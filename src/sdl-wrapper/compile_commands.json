@@ -1,0 +1,23 @@
+[
+  {
+    "arguments": [
+      "/usr/sbin/g++",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-std=c++17",
+      "-fPIC",
+      "-I/usr/include/python3.13",
+      "-I/usr/lib/python3.13/site-packages/pybind11/include",
+      "-I/usr/include/SDL2",
+      "-D_GNU_SOURCE=1",
+      "-D_REENTRANT",
+      "-o",
+      "../bindings.cpython-313-x86_64-linux-gnu.so",
+      "bindings.cpp"
+    ],
+    "directory": "/home/paulh/computer-python/src/sdl-wrapper",
+    "file": "/home/paulh/computer-python/src/sdl-wrapper/bindings.cpp",
+    "output": "/home/paulh/computer-python/src/bindings.cpython-313-x86_64-linux-gnu.so"
+  }
+]

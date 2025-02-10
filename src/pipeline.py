@@ -1,6 +1,6 @@
 from enum import Enum
 import threading, queue, time, bisect, asyncio, math, uuid, json, os, random
-from typing import Any, Callable, Dict, Optional, List, Generic, TypeVar, Iterator, Set, Union
+from typing import Any, Callable, Dict, Optional, List, Generic, Self, Type, TypeVar, Iterator, Set, Union, overload
 from collections import deque, defaultdict
 import logging
 from dataclasses import dataclass, field
@@ -235,11 +235,33 @@ class FramePipeline(Generic[T]):
     def get_consumer_id() -> str:
         return uuid.uuid4().__str__();
 
-    def attach(self, listener: "FrameListener") -> None:
+    @overload
+    def attach(self, listener: "FrameListener") -> None: ...
+
+    @overload
+    def attach(self, listener: Type["FrameListener"], *args: Any, **kwargs: Any) -> None: ...
+
+    @overload
+    def attach(self, listener: Callable[[Self], "FrameListener"]) -> None: ...
+
+    def attach(self, listener: Union["FrameListener", Type["FrameListener"], Callable[[Self], "FrameListener"]], *args: Any, **kwargs: Any) -> None:
         logger.info(f"Attaching Listener to: {self.name}")
-        with self.lock:
-            self.listeners.append(listener)
-            logger.info(f"Attached Listener to: {self.name}")
+        if True:
+            if isinstance(listener, FrameListener):
+                self.listeners.append(listener)
+                logger.info(f"Attached FrameListener instance to: {self.name}")
+
+            elif isinstance(listener, type) and issubclass(listener, FrameListener):
+                instance = listener(self, *args, **kwargs)
+                self.listeners.append(instance)
+                logger.info(f"Attached new FrameListener of type {listener.__name__} to: {self.name}")
+
+            elif callable(listener):
+                instance = listener(self)
+                self.listeners.append(instance)
+                logger.info(f"Attached function callback as FrameListener to: {self.name}")
+            else:
+                raise TypeError("attach() accepts a FrameListener instance, a FrameListener subclass, or a callable.")
 
     def _listeners_loop(self) -> None:
         while not self.closed:
@@ -1305,7 +1327,7 @@ def test_pre_send_and_pre_delivery_hooks():
     pipeline.close()
 
 class FrameListener:
-    def __init__(self, pipeline: FramePipeline[Any], on_tick: Optional[Callable[[Frame[Any]], None]] = None) -> None:
+    def __init__(self, pipeline: FramePipeline[Any], on_tick: Optional[Callable[[Frame[Any]], None]] = None, *args, **kwargs) -> None:
         self.pipeline = pipeline
         self.on_tick = on_tick
 
@@ -1341,7 +1363,7 @@ class PipelineSupplier(Generic[T]):
 
         self.id = uuid.uuid4().__str__()
 
-        event_pipeline.attach(FrameListener(self.event_pipeline, self.supply))
+        event_pipeline.attach(FrameListener, self.supply)
 
     def supply(self, frame: Frame[Event]) -> None:
         if frame.data.event_type == EventType.UPDATE_STATE:
@@ -1360,7 +1382,11 @@ class PipelineState(Generic[T]):
         
         self.current: Optional[T] = None
 
-        self.state_pipeline.attach(FrameListener(self.state_pipeline, self.update))
+        self.state_pipeline.attach(FrameListener, self.update)
+
+    @classmethod
+    def from_supplier(cls, supplier: PipelineSupplier) -> Self:
+        return cls(supplier.get_id(), supplier.state_pipeline)
 
     def get(self) -> Optional[T]:
         return self.current
@@ -1368,3 +1394,18 @@ class PipelineState(Generic[T]):
     def update(self, frame: Frame[StateData]) -> None:
         if frame.data.id == self.id:
             self.current = frame.data.state
+
+class ManagedState(Generic[T]):
+    def __init__(self, initial: T, event_pipeline: FramePipeline[Event], state_pipeline: FramePipeline[StateData]) -> None:
+        self.event_pipeline = event_pipeline
+        self.state_pipeline = state_pipeline
+
+        self.supplier = PipelineSupplier(self.event_pipeline, self.state_pipeline, initial)
+        self.state = PipelineState.from_supplier(self.supplier)
+
+    def get(self) -> Optional[T]:
+        return self.state.get()
+
+    def update(self, new: Optional[T]):
+        self.supplier.update(new)
+

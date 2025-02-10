@@ -8,7 +8,6 @@ from util import logger
 import select
 
 
-# Define the PacketType as an enum.
 class PacketType(enum.Enum):
     # Connection
     STATUS = 0
@@ -77,7 +76,6 @@ def recv_all(sock: socket.socket, length: int, timeout: Optional[float] = None) 
     return data
 
 class Packet:
-    # We use a header consisting of two little-endian unsigned ints:
     #   - packet_type (4 bytes)
     #   - data_length (4 bytes)
     HEADER_FORMAT = "<II"
@@ -148,7 +146,6 @@ class NetworkObject:
         """Returns the priority of this handler. Lower numbers have higher priority."""
         return 0
 
-# Server class that accepts client connections and dispatches packets.
 class Server:
     def __init__(self, port: int, network_objects: List[NetworkObject], start_immediately: bool = True):
         self.port = port
@@ -161,6 +158,9 @@ class Server:
 
         self.server_thread = threading.Thread(target=lambda: self._run(), daemon=True)
         logger.info(f"Server listening on 0.0.0.0:{port}")
+
+        if start_immediately:
+            self.start()
 
     def start(self):
         self.server_thread.start()

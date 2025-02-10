@@ -1,84 +1,107 @@
 import threading
-import bindings  # Assuming this is your bindings module
-import time
-from engine import Camera3D, Engine, EngineCode, EngineFrameData, FramePipeline, FullGameEngine, GameObject, Mesh, MeshRenderer, Rigidbody, Scene, ScriptComponent, SpriteRenderer, Transform, Transform3D, UIAnimation, UIElement, ease_in_out_quad  # Your engine imports
-from pipeline import Event, EventType, ManagedState, PipelineState, PipelineSupplier, StateData, frame_printer  # Your pipeline imports
 import random
-from network import BaseNetworkObject, Client, EchoNetworkObject, PacketType, Server, Packet
-from util import logger
-import perftester as pt 
+from time import sleep
+from game import Board, pretty_print_board
+from network import Server, Client
 
-def _client():
-    engine_pipe = FramePipeline[EngineFrameData]("engine_pipe")
-    state_pipe = FramePipeline[StateData]("state_pipe")
-    event_pipe = FramePipeline[Event]("event_pipe")
 
-    engine = FullGameEngine(engine_pipe, event_pipe, state_pipe,
-                            window_title="Full Game Engine", width=1024, height=768)
+def run_server():
+    """Starts the game server."""
+    server = Server(port=5000)
 
-    # Set up a 3D camera.
-    camera3d = Camera3D(position=(0, 0, 10), target=(0, 0, 0), fov=60, near=0.1, far=1000)
-    engine.set_camera(camera3d)
+    while True:
+        pretty_print_board(server.board.broadcast_state())
+        sleep(1)
 
-    # Define a cube mesh.
-    cube_vertices = [
-         (-1, -1, -1),
-         ( 1, -1, -1),
-         ( 1,  1, -1),
-         (-1,  1, -1),
-         (-1, -1,  1),
-         ( 1, -1,  1),
-         ( 1,  1,  1),
-         (-1,  1,  1)
-    ]
-    cube_indices = [
-         (0, 1, 2), (0, 2, 3),
-         (4, 5, 6), (4, 6, 7),
-         (0, 1, 5), (0, 5, 4),
-         (2, 3, 7), (2, 7, 6),
-         (1, 2, 6), (1, 6, 5),
-         (0, 3, 7), (0, 7, 4)
-    ]
-    cube_mesh = Mesh(cube_vertices, cube_indices)
+class SmartBot:
+    """An AI player that plays strategically."""
 
-    # Define a Cube GameObject that rotates.
-    class Cube(GameObject):
-         def __init__(self, pipeline, name="Cube"):
-             super().__init__(pipeline, name=name)
-             self.add_component(Transform3D(position=(0, 0, 0), rotation=(30, 45, 0), scale=(1, 1, 1)))
-             self.add_component(MeshRenderer(cube_mesh, color=(0, 255, 0)))
-             self.add_component(Rigidbody(mass=1.0))
-             self.add_component(ScriptComponent())
-         def update(self, frame: EngineFrameData):
-             transform3d: Transform3D = self.find_component(Transform3D)
-             if transform3d:
-                transform3d.rotation[1] += 1 
-                transform3d.rotation[2] += 1
-             super().update(frame)
+    def __init__(self, player_name):
+        self.client = Client(address="127.0.0.1", port=5000, player_name=player_name)
 
-    # Create a main scene.
-    main_scene = Scene("MainScene")
-    cube_object = Cube(engine_pipe)
-    main_scene.add_game_object(cube_object)
+    def get_most_infected_city(self):
+        """Finds the city with the highest disease cubes."""
+        max_cubes = 0
+        target_city = None
 
-    ui_panel = UIElement(x=50, y=50, width=300, height=150, color=(100, 100, 250), opacity=0.0)
-    fade_in = UIAnimation(target=ui_panel, property_name="opacity", start_value=0.0, end_value=1.0, duration=2.0, easing=ease_in_out_quad)
-    ui_panel.add_animation(fade_in)
-    initial_x = ui_panel.rect.x
-    ui_panel.rect.x = -ui_panel.rect.w  
-    slide_in = UIAnimation(target=ui_panel.rect, property_name="x", start_value=-ui_panel.rect.w, end_value=initial_x, duration=2.0, easing=ease_in_out_quad)
-    ui_panel.add_animation(slide_in)
-    main_scene.add_ui_element(ui_panel)
+        for city, data in self.client.board["cities"].items():
+            total_cubes = sum(data.get("disease", {}).values())
+            if total_cubes > max_cubes:
+                max_cubes = total_cubes
+                target_city = city
 
-    # Register and load the scene.
-    engine.scene_manager.add_scene(main_scene)
-    engine.scene_manager.load_scene("MainScene")
+        return target_city, max_cubes
 
-    # Run the engine.
-    engine.run(lambda: None)
+    def get_best_move(self, current_city):
+        """Finds the best move to reach the most infected city faster."""
+        target_city, _ = self.get_most_infected_city()
+        if not target_city:
+            return None  
 
-def _server():
-    pass
+        neighbors = self.client.board["cities"][current_city]["neighbors"]
+        if target_city in neighbors:
+            return target_city  # Move directly if possible
+
+        # Otherwise, move toward it by choosing a neighbor that gets closer
+        best_choice = None
+        min_distance = float("inf")
+
+        for neighbor in neighbors:
+            distance = len(set(self.client.board["cities"][neighbor]["neighbors"]) & {target_city})
+            if distance < min_distance:
+                best_choice = neighbor
+                min_distance = distance
+
+        return best_choice
+
+    def play_turn(self):
+        """Executes an AI turn with improved decision-making."""
+        while True:
+            sleep(0.1) 
+            if self.client.is_my_turn:
+                current_location = self.client.board["players"][self.client.player_name]["location"]
+
+                if self.client.board["cities"][current_location]["disease"]:
+                    self.client.send_action("treat")
+                    continue
+
+                best_move = self.get_best_move(current_location)
+                if best_move:
+                    self.client.send_action("move", {"destination": best_move})
+                    continue
+
+                self.client.send_action("pass")
+
+
+def run_bot(player_name):
+    """Creates a bot and makes it play automatically with improved AI."""
+    bot = SmartBot(player_name)
+    bot.play_turn()
+
+
+def find_missing_neighbors(cities):
+    missing_neighbors = set()
+    
+    for city, data in cities.items():
+        for neighbor in data["neighbors"]:
+            if neighbor not in cities:
+                missing_neighbors.add(neighbor)
+    
+    if missing_neighbors:
+        print("The following neighbors are missing from the top-level dictionary:")
+        for neighbor in sorted(missing_neighbors):
+            print(neighbor)
+    else:
+        print("All neighbors are accounted for.")
 
 if __name__ == "__main__":
-    
+    # Start server
+    threading.Thread(target=run_server, daemon=True).start()
+    #
+    # # Start bot players
+    bot_names = ["Bot1", "Bot2", "Bot3", "Bot4"]
+    for name in bot_names:
+        threading.Thread(target=run_bot, args=(name,), daemon=True).start()
+    #
+    while True:
+        sleep(1)

@@ -3,7 +3,7 @@ from enum import Enum
 from logging import Logger
 import threading
 import time
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Type, TypeGuard, TypeVar, Union, overload
+from typing import Any, Callable, Dict, Generic, List, Optional, Self, Tuple, Type, TypeGuard, TypeVar, Union, overload
 import bindings
 from pipeline import Event, EventType, Frame, FrameListener, FramePipeline, ManagedState, PipelineState, PipelineSupplier, StateData
 import numpy as np
@@ -80,8 +80,9 @@ class Engine:
     def update(self):
         self.pipeline.send(EngineFrameData(EngineCode.COMPONENT_TICK, self.sdl, self.camera))
 
-    def render(self):
-        self.sdl.clear_screen(0, 0, 0)
+    def render(self, override: bool = False):
+        if not override:
+            self.sdl.clear_screen(0, 0, 0)
         for game_object in self.game_objects:
             game_object.render(self.sdl, self.camera)
         self.sdl.update_screen()
@@ -105,14 +106,23 @@ class Engine:
             self.states[u] = (lambda: ms.get(), lambda new: ms.update(new))
             return self.states[u]
 
+    def with_callback(self, callback: Callable[[Self], None]) -> None:
+        callback(self)
+
 # ---- 2D and 3D Camera Classes ----
 class Camera:
-    def __init__(self, position: Tuple[int, int] = (0, 0), zoom: float = 1.0):
+    def __init__(self, position: Tuple[int, int] = (0, 0), zoom: float = 1.0, screen_width: int = 1200, screen_height: int = 800):
         self.position = list(position)
         self.zoom = zoom
-    def world_to_screen(self, point: Tuple[int, int]) -> Tuple[int, int]:
-        x, y = point
-        return (int((x - self.position[0]) * self.zoom), int((y - self.position[1]) * self.zoom))
+        self.screen_width = screen_width 
+        self.screen_height = screen_height
+
+    def world_to_screen(self, point: Tuple[float, float, float]) -> Tuple[int, int]:
+        x, y, _ = point
+        screen_x = int((x - self.position[0]) * self.zoom + self.screen_width / 2)
+        screen_y = int((y - self.position[1]) * self.zoom + self.screen_height / 2)
+        return (screen_x, screen_y)
+
     def screen_to_world(self, point: Tuple[int, int]) -> Tuple[int, int]:
         screen_x, screen_y = point
         return (int(screen_x / self.zoom + self.position[0]), int(screen_y / self.zoom + self.position[1]))
@@ -121,17 +131,56 @@ class Camera3D:
     def __init__(self, position: Tuple[float, float, float],
                  target: Tuple[float, float, float],
                  up: Tuple[float, float, float] = (0, 1, 0),
-                 fov: float = 60, near: float = 0.1, far: float = 1000):
+                 fov: float = 60, near: float = 0.1, far: float = 1000,
+                 width: float = 800,
+                 height: float = 600):
         self.position = np.array(position, dtype=float)
         self.target = np.array(target, dtype=float)
         self.up = np.array(up, dtype=float)
         self.fov = fov
         self.near = near
         self.far = far
+        self.screen_width = width
+        self.screen_height = height
     def get_view_matrix(self) -> np.ndarray:
         return look_at(self.position, self.target, self.up)
+    
     def get_projection_matrix(self, aspect: float) -> np.ndarray:
         return perspective(self.fov, aspect, self.near, self.far)
+    
+    def world_to_screen(self, point: Tuple[float, float, float]) -> Tuple[int, int]:
+        """
+        Convert 3D world coordinates to 2D screen coordinates.
+    
+        Args:
+            point: 3D point in world space (x, y, z)
+            screen_width: Width of the screen in pixels
+            screen_height: Height of the screen in pixels
+        
+        Returns:
+            Tuple of (screen_x, screen_y) coordinates
+        """
+        # Convert point to homogeneous coordinates
+        world_pos = np.array([*point, 1.0])
+    
+    # Get view and projection matrices
+        view_matrix = self.get_view_matrix()
+        proj_matrix = self.get_projection_matrix(self.screen_width / self.screen_height)
+    
+    # Transform point to clip space
+        clip_space = proj_matrix @ view_matrix @ world_pos
+    
+    # Perform perspective division
+        if clip_space[3] == 0:
+            return (0, 0)  # Or handle this edge case differently
+        
+        ndc = clip_space[:3] / clip_space[3]
+    
+    # Convert NDC to screen coordinates
+        screen_x = int((ndc[0] + 1) / 2 * self.screen_width)
+        screen_y = int((1 - (ndc[1] + 1) / 2) * self.screen_height)
+    
+        return (screen_x, screen_y)
 
 def look_at(eye: np.ndarray, target: np.ndarray, up: np.ndarray) -> np.ndarray:
     forward = target - eye
@@ -178,7 +227,7 @@ class GameObject:
             component.on_disable()
             self.components.remove(component)
             component.game_object = None
-    def find_component(self, component_type: type) -> Optional[Any]:
+    def find_component(self, component_type: Type[T]) -> Optional[T]:
         for comp in self.components:
             if isinstance(comp, component_type):
                 return comp
@@ -613,8 +662,10 @@ class FullGameEngine(Engine):
             for game_object in self.game_objects:
                 game_object.update(frame_data)
         self.ui_manager.update(dt)
-    def render(self):
-        self.sdl.clear_screen(0, 0, 0)
+
+    def render(self, override: bool = False):
+        if not override:
+            self.sdl.clear_screen(0, 0, 0)
         if self.scene_manager.current_scene:
             self.scene_manager.current_scene.render(self.sdl, self.camera)
         else:

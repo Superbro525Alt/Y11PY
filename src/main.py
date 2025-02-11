@@ -1,8 +1,10 @@
 import threading
 import random
 from time import sleep
-from game import Board, pretty_print_board
+from engine import EngineFrameData, FullGameEngine
+from game import Board, PandemicGame, pretty_print_board
 from network import Server, Client
+from pipeline import Event, FramePipeline, StateData
 
 
 def run_server():
@@ -96,12 +98,16 @@ def find_missing_neighbors(cities):
 
 if __name__ == "__main__":
     # Start server
-    threading.Thread(target=run_server, daemon=True).start()
-    #
-    # # Start bot players
-    bot_names = ["Bot1", "Bot2", "Bot3", "Bot4"]
-    for name in bot_names:
-        threading.Thread(target=run_bot, args=(name,), daemon=True).start()
-    #
-    while True:
-        sleep(1)
+    # find_missing_neighbors(Board.CITIES)
+    # threading.Thread(target=run_server, daemon=True).start()
+    # #
+    # # # Start bot players
+    # bot_names = ["Bot1", "Bot2", "Bot3", "Bot4"]
+    # for name in bot_names:
+    #     threading.Thread(target=run_bot, args=(name,), daemon=True).start()
+    # #
+    # while True:
+        # sleep(1)
+    game = PandemicGame()
+    game.with_callback(lambda this: [this.board.end_turn() for i in range(500)])
+    game.start()

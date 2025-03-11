@@ -188,9 +188,14 @@ void SDLWrapper::drawTexture(SDL_Texture* texture, SDL_Rect* srcRect, SDL_Rect* 
 }
 
 bool SDLWrapper::loadFont(const std::string& path, int size) {
+    if (font) {                 // Check if a font is already loaded
+        TTF_CloseFont(font);    // Close the old font if it exists
+        font = nullptr;         // Important: Set font to nullptr after closing
+    }
+
     font = TTF_OpenFont(path.c_str(), size);
     if (font == nullptr) {
-        SDL_Log("Failed to load font! TTF Error: %s\n", TTF_GetError());
+        SDL_Log("Failed to load font '%s' (size %d)! TTF Error: %s\n", path.c_str(), size, TTF_GetError());
         return false;
     }
     return true;
@@ -272,3 +277,14 @@ int SDLWrapper::getWidth() const {
 int SDLWrapper::getHeight() const {
     return height;
 }
+
+std::tuple<int, int> SDLWrapper::getMousePosition() {
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    int x = mouseX;
+    int y = mouseY;
+
+    return std::make_tuple(x, y); // Return the tuple
+}
+

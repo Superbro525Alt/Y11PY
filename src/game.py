@@ -1,219 +1,15 @@
 import json
+import math
 import random
 from typing import Dict, Any, List, Optional, Union, override
 
 from bindings import A, D, E, Q, S, W, SDLWrapper
-from engine import Camera, Camera3D, Component, EngineCode, EngineFrameData, FullGameEngine, GameObject, Transform, Transform3D
+import bindings
+from board import Board
+from engine import Camera, Camera3D, Component, EngineCode, EngineFrameData, FullGameEngine, GameObject, TextRenderer, Transform, Transform3D
+from network import Client
 from pipeline import Event, FramePipeline, StateData
-
-def pretty_print_board(board_state):
-    """Prints the game board in a readable format."""
-    print("\n" + "=" * 50)
-    print(f" 🌍 PANDEMIC GAME BOARD - TURN {board_state['turn']} 🌍")
-    print(f"Current Turn: {board_state['current_turn']} | Actions Left: {board_state['actions_remaining']}")
-    print("=" * 50)
-
-    # Print Players
-    print("\n👥 Players:")
-    for player, data in board_state["players"].items():
-        print(f"  - {player}: {data['location']}")
-
-    # Print Cities
-    print("\n🏙️ Cities:")
-    for city, data in board_state["cities"].items():
-        research_center = "🏥" if data["research_center"] else "   "
-        diseases = ", ".join([f"{color}: {count}" for color, count in data.get("disease", {}).items()])
-        diseases = diseases if diseases else "None"
-        print(f"  {research_center} {city:<15} | Diseases: {diseases}")
-
-    print("\n" + "=" * 50)
-
-class Board:
-    CITIES = {
-                "San Francisco": {"neighbors": ["Los Angeles", "Chicago", "Tokyo", "Manila"], "research_center": False, "disease": {}, "x": -2, "y": 2},
-        "Los Angeles": {"neighbors": ["San Francisco", "Mexico City", "Sydney", "Chicago"], "research_center": False, "disease": {}, "x": -3, "y": 1},
-        "Chicago": {"neighbors": ["San Francisco", "Los Angeles", "Montreal", "Atlanta", "Mexico City"], "research_center": False, "disease": {}, "x": -1, "y": 2},
-        "Montreal": {"neighbors": ["Chicago", "New York", "Washington"], "research_center": False, "disease": {}, "x": 0, "y": 3},
-        "New York": {"neighbors": ["Montreal", "Washington", "Madrid", "London"], "research_center": False, "disease": {}, "x": 1, "y": 3},
-        "Washington": {"neighbors": ["New York", "Montreal", "Miami", "Atlanta"], "research_center": False, "disease": {}, "x": 1, "y": 2},
-        "Atlanta": {"neighbors": ["Chicago", "Washington", "Miami"], "research_center": True, "disease": {}, "x": 0, "y": 1},
-        "Miami": {"neighbors": ["Washington", "Atlanta", "Bogotá", "Mexico City"], "research_center": False, "disease": {}, "x": 2, "y": 1},
-        "Mexico City": {"neighbors": ["Los Angeles", "Chicago", "Miami", "Bogotá", "Lima"], "research_center": False, "disease": {}, "x": -2, "y": -1},
-        "Bogotá": {"neighbors": ["Mexico City", "Miami", "Lima", "São Paulo", "Buenos Aires"], "research_center": False, "disease": {}, "x": 1, "y": -2},
-        "Lima": {"neighbors": ["Mexico City", "Bogotá", "Santiago"], "research_center": False, "disease": {}, "x": 0, "y": -3},
-        "Santiago": {"neighbors": ["Lima"], "research_center": False, "disease": {}, "x": -1, "y": -4},
-        "Buenos Aires": {"neighbors": ["Bogotá", "São Paulo"], "research_center": False, "disease": {}, "x": 2, "y": -3},
-        "São Paulo": {"neighbors": ["Bogotá", "Buenos Aires", "Madrid", "Lagos"], "research_center": False, "disease": {}, "x": 2, "y": -2},
-        "Lagos": {"neighbors": ["São Paulo", "Kinshasa", "Khartoum"], "research_center": False, "disease": {}, "x": 3, "y": -1},
-        "Khartoum": {"neighbors": ["Lagos", "Kinshasa", "Johannesburg", "Cairo"], "research_center": False, "disease": {}, "x": 4, "y": 0},
-        "Kinshasa": {"neighbors": ["Lagos", "Khartoum", "Johannesburg"], "research_center": False, "disease": {}, "x": 3, "y": -2},
-        "Johannesburg": {"neighbors": ["Kinshasa", "Khartoum"], "research_center": False, "disease": {}, "x": 4, "y": -2},
-        "Madrid": {"neighbors": ["New York", "São Paulo", "Paris", "London", "Algiers"], "research_center": False, "disease": {}, "x": 2, "y": 2},
-        "London": {"neighbors": ["New York", "Madrid", "Paris", "Essen"], "research_center": False, "disease": {}, "x": 1, "y": 4},
-        "Paris": {"neighbors": ["London", "Madrid", "Essen", "Algiers", "Milan"], "research_center": False, "disease": {}, "x": 2, "y": 4},
-        "Essen": {"neighbors": ["London", "Paris", "Milan", "St. Petersburg"], "research_center": False, "disease": {}, "x": 2, "y": 5},
-        "Milan": {"neighbors": ["Essen", "Paris", "Istanbul"], "research_center": False, "disease": {}, "x": 3, "y": 4},
-        "Algiers": {"neighbors": ["Madrid", "Paris", "Cairo", "Istanbul"], "research_center": False, "disease": {}, "x": 3, "y": 2},
-        "Cairo": {"neighbors": ["Algiers", "Istanbul", "Baghdad", "Khartoum"], "research_center": False, "disease": {}, "x": 4, "y": 1},
-        "Istanbul": {"neighbors": ["Milan", "Algiers", "Cairo", "Baghdad", "Moscow", "St. Petersburg"], "research_center": False, "disease": {}, "x": 4, "y": 3},
-        "Moscow": {"neighbors": ["St. Petersburg", "Istanbul", "Tehran"], "research_center": False, "disease": {}, "x": 5, "y": 4},
-        "St. Petersburg": {"neighbors": ["Essen", "Istanbul", "Moscow"], "research_center": False, "disease": {}, "x": 4, "y": 5},
-        "Baghdad": {"neighbors": ["Istanbul", "Cairo", "Riyadh", "Tehran", "Karachi"], "research_center": False, "disease": {}, "x": 5, "y": 2},
-        "Manila": {"neighbors": ["Taipei", "San Francisco", "Ho Chi Minh City", "Sydney", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": -1},
-        "Sydney": {"neighbors": ["Jakarta", "Los Angeles", "Manila"], "research_center": False, "disease": {}, "x": -5, "y": -3},
-        "Tehran": {"neighbors": ["Baghdad", "Moscow", "Delhi", "Karachi"], "research_center": False, "disease": {}, "x": 6, "y": 3},
-        "Tokyo": {"neighbors": ["Seoul", "Shanghai", "San Francisco", "Osaka"], "research_center": False, "disease": {}, "x": -3, "y": 4},
-        "Delhi": {"neighbors": ["Tehran", "Karachi", "Mumbai", "Chennai", "Kolkata"], "research_center": False, "disease": {}, "x": 7, "y": 2},
-        "Ho Chi Minh City": {"neighbors": ["Jakarta", "Bangkok", "Manila", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": -2},
-        "Hong Kong": {"neighbors": ["Shanghai", "Taipei", "Manila", "Ho Chi Minh City", "Bangkok", "Kolkata"], "research_center": False, "disease": {}, "x": -3, "y": -2},
-        "Jakarta": {"neighbors": ["Chennai", "Bangkok", "Ho Chi Minh City", "Sydney"], "research_center": False, "disease": {}, "x": -5, "y": -2},
-    "Karachi": {"neighbors": ["Baghdad", "Tehran", "Delhi", "Mumbai", "Riyadh"], "research_center": False, "disease": {}, "x": 6, "y": 1},
-        "Osaka": {"neighbors": ["Taipei", "Tokyo"], "research_center": False, "disease": {}, "x": -2, "y": 3},
-        "Riyadh": {"neighbors": ["Baghdad", "Karachi", "Cairo"], "research_center": False, "disease": {}, "x": 6, "y": 0},
-        "Seoul": {"neighbors": ["Beijing", "Shanghai", "Tokyo"], "research_center": False, "disease": {}, "x": -2, "y": 5},
-        "Shanghai": {"neighbors": ["Beijing", "Seoul", "Tokyo", "Taipei", "Hong Kong"], "research_center": False, "disease": {}, "x": -3, "y": 3},
-        "Taipei": {"neighbors": ["Shanghai", "Hong Kong", "Osaka", "Manila"], "research_center": False, "disease": {}, "x": -3, "y": 2},
-        "Bangkok": {"neighbors": ["Kolkata", "Chennai", "Jakarta", "Ho Chi Minh City", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": 0},
-        "Beijing": {"neighbors": ["Shanghai", "Seoul"], "research_center": False, "disease": {}, "x": -3, "y": 5},
-        "Chennai": {"neighbors": ["Mumbai", "Delhi", "Kolkata", "Bangkok", "Jakarta"], "research_center": False, "disease": {}, "x": 8, "y": 1},
-        "Kolkata": {"neighbors": ["Delhi", "Chennai", "Bangkok", "Hong Kong"], "research_center": False, "disease": {}, "x": 7, "y": 0},
-        "Mumbai": {"neighbors": ["Karachi", "Delhi", "Chennai"], "research_center": False, "disease": {}, "x": 7, "y": 2},
-    }
-
-    def __init__(self, player_names: List[str]):
-        """Initialize the board with cities, players, diseases, and turn tracking."""
-        self.cities = {city: data.copy() for city, data in self.CITIES.items()}
-        self.players = {name: {"location": "Atlanta", "role": None} for name in player_names}
-        self.turn_order = list(self.players.keys())  # Order of turns
-        self.current_turn_index = 0  # Index of whose turn it is
-        self.actions_per_turn = 4
-        self.actions_remaining = self.actions_per_turn
-        self.diseases = {"blue": 0, "red": 0, "yellow": 0, "black": 0}
-        self.outbreaks = 0
-        self.turn = 0
-        self.infection_deck = list(self.CITIES.keys())
-        random.shuffle(self.infection_deck)
-        self.player_deck = []  # Placeholder for player card deck
-
-    def get_current_player(self):
-        """Returns the name of the current player."""
-        return self.turn_order[self.current_turn_index]
-
-    def move(self, player: str, destination: str):
-        """Moves a player to a neighboring city."""
-        if self.get_current_player() != player:
-            print(f"{player} cannot move, it's not their turn.")
-            return False
-        
-        if destination in self.CITIES[self.players[player]["location"]]["neighbors"]:
-            self.players[player]["location"] = destination
-            self.actions_remaining -= 1
-            print(f"{player} moved to {destination}.")
-            return True
-        else:
-            print("Invalid move!")
-            return False
-
-    def treat_disease(self, player: str):
-        """Treats one cube of disease in the player's current city."""
-        if self.get_current_player() != player:
-            print(f"{player} cannot treat disease, it's not their turn.")
-            return False
-
-        city = self.players[player]["location"]
-        if self.cities[city]["disease"]:
-            disease_type = next(iter(self.cities[city]["disease"]))
-            self.cities[city]["disease"][disease_type] -= 1
-            if self.cities[city]["disease"][disease_type] == 0:
-                del self.cities[city]["disease"][disease_type]
-            self.actions_remaining -= 1
-            print(f"{player} treated {disease_type} disease in {city}.")
-            return True
-        else:
-            print(f"No disease to treat in {city}.")
-            return False
-
-    def cure_disease(self, player: str, disease_type: str):
-        """Cures a disease if the player has enough cards."""
-        if self.get_current_player() != player:
-            print(f"{player} cannot cure disease, it's not their turn.")
-            return False
-
-        # Assume players need 5 matching cards (simplified for now)
-        if disease_type in self.diseases and self.diseases[disease_type] > 0:
-            self.diseases[disease_type] = 0  # Cure disease
-            self.actions_remaining -= 1
-            print(f"{player} cured {disease_type} disease!")
-            return True
-        else:
-            print(f"{disease_type} disease is not active.")
-            return False
-
-    def build_research_station(self, player: str):
-        """Builds a research station in the player's current city."""
-        if self.get_current_player() != player:
-            print(f"{player} cannot build, it's not their turn.")
-            return False
-
-        city = self.players[player]["location"]
-        self.cities[city]["research_center"] = True
-        self.actions_remaining -= 1
-        print(f"{player} built a research station in {city}.")
-        return True
-
-    def pass_turn(self, player: str):
-        """Ends the player's turn early."""
-        if self.get_current_player() != player:
-            print(f"{player} cannot pass, it's not their turn.")
-            return False
-
-        self.actions_remaining = 0
-        self.end_turn()
-
-    def end_turn(self):
-        """Ends the turn, advances turn order, and resets actions."""
-        self.current_turn_index = (self.current_turn_index + 1) % len(self.turn_order)
-        self.actions_remaining = self.actions_per_turn
-        self.turn += 1
-        self.infect_city()
-        print(f"Turn {self.turn} ended. Next player: {self.get_current_player()}.")
-
-    def infect_city(self):
-        """Infects a random city from the infection deck."""
-        if not self.infection_deck:
-            self.infection_deck = list(self.CITIES.keys())
-            random.shuffle(self.infection_deck)
-
-        city = self.infection_deck.pop(0)
-        disease_type = random.choice(["blue", "red", "yellow", "black"])
-        self.cities[city]["disease"][disease_type] = self.cities[city]["disease"].get(disease_type, 0) + 1
-        print(f"{city} infected with {disease_type}.")
-
-    def tick_turn(self):
-        """Processes end-of-turn events."""
-        self.infect_city()
-        print(f"End of turn {self.turn}. {self.get_current_player()}'s turn begins.")
-
-    def update_from_server(self, game_state: Dict[str, Any]):
-        """Updates the board state with data from the server."""
-        self.__dict__.update(game_state)
-
-    def broadcast_state(self) -> Dict[str, Any]:
-        """Returns the current game state for sending to clients."""
-        return {
-            "players": self.players,
-            "turn_order": self.turn_order,
-            "current_turn": self.get_current_player(),
-            "actions_remaining": self.actions_remaining,
-            "cities": self.cities,
-            "diseases": self.diseases,
-            "outbreaks": self.outbreaks,
-            "turn": self.turn,
-            "infection_deck": self.infection_deck
-        }
-
-    def __repr__(self):
-        return json.dumps(self.broadcast_state(), indent=2)
+import util
 
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
@@ -235,11 +31,12 @@ class BoardState:
     actions_remaining: int
 
 class PandemicBoardRenderer(Component):
-    def __init__(self, scale: float = 100):
+    def __init__(self, text_renderer: TextRenderer, scale: float = 100):
         super().__init__()
         self.scale = scale
         self.cities: Dict[str, CityData] = {}
         self.board: Optional[Board] = None
+        self.text_renderer = text_renderer
         
     def update_state(self, board_state: Board):
         """Update the renderer with new board state"""
@@ -259,66 +56,160 @@ class PandemicBoardRenderer(Component):
     def render(self, sdl: SDLWrapper, camera: Optional[Union[Camera, Camera3D]] = None):
         if not self.game_object or not self.board_state:
             return
-            
+
         transform = self.game_object.find_component(Transform)
         if not transform:
             return
-            
+
+        mousePos = sdl.getMousePosition()
+        scaled_radius = int(10 * camera.zoom if camera else 10)
+
         # Draw connections between cities
         for city_name, city_data in self.cities.items():
             city_pos = city_data.position
             for neighbor in city_data.neighbors:
                 neighbor_pos = self.cities[neighbor].position
-                x1, y1 = transform.local_to_world(city_pos)
-                x2, y2 = transform.local_to_world(neighbor_pos)
+
+                x1_world, y1_world = transform.local_to_world(city_pos)
+                x2_world, y2_world = transform.local_to_world(neighbor_pos)
+
                 if camera:
-                    x1, y1 = camera.world_to_screen((x1, y1, 0))
-                    x2, y2 = camera.world_to_screen((x2, y2, 0))
-                sdl.draw_line(int(x1), int(y1), int(x2), int(y2), 100, 100, 100)
-        
+                    x1_screen, y1_screen = camera.world_to_screen((x1_world, y1_world, 0))
+                    x2_screen, y2_screen = camera.world_to_screen((x2_world, y2_world, 0))
+                else:
+                    x1_screen, y1_screen = x1_world, y1_world
+                    x2_screen, y2_screen = x2_world, y2_world
+
+                dx = x2_screen - x1_screen
+                dy = y2_screen - y1_screen
+                angle = np.arctan2(dy, dx)
+
+                x1_line = x1_screen + scaled_radius * np.cos(angle)
+                y1_line = y1_screen + scaled_radius * np.sin(angle)
+
+                x2_line = x2_screen - scaled_radius * np.cos(angle)
+                y2_line = y2_screen - scaled_radius * np.sin(angle)
+
+                sdl.draw_line(int(x1_line), int(y1_line), int(x2_line), int(y2_line), 100, 100, 100)
+
         # Draw cities
         for city_name, city_data in self.cities.items():
             x, y = transform.local_to_world(city_data.position)
             if camera:
                 x, y = camera.world_to_screen((x, y, 0))
-            
+
             # Draw research center
             if city_data.has_research_center:
-                sdl.draw_rect(int(x) - 15, int(y) - 15, 30, 30, 255, 255, 0)
-            
+                rect_size = int(30 * camera.zoom) if camera else 30
+                sdl.draw_rect(int(x) - rect_size // 2, int(y) - rect_size // 2, rect_size, rect_size, 255, 255, 0)
+
             # Draw city circle
-            self.draw_circle(sdl, int(x), int(y), 10, 200, 200, 200)
-            
+            self.draw_circle(sdl, int(x), int(y), scaled_radius, 200, 200, 200, util.is_point_inside_circle(int(x), int(y), scaled_radius, mousePos[0], mousePos[1]))
+
             # Draw disease cubes
-            if city_data.diseases:
-                offset = 0
-                for disease_type, count in city_data.diseases.items():
-                    color = self.get_disease_color(disease_type)
-                    for i in range(count):
-                        sdl.draw_rect(int(x) + offset, int(y) + 15, 5, 5, *color)
-                        offset += 7
-            
+            num_boxes = 4  # We always have 4 boxes
+            angle_increment = 360 / num_boxes  # Angle between boxes
+
+
+            disease_colors = {
+                "blue": 0,
+                "red": 1,
+                "yellow": 2,
+                "black": 3,
+            }
+
+            disease_counts = {
+                "blue": 0,
+                "red": 0,
+                "yellow": 0,
+                "black": 0,
+            }
+
+            for disease_type, count in city_data.diseases.items():
+                disease_counts[disease_type] = count
+
+            self.text_renderer.set_font_size(int(5 * camera.zoom) if camera else 10)
+            for disease_type, count in disease_counts.items():
+                color = self.get_disease_color(disease_type)
+                box_index = disease_colors[disease_type]
+
+                # Calculate box position using polar coordinates
+                scaled_disease_box_size = int(scaled_radius * 0.5)  # Box size (25% of radius) - Moved inside the loop
+                angle_deg = angle_increment * box_index
+                angle_rad = np.radians(angle_deg)
+
+                box_x = int(x + (scaled_radius * 0.6) * np.cos(angle_rad))  # Adjust 0.6 for distance from center
+                box_y = int(y + (scaled_radius * 0.6) * np.sin(angle_rad))
+
+                # Center the box
+                box_x -= scaled_disease_box_size // 2
+                box_y -= scaled_disease_box_size // 2
+
+                sdl.draw_rect(box_x, box_y, scaled_disease_box_size, scaled_disease_box_size, *color)
+
+                text_x = box_x + scaled_disease_box_size // 2 - int(self.text_renderer.get_text_width(str(count)) / 2)
+                text_y = box_y + scaled_disease_box_size // 2 - int(self.text_renderer.get_font_height(str(count)) / 2)
+                self.text_renderer.draw_text(str(count), text_x, text_y, (255, 255, 255))
+
+
             # Draw players in this city
             if self.board_state.players:
-                player_offset = 0
+                num_players_in_city = 0
                 for player_name, player_data in self.board_state.players.items():
                     if player_data['location'] == city_name:
-                        # Highlight current player
+                        num_players_in_city += 1
+
+                player_index = 0
+                for player_name, player_data in self.board_state.players.items():
+                    if player_data['location'] == city_name:
                         color = (255, 255, 0) if player_name == self.board_state.get_current_player() else (255, 255, 255)
-                        sdl.draw_circle(int(x) - 5 + player_offset, int(y) - 20, 5, *color)
-                        player_offset += 12
+
+                        angle = 2 * np.pi * player_index / num_players_in_city
+                        scaled_player_radius = int(6 * camera.zoom) if camera else 6
+                        circle_radius = int(25 * camera.zoom) if camera else 25
+
+                        player_x = int(x + circle_radius * np.cos(angle))
+                        player_y = int(y + circle_radius * np.sin(angle))
+
+                        self.draw_circle(sdl, player_x, player_y, scaled_player_radius, color[0], color[1], color[2])
+
+                        text_x = player_x - int(self.text_renderer.get_text_width(str(player_index + 1)) / 2)
+                        text_y = player_y - int(self.text_renderer.get_font_height(str(player_index)) / 2)
+                        self.text_renderer.set_font_size(int(12 * camera.zoom) if camera else 12)
+                        self.text_renderer.draw_text(str(player_index + 1), text_x, text_y, (255, 255, 255))
+
+                        player_index += 1
                         
-    def draw_circle(self, sdl: SDLWrapper, x: int, y: int, radius: int, r: int, g: int, b: int):
-        """Draw a circle by approximating it with lines."""
-        segments = 16
-        for i in range(segments):
-            angle1 = 2 * np.pi * i / segments
-            angle2 = 2 * np.pi * (i + 1) / segments
-            x1 = int(x + radius * np.cos(angle1))
-            y1 = int(y + radius * np.sin(angle1))
-            x2 = int(x + radius * np.cos(angle2))
-            y2 = int(y + radius * np.sin(angle2))
-            sdl.draw_line(x1, y1, x2, y2, r, g, b)
+    def draw_circle(self, sdl: SDLWrapper, x: int, y: int, radius: int, r: int, g: int, b: int, fill: bool = False):
+        """Draw a circle by approximating it with lines, optionally filled.
+
+        Args:
+            sdl: The SDLWrapper object for drawing.
+            x: The x-coordinate of the circle's center.
+            y: The y-coordinate of the circle's center.
+            radius: The radius of the circle.
+            r: The red component of the circle's color.
+            g: The green component of the circle's color.
+            b: The blue component of the circle's color.
+            fill: If True, the circle will be filled.  Defaults to False.
+        """
+        segments = 16  # You can adjust this for smoother/rougher circles
+
+        if fill:
+            for i in range(-radius, radius + 1):  # Iterate through x-coordinates
+                for j in range(-radius, radius + 1):  # Iterate through y-coordinates
+                    if i*i + j*j <= radius*radius:  # Check if point is within circle
+                        sdl.draw_point(x + i, y + j, r, g, b)
+        else:
+            # Draw the outline
+            for i in range(segments):
+                angle1 = 2 * np.pi * i / segments
+                angle2 = 2 * np.pi * (i + 1) / segments
+                x1 = int(x + radius * np.cos(angle1))
+                y1 = int(y + radius * np.sin(angle1))
+                x2 = int(x + radius * np.cos(angle2))
+                y2 = int(y + radius * np.sin(angle2))
+                sdl.draw_line(x1, y1, x2, y2, r, g, b)
             
     def get_disease_color(self, disease_type: str) -> Tuple[int, int, int]:
         """Return RGB color for each disease type."""
@@ -326,7 +217,7 @@ class PandemicBoardRenderer(Component):
             "blue": (0, 0, 255),
             "red": (255, 0, 0),
             "yellow": (255, 255, 0),
-            "black": (0, 0, 0)
+            "black": (255, 255, 255)
         }
         return colors.get(disease_type, (255, 255, 255))
 
@@ -337,11 +228,12 @@ class PandemicBoardRenderer(Component):
 
 
 class PandemicBoard(GameObject):
-    def __init__(self, pipeline: FramePipeline[EngineFrameData], position: Tuple[int, int] = (400, 300), board: Optional[Board] = None):
+    def __init__(self, pipeline: FramePipeline[EngineFrameData], client: Client, text_renderer: TextRenderer, player: Client, position: Tuple[int, int] = (400, 300), board: Optional[Board] = None):
         super().__init__(pipeline, "PandemicBoard", position)
         self.add_component(Transform(position))
-        self.add_component(PandemicBoardRenderer())
+        self.add_component(PandemicBoardRenderer(text_renderer=text_renderer))
         self.board: Optional[Board] = board 
+        self.player = player
 
     def set_board(self, board: Board):
         """Set the game board and update the renderer"""
@@ -372,7 +264,7 @@ class PandemicGame(FullGameEngine):
         self.camera_speed = 10
         self.zoom_speed = 0.05
 
-        self.board = Board(["Bot1", "Bot2", "Bot3", "Bot4"])
+        self.board = Board(["Bot1", "Bot2", "Bot3", "Player"])
 
     def tick(self):
         pass
@@ -381,11 +273,15 @@ class PandemicGame(FullGameEngine):
         self.run(self.tick)
 
     def render(self, override: bool = True):
-        self.sdl.clear_screen(0, 100, 0)
+        self.sdl.clear_screen(0, 0, 0)
         return super().render(True)
         
     def setup(self):
-        self.add_game_object(PandemicBoard, (0, 0), board=self.board)
+        self.client = Client("127.0.0.1", 5000, "Player")
+        self.text_renderer = TextRenderer(self.sdl)
+        self.text_renderer.load_font("/usr/share/fonts/adobe-source-sans/SourceSansPro-Regular.otf", 24)
+
+        self.add_game_object(PandemicBoard, self.client, self.text_renderer, (0, 0), board=self.board)
         
         self.input_manager.register_key_down(W, lambda: self.move_camera(0, -self.camera_speed))
         self.input_manager.register_key_down(S, lambda: self.move_camera(0, self.camera_speed))
@@ -402,5 +298,13 @@ class PandemicGame(FullGameEngine):
     def adjust_zoom(self, delta: float):
         """Adjust the camera zoom level."""
         new_zoom = self.camera.zoom + delta
-        if 0.1 <= new_zoom <= 2.0:  # Clamp zoom to reasonable values
+        if 0.5 <= new_zoom <= 8.0:  # Clamp zoom to reasonable values
             self.camera.zoom = new_zoom
+
+def clamp(n, min, max): 
+	if n < min: 
+		return min
+	elif n > max: 
+		return max
+	else: 
+		return n 

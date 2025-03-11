@@ -59,6 +59,8 @@ public:
     int getWidth() const;
     int getHeight() const;
 
+    std::tuple<int, int> getMousePosition(); // Return tuple of x and y
+
 private:
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;

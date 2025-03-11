@@ -5,7 +5,7 @@ import threading
 import json
 from time import sleep
 from typing import List, Optional, Dict, Any
-from game import Board, pretty_print_board
+from board import Board
 from util import logger
 import select
 
@@ -65,9 +65,13 @@ class Packet:
         return header + self.data
 
     @staticmethod
-    def from_socket(sock: socket.socket, id: Optional[str] = None) -> Optional["Packet"]:
+    def from_socket(sock: socket.socket, id: Optional[str] = None, timeout: bool = False) -> Optional["Packet"]:
         """Receives a packet from a socket."""
-        header = recv_all(sock, Packet.HEADER_SIZE, 5, id)
+        t = None
+        if timeout:
+            t = 5
+
+        header = recv_all(sock, Packet.HEADER_SIZE, id=id, timeout=t)
         if header is None:
             return None
 
@@ -143,7 +147,7 @@ class Server:
         self.server_socket.listen()
         self.clients = []
         self.lock = threading.Lock()
-        self.board = Board(["Bot1", "Bot2", "Bot3", "Bot4"])
+        self.board = Board(["Bot1", "Bot2", "Bot3", "Player"])
         self.handlers = [GameActionHandler(self.board)]
 
         print(f"Starting player: {self.board.get_current_player()}")
@@ -157,6 +161,7 @@ class Server:
     def _run(self):
         """Runs the server loop, accepting connections and handling clients."""
         while True:
+            print("waiting")
             client_sock, addr = self.server_socket.accept()
             logger.info(f"Client connected: {addr}")
             with self.lock:
@@ -167,17 +172,15 @@ class Server:
     def handle_client(self, client_sock: socket.socket):
         """Handles client messages and packet processing."""
 
-        try:
-            while True:
-                packet = Packet.from_socket(client_sock)
+        while True:
+            try:
+                packet = Packet.from_socket(client_sock, timeout=False)
                 if packet is None:
                     break
 
                 self.process_packet(packet, client_sock)
-        except (ConnectionError, Exception) as e:
-            logger.warning(f"Client disconnected: {e}")
-        finally:
-            client_sock.close()
+            except (ConnectionError, Exception) as e:
+                logger.warning(f"Client disconnected: {e}")
 
     def process_packet(self, packet: Packet, client_sock: socket.socket):
         """Finds the appropriate handler for a received packet."""
@@ -200,6 +203,7 @@ class Server:
                     client.sendall(packet.serialize_with_length())
                 except:
                     self.clients.remove(client)
+                    logger.warning("Client disconnected")
 
 class Client:
     """Multiplayer game client that communicates with the server and tracks game state."""
@@ -208,6 +212,7 @@ class Client:
         """Initializes the client, connects to the server, and starts listening for updates."""
         self.server_address = (address, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.connect(self.server_address)
         self.player_name = player_name
 
@@ -242,10 +247,37 @@ class Client:
     def receive_updates(self):
         """Listens for game state updates from the server and updates the client's local state."""
         while True:
-            packet = Packet.from_socket(self.sock, self.player_name)
-            if packet and packet.packet_type == PacketType.GAME_TICKDATA:
-                game_state = json.loads(packet.data.decode())
-                self.update_local_state(game_state)
+            try:
+                packet = Packet.from_socket(self.sock, self.player_name)
+                if packet is None:
+                    logger.warning(f"[{self.player_name}] Received empty packet, disconnecting...")
+                    break
+                
+                if packet.packet_type == PacketType.GAME_TICKDATA:
+                    game_state = json.loads(packet.data.decode())
+                    self.update_local_state(game_state)
+                
+            except (ConnectionError, socket.error) as e:
+                logger.warning(f"[{self.player_name}] Connection error: {e}")
+                break
+            except Exception as e:
+                logger.error(f"[{self.player_name}] Unexpected error: {e}")
+                break
+    
+    # Clean up on disconnect
+        try:
+            self.sock.close()
+        except:
+            pass
+
+    def close(self):
+        """Closes the client connection gracefully."""
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except:
+            pass
+        finally:
+            self.sock.close()
 
     def update_local_state(self, game_state: Dict[str, Any]):
         """Updates the client's local copy of the board state and turn tracking."""
@@ -258,8 +290,3 @@ class Client:
 
         if self.is_my_turn:
             logger.info(f"[{self.player_name}] It's your turn! You have {self.actions_remaining} actions.")
-
-    def close(self):
-        """Closes the client connection."""
-        self.sock.close()
-

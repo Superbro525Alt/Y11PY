@@ -142,6 +142,7 @@ class Camera3D:
         self.far = far
         self.screen_width = width
         self.screen_height = height
+        self.zoom = 1
     def get_view_matrix(self) -> np.ndarray:
         return look_at(self.position, self.target, self.up)
     
@@ -735,3 +736,51 @@ class InputManager:
         #     key = event.key.keysym.scancode
         #     if key in self.key_up_callbacks:
         #         self.key_up_callbacks[key]()
+
+class TextRenderer:
+    def __init__(self, sdl: SDLWrapper):
+        self.sdl = sdl
+        self.font = None  # Store the loaded font
+        self.font_path = ""
+
+    def load_font(self, path: str, size: int):
+        """Loads a font. Returns True on success, False on failure."""
+        self.font = self.sdl.load_font(path, size)
+        self.font_path = path
+        return self.font is not None  # Return True if font loaded successfully
+
+    def set_font_size(self, size: int):
+        """Sets the font size.  Reloads the font if necessary."""
+        if self.font:
+            if self.font_path != "":
+                if self.load_font(self.font_path, size): # Reload with new size
+                    pass
+                else:
+                    print(f"Error changing font size to {size}")
+            else:
+                print("Error: Could not retrieve font path to resize.")
+        else:
+            self.font_size = size  # Set it for when the font is actually loaded
+
+    def draw_text(self, text: str, x: int, y: int, color: Tuple[int, int, int]):
+        """Draws text. Accepts RGB tuple."""
+        if not self.font:
+            print("Error: No font loaded. Call load_font() first.")
+            return
+
+        r, g, b = color  # No need for isinstance check as only RGB tuple is accepted.
+        self.sdl.draw_text(text, x, y, r, g, b)
+
+    def get_text_width(self, text: str) -> int:
+        """Returns the width of the given text in pixels."""
+        if not self.font:
+            print("Error: No font loaded. Call load_font() first.")
+            return 0
+        return self.sdl.get_text_size(text).w
+
+    def get_font_height(self, text) -> int:
+        """Returns the height of the current font in pixels."""
+        if not self.font:
+            print("Error: No font loaded. Call load_font() first.")
+            return 0
+        return self.sdl.get_text_size(text).h

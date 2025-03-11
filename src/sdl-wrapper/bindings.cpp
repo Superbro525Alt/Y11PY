@@ -58,10 +58,10 @@ PYBIND11_MODULE(bindings, m) {
         // .def("set_texture_alpha_mod", &SDLWrapper::setTextureAlphaMod, "Sets texture alpha modulation", py::arg("texture"), py::arg("alpha"))
         // .def("set_texture_color_mod", &SDLWrapper::setTextureColorMod, "Sets texture color modulation", py::arg("texture"), py::arg("r"), py::arg("g"), py::arg("b"))
         //
-        // .def("load_font", &SDLWrapper::loadFont, "Loads a font", py::arg("path"), py::arg("size"))
-        // .def("draw_text", py::overload_cast<const std::string&, int, int, SDL_Color>(&SDLWrapper::drawText), "Draws text with SDL_Color", py::arg("text"), py::arg("x"), py::arg("y"), py::arg("color"))
-        // .def("draw_text", py::overload_cast<const std::string&, int, int, Uint8, Uint8, Uint8>(&SDLWrapper::drawText), "Draws text with RGB", py::arg("text"), py::arg("x"), py::arg("y"), py::arg("r"), py::arg("g"), py::arg("b"))
-        // .def("get_text_size", &SDLWrapper::getTextSize, "Gets the size of text", py::arg("text"))
+        .def("load_font", &SDLWrapper::loadFont, "Loads a font", py::arg("path"), py::arg("size"))
+        .def("draw_text", py::overload_cast<const std::string&, int, int, SDL_Color>(&SDLWrapper::drawText), "Draws text with SDL_Color", py::arg("text"), py::arg("x"), py::arg("y"), py::arg("color"))
+        .def("draw_text", py::overload_cast<const std::string&, int, int, Uint8, Uint8, Uint8>(&SDLWrapper::drawText), "Draws text with RGB", py::arg("text"), py::arg("x"), py::arg("y"), py::arg("r"), py::arg("g"), py::arg("b"))
+          .def("get_text_size", &SDLWrapper::getTextSize, "Gets text size", py::arg("text")) // Corrected name
 
         .def("poll_event", &SDLWrapper::pollEvent, "Polls for events", py::arg("event"))  // Important:  See explanation below
 
@@ -70,7 +70,8 @@ PYBIND11_MODULE(bindings, m) {
         .def("is_key_pressed", &SDLWrapper::isKeyPressed, "Checks if a key is pressed", py::arg("key"))
 
         .def("get_width", &SDLWrapper::getWidth, "Gets window width")
-        .def("get_height", &SDLWrapper::getHeight, "Gets window height");
+        .def("get_height", &SDLWrapper::getHeight, "Gets window height")
+        .def("getMousePosition", &SDLWrapper::getMousePosition, "Get mouse position (relative to center)");
 
     // Example of how to bind an enum
     py::enum_<SDL_BlendMode>(m, "BlendMode")
@@ -89,7 +90,7 @@ PYBIND11_MODULE(bindings, m) {
         .def_readwrite("a", &SDL_Color::a);
 
     // Example: Bind SDL_Rect struct
-    py::class_<SDL_Rect>(m, "Rect")
+    py::class_<SDL_Rect>(m, "SDL_Rect")
         .def(py::init<int, int, int, int>())
         .def_readwrite("x", &SDL_Rect::x)
         .def_readwrite("y", &SDL_Rect::y)
@@ -188,15 +189,4 @@ py::enum_<SDL_Scancode>(m, "SDL_Scancode")
 
     py::class_<SDL_Keysym>(m, "SDL_Keysym")
         .def_readwrite("scancode", &SDL_Keysym::scancode);
-
-    //Example: Bind SDL_Event struct (Careful with this one! See below)
-    // py::class_<SDL_Event>(m, "Event"); // You may want to bind specific members
-
-    // Binding std::vector<std::pair<int, int>> for drawPolygon
-
-    // py::class_<std::pair<int, int>>(m, "Point")
-    //   .def(py::init<int, int>());
-    //
-    // // This is usually sufficient for automatic conversions:
-    // py::implicitly_convertible<py::list, std::vector<std::pair<int, int>>>();
 }

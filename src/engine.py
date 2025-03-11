@@ -23,7 +23,7 @@ class EngineFrameData:
 
 T = TypeVar('T')
 
-class Engine:
+class InternalEngine:
     def __init__(self, pipeline: FramePipeline[EngineFrameData],
                  event_pipeline: FramePipeline[Event],
                  state_pipeline: FramePipeline[StateData],
@@ -631,11 +631,7 @@ def ease_in_out_quad(t: float) -> float:
     else:
         return -1 + (4 - 2 * t) * t
 
-# =============================================================================
-# Extended FullGameEngine with All Managers Integrated
-# =============================================================================
-
-class FullGameEngine(Engine):
+class Engine(InternalEngine):
     def __init__(self, pipeline, event_pipeline, state_pipeline, window_title="Full Game Engine", width=1024, height=768):
         super().__init__(pipeline, event_pipeline, state_pipeline, window_title, width, height)
         self.scene_manager = SceneManager()

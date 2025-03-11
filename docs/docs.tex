@@ -1,0 +1,668 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{titling}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{titlesec}
+
+\geometry{a4paper, margin=1in}
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\title{Clash Royale Online Implementation}
+\author{Paul Hodges}
+\date{\today}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{4cm}
+    {\Huge \textbf{Clash Royale} \par}
+    \vspace{2cm}
+    {\Large by \par}
+    \vspace{1cm}
+    {\Large Paul Hodges \par}
+    \vspace{3cm}
+    {\Large \today \par}
+    \vspace*{4cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Development Schedule}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Week 1-2:} Research and System Architecture
+    \begin{itemize}
+        \item Analysis of original Clash Royale mechanics
+        \item Server-client architecture design
+        \item Technology stack selection
+        \item Project management setup
+    \end{itemize}
+    
+    \item \textbf{Week 3:} Problem Definition and Requirements
+    \begin{itemize}
+        \item Detailed problem description documentation
+        \item Functional and non-functional requirements specification
+        \item User stories and use case development
+        \item Feature prioritization
+    \end{itemize}
+    
+    \item \textbf{Week 4:} Core Algorithm Design
+    \begin{itemize}
+        \item Pseudocode development for game logic
+        \item Network protocol specification
+        \item Data structures design
+        \item Database schema planning
+    \end{itemize}
+    
+    \item \textbf{Week 5:} Algorithm Testing and Validation
+    \begin{itemize}
+        \item Trace table construction for logic verification
+        \item Edge case identification and handling
+        \item Logic refinement based on test results
+        \item Protocol simulation testing
+    \end{itemize}
+    
+    \item \textbf{Week 6-7:} Server Implementation
+    \begin{itemize}
+        \item Network communication setup
+        \item Game state management implementation
+        \item Player authentication system
+        \item Card deployment and battle mechanics coding
+    \end{itemize}
+    
+    \item \textbf{Week 8:} Client Implementation and Integration
+    \begin{itemize}
+        \item Client-side interface development
+        \item Server-client integration
+        \item Real-time gameplay testing
+        \item Bug fixing and optimization
+    \end{itemize}
+    
+    \item \textbf{Week 9:} Final Testing and Submission
+    \begin{itemize}
+        \item Comprehensive system testing
+        \item Documentation completion
+        \item Part 1 submission preparation
+        \item Project demonstration setup
+    \end{itemize}
+\end{itemize}
+
+\section{Problem Outline}
+
+The purpose of this project is to develop a simplified but functional online version of Clash Royale using Python. This real-time strategy game implementation will focus on core gameplay mechanics and network functionality, demonstrating practical software development skills in a gaming context.
+
+\noindent The game will allow players to:
+\begin{itemize}
+    \item Engage in real-time, online strategic battles against other players
+    \item Build and customize card decks from their collection
+    \item Progress through a skill-based arena system
+    \item Earn rewards through a chest system to expand their card collection
+    \item Experience the core strategic elements that make Clash Royale engaging
+\end{itemize}
+
+\noindent This implementation serves as both an educational tool for understanding game development principles and a demonstration of networking, database management, and software architecture skills in a cohesive application.
+
+\section{Problem Description}
+
+\subsection{Game Overview}
+Clash Royale is a real-time strategy game where players deploy cards representing troops, spells, and buildings onto a battlefield to defeat their opponent. The game combines elements of collectible card games, tower defense, and multiplayer online battle arenas (MOBAs) into a unique gaming experience.
+
+\subsection{Game Objectives}
+The primary objective is to destroy more of the opponent's towers than they destroy of yours within the allotted battle time (typically 3 minutes, with a 2 minute overtime if tied). The game features:
+\begin{itemize}
+    \item Three towers per player: two Princess Towers and one King Tower
+    \item Destroying a Princess Tower grants one crown
+    \item Destroying the King Tower grants three crowns and ends the match immediately
+    \item The player with more crowns at the end of the time limit wins
+\end{itemize}
+
+\subsection{Core Game Rules}
+\begin{itemize}
+    \item Each player begins with four cards from their eight-card deck
+    \item Cards are deployed using elixir, a regenerating resource
+    \item Elixir regenerates at a rate of 1 unit every 2.8 seconds (doubles in the first minute of overtime and then triples in the second minute)
+    \item Maximum elixir capacity is 10 units
+    \item Card costs range from 1 to 8 elixir
+    \item After playing a card, it's replaced by another from the player's deck
+    \item Cards can only be deployed on the player's side of the arena (with exceptions for spells and certain cards)
+    \item Units automatically move toward and attack enemy units and towers based on their targeting preferences
+\end{itemize}
+
+\subsection{Gameplay Flow}
+\begin{enumerate}
+    \item Players join a match through the matchmaking system
+    \item Both players start with the same amount of elixir
+    \item Players strategically deploy cards to attack opponent towers while defending their own
+    \item Units and buildings have specific health, damage, speed, and targeting parameters
+    \item Spells cause immediate effects (damage, slow, etc.) in their area of effect
+    \item Destroyed units are removed from the battlefield
+    \item The battle continues until a King Tower falls or time expires
+\end{enumerate}
+
+\subsection{Scoring System}
+\begin{itemize}
+    \item Destroying a Princess Tower: 1 crown
+    \item Destroying the King Tower: 3 crowns (automatic victory)
+    \item Most crowns at time expiration: Victory
+    \item Equal crowns at time expiration: Draw
+    \item Victory awards trophies that contribute to arena progression
+    \item Defeat results in trophy loss
+\end{itemize}
+
+\subsection{Winner Determination}
+\begin{itemize}
+    \item The player who destroys the opponent's King Tower instantly wins
+    \item If no King Tower is destroyed within the time limit, the player with more crowns wins
+    \item If both players have the same number of crowns when time expires, the match enters overtime
+    \item In overtime, the first player to gain a crown advantage wins
+    \item If neither player gains an advantage during overtime, the match ends in a draw
+\end{itemize}
+
+\subsection{Advanced Game Mechanics and Strategies}
+\begin{itemize}
+    \item \textbf{Elixir Management:} Efficient use of elixir is critical; overspending creates vulnerability
+    \item \textbf{Counter Deployment:} Specific cards counter others effectively (e.g., air units counter ground-only attackers)
+    \item \textbf{Card Synergies:} Certain combinations of cards create powerful offensive or defensive capabilities
+    \item \textbf{Lane Pressure:} Applying pressure in one lane to force defensive card usage, then attacking the other
+    \item \textbf{Elixir Counting:} Tracking opponent's elixir to identify advantageous attack opportunities
+    \item \textbf{Card Cycle Management:} Cycling through cards quickly to reach key cards in your deck
+    \item \textbf{Tower Trading:} Strategic sacrifice of a tower to gain elixir advantage for a stronger counter-push
+    \item \textbf{Spell Value:} Using spells to eliminate multiple units simultaneously for positive elixir trades
+    \item \textbf{Unit Placement:} Precise placement affects unit interactions and pathing
+    \item \textbf{Timing:} Deploying cards at optimal moments to maximize their effectiveness
+\end{itemize}
+
+\section{Requirements}
+
+\subsection{Functional Requirements}
+
+\begin{enumerate}
+    \item \textbf{FR1: Server-Client Architecture}
+    \begin{itemize}
+        \item The system shall implement a client-server model supporting real-time multiplayer
+        \item The server shall handle game state synchronization across clients
+        \item The server shall manage concurrent games with minimal latency
+        \item The system shall handle connection drops and reconnections gracefully
+    \end{itemize}
+
+    \item \textbf{FR2: Card Management System}
+    \begin{itemize}
+        \item Players shall be able to view their card collection
+        \item Players shall be able to build decks with exactly 8 cards
+        \item The system shall validate deck composition rules
+        \item The system shall implement card rarity and level mechanics
+        \item Players shall be able to upgrade cards when meeting requirements
+    \end{itemize}
+
+    \item \textbf{FR3: Real-time Battle Simulation}
+    \begin{itemize}
+        \item The system shall manage battles in real-time
+        \item The system shall implement elixir generation mechanics
+        \item The system shall handle unit deployment, movement, and targeting
+        \item The system shall calculate damage, health, and tower destruction
+        \item The system shall implement the 3-minute standard time and overtime rules
+    \end{itemize}
+
+    \item \textbf{FR4: Progression System}
+    \begin{itemize}
+        \item The system shall track player trophies
+        \item The system shall implement arena progression based on trophy count
+        \item The system shall match players based on similar trophy counts
+        \item Different arenas shall unlock different cards
+    \end{itemize}
+
+    \item \textbf{FR5: Reward System}
+    \begin{itemize}
+        \item The system shall reward players with chests after victories
+        \item Chests shall contain cards and gold based on arena level
+        \item The system shall implement various chest types with different rewards
+        \item The system shall track chest unlocking timers
+    \end{itemize}
+
+    \item \textbf{FR6: Clan System}
+    \begin{itemize}
+        \item Players shall be able to create and join clans
+        \item Clans shall support basic member management
+        \item The system shall implement a clan chat feature
+        \item The system shall display clan member activity
+    \end{itemize}
+
+    \item \textbf{FR7: User Authentication}
+    \begin{itemize}
+        \item The system shall securely authenticate users
+        \item The system shall protect user credentials
+        \item The system shall manage login sessions with tokens
+        \item The system shall enforce password security requirements
+    \end{itemize}
+
+    \item \textbf{FR8: Database Integration}
+    \begin{itemize}
+        \item The system shall persist all player data
+        \item The system shall record battle history
+        \item The system shall implement transaction safety for critical operations
+        \item The system shall backup data regularly
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Non-Functional Requirements}
+
+\begin{enumerate}
+    \item \textbf{NFR1: Performance}
+    \begin{itemize}
+        \item The system shall handle at least 100 concurrent connections
+        \item Battle simulations shall update at least 10 times per second
+        \item Server response time shall not exceed 200ms under normal load
+        \item Client frame rate shall maintain at least 30 FPS on target devices
+    \end{itemize}
+
+    \item \textbf{NFR2: Reliability}
+    \begin{itemize}
+        \item The system shall have 99\% uptime
+        \item The system shall recover from crashes without data loss
+        \item The system shall handle network instability gracefully
+        \item The system shall implement data integrity checks
+    \end{itemize}
+
+    \item \textbf{NFR3: Scalability}
+    \begin{itemize}
+        \item The architecture shall support horizontal scaling
+        \item The database shall handle growing player data efficiently
+        \item The matchmaking algorithm shall scale with player population
+    \end{itemize}
+
+    \item \textbf{NFR4: Maintainability}
+    \begin{itemize}
+        \item The code shall follow PEP 8 style guidelines
+        \item The system shall use modular design patterns
+        \item The codebase shall include comprehensive documentation
+        \item The system shall implement logging for debugging
+    \end{itemize}
+
+    \item \textbf{NFR5: Security}
+    \begin{itemize}
+        \item User passwords shall be stored using strong hashing
+        \item Communication shall be encrypted
+        \item The system shall protect against common attack vectors
+        \item The system shall validate all client input
+    \end{itemize}
+\end{enumerate}
+
+\section{Design}
+
+\subsection{Core System Design}
+
+The game will be built using a custom Entity Component System (ECS) engine and a custom network implementation. The visual style will be 2D with a simulated 3D look achieved through layered sprites and shadow rendering.
+
+\subsubsection{Engine}
+
+The engine is written in Python, based on the design off of one of my previous Rust engines, "Oxidized." Key features include:
+
+\paragraph{ECS Architecture} 
+
+The Entity Component System (ECS) architecture separates data (components) from logic (systems). Entities are simple IDs, and components are data containers (e.g., Position, Velocity, Sprite). Systems operate on entities that have the required components. This design promotes data-oriented programming, improving cache efficiency and making the code more modular and maintainable. In this Python implementation, we'll leverage dictionaries and lists to store and manage entities, components, and systems. For example, a "MovementSystem" would iterate through entities with "Position" and "Velocity" components, updating their positions based on their velocities. This decoupling of data and logic allows for flexible entity composition and avoids the complexities of traditional inheritance-based object-oriented programming.
+
+\paragraph{2D/3D Cameras}
+The engine will support both orthographic and perspective cameras. Orthographic cameras provide a parallel projection, useful for classic 2D views where depth isn't emphasized. Perspective cameras simulate real-world vision, where objects appear smaller as they recede into the distance. This is crucial for creating the simulated 3D look. The camera implementation will likely involve a transformation matrix that converts world coordinates to screen coordinates. For perspective cameras, this matrix will include a perspective projection component, while orthographic cameras will use a simple scaling and translation matrix. We will have functions to easily switch between camera types, and to adjust the field of view of the perspective camera.
+
+\paragraph{GameObjects and Components}
+GameObjects serve as containers for components. By assigning different combinations of components to a GameObject, we can create a wide variety of entities with unique behaviors. For example, a "Player" GameObject might have "Position," "Velocity," "Sprite," "Input," and "Health" components. A "Tree" GameObject might have "Position" and "Sprite" components. This modularity allows for easy creation and modification of game entities without modifying core engine code. The component data will be stored in data structures that are easily accessible by the systems.
+
+\paragraph{Layered Sprite Rendering}
+To create the illusion of depth in a 2D environment, we'll use layered sprites. Sprites representing objects closer to the "camera" will be rendered on top of sprites representing objects further away. We'll implement a sorting mechanism based on the Y-coordinate (or a custom depth value) of the entities to determine the rendering order. This will allow for overlapping sprites to create a sense of depth. Furthermore, we will have the capability to assign a layer number to each sprite, allowing for more manual control over the draw order, and enabling the creation of backgrounds, midgrounds, and foregrounds.
+
+\paragraph{Rendering}
+The rendering for the python engine are not done using conventional methods like "pygame". I use a custom library that i created myself which uses SDL2 to draw to the screen and provides more complex methods for other things like textures, images and keyboard input. I create the python bindings (for the cpython module) using pybin11. The library is compiled, the binds are compiled and then the library is linked with the binds to produce a cpython library. The stub file for the LSP is then generated using stubgen, which is shipped with python.
+
+\subsubsection{Network}
+
+The network uses custom socket communication with binary data transmission:
+
+\paragraph{Custom Binary Protocol}
+Instead of relying on human-readable text-based protocols, we'll use a custom binary protocol. This protocol will define the structure of packets sent between the client and server, specifying the types and sizes of data fields. Binary protocols are more compact and efficient, reducing network overhead and latency. We will use python's struct module to pack and unpack data into binary format. We will define packet types, and each packet type will have a defined data structure.
+
+\paragraph{Client-Server Architecture}
+We'll implement a client-server architecture, where the server acts as the authoritative source of game state. Clients send input to the server, and the server processes the input, updates the game state, and sends updates back to the clients. This architecture helps prevent cheating and ensures consistency across all clients. The server will maintain the master copy of the game world, and the clients will maintain local copies that are kept in sync with the server.
+
+\paragraph{Asynchronous Sockets}
+To avoid blocking the main game loop, we'll use asynchronous sockets. Asynchronous sockets allow the game to continue running while waiting for network data. We will use python's asyncio library or similar, to handle the asynchronous network operations. This will prevent the game from freezing or becoming unresponsive during network communication.
+
+\paragraph{Packet Listener and Broadcaster}
+The server will have a packet listener to receive incoming packets from clients and a packet broadcaster to send packets to all connected clients. The listener will parse incoming packets and dispatch them to the appropriate game logic. The broadcaster will efficiently distribute game state updates to all clients, minimizing network traffic. We will implement packet queuing and throttling to prevent network congestion. The broadcaster will only send data that has changed, to reduce the amount of data sent.
+
+\subsubsection{2D with 3D Illusion}
+
+The 3D look is achieved through:
+
+\paragraph{Layered Sprites}
+As mentioned earlier, layered sprites are crucial for creating the illusion of depth. By rendering sprites in a specific order based on their perceived depth, we can simulate the effect of objects being in front of or behind each other. This will involve sorting sprites by their Y-coordinate or a custom depth value before rendering. We will use a depth buffer, or an equivalent sort algorithm, to ensure that sprites are drawn in the correct order.
+
+\paragraph{Shadow Rendering}
+Adding shadows to objects can significantly enhance depth perception. We'll implement shadow rendering by projecting a simplified silhouette of each object onto the ground. The darkness and length of the shadow will vary based on the object's height and the light source's position. This will give objects a sense of grounding and add visual depth to the scene. We will use sprite masks to create the shadow silhouettes.
+
+\paragraph{Perspective Scaling}
+To further enhance the 3D illusion, we'll implement perspective scaling. Objects farther away from the "camera" will appear smaller, while objects closer will appear larger. This will be achieved by adjusting the sprite's scale based on its distance from the camera. We will use a perspective projection matrix to calculate the scale factor. This will be done in conjunction with the Layered Sprite rendering, to create a believable 3D effect.
+
+\subsection{Algorithm Design}
+
+Below are the core algorithms for the main game systems. These algorithms use proper control structures and follow logical flow to handle the key game mechanics.
+
+\subsubsection{Server-Side Game Management}
+
+\begin{lstlisting}[language=Python, caption=Main Server Loop]
+FUNCTION RunServer():
+    INITIALIZE server
+    INITIALIZE player_pool = []
+    INITIALIZE active_games = []
+    
+    WHILE server_running:
+        FOR each incoming_connection:
+            IF is_new_connection THEN
+                player = CreatePlayer(connection)
+                player_pool.APPEND(player)
+                SEND_WELCOME_MESSAGE(connection)
+            ELSE IF is_matchmaking_request THEN
+                player = GetPlayerFromConnection(connection)
+                MatchmakingQueue.ADD(player)
+            ELSE IF is_game_action THEN
+                game = GetGameFromPlayer(connection)
+                ProcessGameAction(game, connection, action)
+            END IF
+        END FOR
+        
+        # Matchmaking
+        WHILE MatchmakingQueue.COUNT >= 2:
+            player1 = MatchmakingQueue.GET_NEXT()
+            player2 = MatchmakingQueue.FIND_OPPONENT(player1)
+            IF player2 != NULL THEN
+                game = CreateGame(player1, player2)
+                active_games.APPEND(game)
+                MatchmakingQueue.REMOVE(player2)
+            ELSE
+                MatchmakingQueue.RETURN(player1)
+                BREAK
+            END IF
+        END WHILE
+        
+        # Update all active games
+        FOR each game IN active_games:
+            UpdateGame(game)
+            IF game.is_finished THEN
+                ProcessGameResults(game)
+                active_games.REMOVE(game)
+            END IF
+        END FOR
+    END WHILE
+END FUNCTION
+\end{lstlisting}
+
+\subsubsection{Card Deployment Process}
+
+\begin{lstlisting}[language=Python, caption=Card Deployment]
+FUNCTION ProcessCardDeployment(game, player, card_id, position_x, position_y):
+    # Validate the deployment
+    IF NOT IsValidDeployPosition(game, player, position_x, position_y) THEN
+        SEND_ERROR(player, "Invalid deployment position")
+        RETURN False
+    END IF
+    
+    # Get the card from player's hand
+    card = player.GetCardFromHand(card_id)
+    IF card == NULL THEN
+        SEND_ERROR(player, "Card not in hand")
+        RETURN False
+    END IF
+    
+    # Check elixir cost
+    IF player.current_elixir < card.elixir_cost THEN
+        SEND_ERROR(player, "Insufficient elixir")
+        RETURN False
+    END IF
+    
+    # Deploy the card
+    player.current_elixir = player.current_elixir - card.elixir_cost
+    player.RemoveCardFromHand(card_id)
+    player.AddNextCardToHand()
+    
+    # Create the unit/spell/building on the field
+    IF card.type == "TROOP" THEN
+        unit = CreateTroop(card, position_x, position_y, player.side)
+        game.AddUnit(unit)
+    ELSE IF card.type == "SPELL" THEN
+        ApplySpellEffect(game, card, position_x, position_y, player.side)
+    ELSE IF card.type == "BUILDING" THEN
+        building = CreateBuilding(card, position_x, position_y, player.side)
+        game.AddBuilding(building)
+    END IF
+    
+    # Notify both players
+    BROADCAST_DEPLOYMENT(game, player.id, card_id, position_x, position_y)
+    
+    RETURN True
+END FUNCTION
+\end{lstlisting}
+
+\subsubsection{Battle Update Logic}
+
+\begin{lstlisting}[language=Python, caption=Battle Update Logic]
+FUNCTION UpdateGame(game):
+    # Update game time
+    game.current_time = game.current_time + TICK_RATE
+    
+    # Check for game end conditions
+    IF game.current_time >= game.max_time AND NOT game.in_overtime THEN
+        IF game.player1.crowns == game.player2.crowns THEN
+            game.in_overtime = True
+            game.overtime_end = game.current_time + OVERTIME_DURATION
+            BROADCAST_OVERTIME_START(game)
+        ELSE
+            game.is_finished = True
+            RETURN
+        END IF
+    END IF
+    
+    IF game.in_overtime AND game.current_time >= game.overtime_end THEN
+        game.is_finished = True
+        RETURN
+    END IF
+    
+    # Regenerate elixir for both players
+    regeneration_amount = CALCULATE_ELIXIR_REGEN(game)
+    game.player1.current_elixir = MIN(game.player1.current_elixir + regeneration_amount, MAX_ELIXIR)
+    game.player2.current_elixir = MIN(game.player2.current_elixir + regeneration_amount, MAX_ELIXIR)
+    
+    # Update all units on the field
+    FOR each unit IN game.units:
+        IF unit.health <= 0 THEN
+            game.RemoveUnit(unit)
+            CONTINUE
+        END IF
+        
+        # Find target for the unit
+        IF unit.current_target == NULL OR unit.current_target.health <= 0 THEN
+            unit.current_target = FindTarget(game, unit)
+        END IF
+        
+        # Update unit position and attack
+        IF unit.current_target != NULL THEN
+            IF IsInRange(unit, unit.current_target) THEN
+                PerformAttack(unit, unit.current_target)
+            ELSE
+                MoveTowards(unit, unit.current_target)
+            END IF
+        END IF
+    END FOR
+    
+    # Update all buildings
+    FOR each building IN game.buildings:
+        IF building.health <= 0 OR building.lifetime <= 0 THEN
+            game.RemoveBuilding(building)
+            CONTINUE
+        END IF
+        
+        building.lifetime = building.lifetime - TICK_RATE
+        
+        # Find target for the building
+        IF building.can_attack THEN
+            IF building.current_target == NULL OR building.current_target.health <= 0 THEN
+                building.current_target = FindTarget(game, building)
+            END IF
+            
+            # Attack if target in range
+            IF building.current_target != NULL AND IsInRange(building, building.current_target) THEN
+                PerformAttack(building, building.current_target)
+            END IF
+        END IF
+    END FOR
+    
+    # Check tower status
+    CheckTowerStatus(game)
+    
+    # Send updated game state to both players
+    BROADCAST_GAME_STATE(game)
+END FUNCTION
+\end{lstlisting}
+
+\subsubsection{Target Selection Algorithm}
+
+\begin{lstlisting}[language=Python, caption=Target Finding]
+FUNCTION FindTarget(game, attacker):
+    closest_target = NULL
+    min_distance = INFINITY
+    
+    # Define potential targets based on attacker type
+    potential_targets = []
+    
+    # Filter targets based on attacker's capabilities
+    IF attacker.attacks_ground AND attacker.attacks_air THEN
+        potential_targets = game.GetAllUnitsAndBuildings(GetOpponentSide(attacker.side))
+    ELSE IF attacker.attacks_ground THEN
+        potential_targets = game.GetGroundUnitsAndBuildings(GetOpponentSide(attacker.side))
+    ELSE IF attacker.attacks_air THEN
+        potential_targets = game.GetAirUnits(GetOpponentSide(attacker.side))
+    END IF
+    
+    # Add towers to potential targets
+    towers = game.GetTowers(GetOpponentSide(attacker.side))
+    potential_targets.EXTEND(towers)
+    
+    # Apply targeting preference
+    IF attacker.targeting_preference == "BUILDINGS" THEN
+        buildings = [target FOR target IN potential_targets IF target.type == "BUILDING" OR target.type == "TOWER"]
+        IF buildings.LENGTH > 0 THEN
+            potential_targets = buildings
+        END IF
+    END IF
+    
+    # Find closest target
+    FOR each target IN potential_targets:
+        distance = CalculateDistance(attacker.position, target.position)
+        IF distance < min_distance THEN
+            min_distance = distance
+            closest_target = target
+        END IF
+    END FOR
+    
+    RETURN closest_target
+END FUNCTION
+\end{lstlisting}
+
+\subsubsection{Chest Reward System}
+
+\begin{lstlisting}[language=Python, caption=Chest Generation]
+FUNCTION GenerateChestForPlayer(player, chest_type):
+    # Create a new chest with appropriate type
+    chest = CreateChest(chest_type)
+    
+    # Set unlock time based on chest type
+    IF chest_type == "SILVER" THEN
+        chest.unlock_time = 3 * HOURS
+    ELSE IF chest_type == "GOLD" THEN
+        chest.unlock_time = 8 * HOURS
+    ELSE IF chest_type == "MAGICAL" THEN
+        chest.unlock_time = 12 * HOURS
+    ELSE IF chest_type == "GIANT" THEN
+        chest.unlock_time = 16 * HOURS
+    END IF
+    
+    # Determine gold amount based on arena and chest type
+    chest.gold = CALCULATE_GOLD_REWARD(player.arena, chest_type)
+    
+    # Determine card counts based on arena and chest type
+    common_count, rare_count, epic_count, legendary_count = CALCULATE_CARD_COUNTS(player.arena, chest_type)
+    
+    # Generate specific cards
+    available_cards = GetAvailableCardsForArena(player.arena)
+    
+    FOR i = 1 TO common_count:
+        card = SelectRandomCard(available_cards, "COMMON")
+        chest.AddCard(card)
+    END FOR
+    
+    FOR i = 1 TO rare_count:
+        card = SelectRandomCard(available_cards, "RARE")
+        chest.AddCard(card)
+    END FOR
+    
+    FOR i = 1 TO epic_count:
+        card = SelectRandomCard(available_cards, "EPIC")
+        chest.AddCard(card)
+    END FOR
+    
+    FOR i = 1 TO legendary_count:
+        card = SelectRandomCard(available_cards, "LEGENDARY")
+        chest.AddCard(card)
+    END FOR
+    
+    # Add chest to player's inventory
+    player.AddChest(chest)
+    
+    # Notify player
+    SEND_CHEST_RECEIVED(player, chest)
+    
+    RETURN chest
+END FUNCTION
+\end{lstlisting}
+
+\end{document}

@@ -1,28 +1,38 @@
+from abc import ABCMeta, abstractmethod
+from collections import abc
+from dataclasses import dataclass
 import enum
+from random import randint, random
 import socket
 import struct
 import threading
 import json
-from time import sleep
-from typing import List, Optional, Dict, Any
+from time import sleep, time
+from typing import Callable, List, Optional, Dict, Any, Self
 from board import Board
+from game_packet import PacketType
 from util import logger
 import select
+from uuid import uuid4
 
+@dataclass 
+class ServerStatus:
+    pass
 
-class PacketType(enum.Enum):
-    """Defines different types of network packets."""
-    STATUS = 0
-    HANDSHAKE = 1
-    PLAYER_JOIN = 2
-    PLAYER_LEAVE = 3
-    GAME_TICKDATA = 6
-    GAME_ACTION = 7
-    GAME_END = 8
-    WORLD_SYNC = 15
-    PING = 16
-    PONG = 17
+import enum
 
+def serialize_object(obj: Any):
+    """ Recursively converts objects to dictionaries if they have `__dict__`. """
+    if isinstance(obj, (int, float, str, bool, type(None))):  # Handle primitives
+        return obj
+    elif isinstance(obj, list):  # Handle lists
+        return [serialize_object(item) for item in obj]
+    elif isinstance(obj, dict):  # Handle dictionaries
+        return {key: serialize_object(value) for key, value in obj.items()}
+    elif hasattr(obj, "__dict__"):  # Handle custom objects
+        return {key: serialize_object(value) for key, value in obj.__dict__.items()}
+    else:
+        raise TypeError(f"Type {type(obj)} is not JSON serializable")
 
 def recv_all(sock: socket.socket, length: int, timeout: Optional[float] = None, id: Optional[str] = None) -> Optional[bytes]:
     """Receives exactly 'length' bytes from the socket with an optional timeout."""
@@ -58,6 +68,10 @@ class Packet:
         self.packet_type = packet_type
         self.data = data if data else b""
 
+    @classmethod
+    def from_struct(cls, packet_type: PacketType, s: object):
+        return cls(packet_type, json.dumps(serialize_object(s)).encode())
+
     def serialize_with_length(self) -> bytes:
         """Serializes the packet into bytes with length headers."""
         data_length = len(self.data)
@@ -87,7 +101,6 @@ class Packet:
         data = recv_all(sock, data_length)
         return Packet(packet_type, data)
 
-
 class NetworkObject:
     """Base class for handling specific packet types."""
     
@@ -106,53 +119,25 @@ class NetworkObject:
         """Checks if this network object can handle a given packet type."""
         return packet_type in self._handles
 
-
-class GameActionHandler(NetworkObject):
-    """Handles game actions such as movement, treating disease, passing turns."""
-
-    def __init__(self, board: Board):
-        super().__init__()
-        self.board = board
-        self._handles = [PacketType.GAME_ACTION]
-
-    def handle_packet(self, packet: Packet, client_sock: socket.socket) -> None:
-        """Processes a game action from a client."""
-        action_data = json.loads(packet.data.decode())
-        player = action_data.get("player")
-        action_type = action_data.get("action")
-        details = action_data.get("details")
-
-        if action_type == "move":
-            self.board.move(player, details["destination"])
-        elif action_type == "treat":
-            self.board.treat_disease(player)
-        elif action_type == "cure":
-            self.board.cure_disease(player, details["disease"])
-        elif action_type == "pass":
-            self.board.pass_turn(player)
-
-        if self.board.actions_remaining == 0:
-            self.board.pass_turn(player)
-
-
+    def on_connection(self) -> None: 
+        pass
 
 class Server:
     """Multiplayer game server that manages clients and game state."""
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, handlers: List[NetworkObject]) -> None:
         self.port = port
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server_socket.bind(("0.0.0.0", port))
         self.server_socket.listen()
-        self.clients = []
+        self.clients: List[socket.socket] = []
         self.lock = threading.Lock()
-        self.board = Board(["Bot1", "Bot2", "Bot3", "Player"])
-        self.handlers = [GameActionHandler(self.board)]
 
-        print(f"Starting player: {self.board.get_current_player()}")
         self.server_thread = threading.Thread(target=self._run, daemon=True)
         self.server_thread.start()
+
+        self.handlers: List[NetworkObject] = handlers
 
         logger.info(f"Server listening on 0.0.0.0:{port}")
 
@@ -161,16 +146,18 @@ class Server:
     def _run(self):
         """Runs the server loop, accepting connections and handling clients."""
         while True:
-            print("waiting")
             client_sock, addr = self.server_socket.accept()
             logger.info(f"Client connected: {addr}")
             with self.lock:
                 self.clients.append(client_sock)
             threading.Thread(target=self.handle_client, args=(client_sock,), daemon=True).start()
-
+            threading.Thread(target=self.handle_client_conn, args=(client_sock,), daemon=True).start()
 
     def handle_client(self, client_sock: socket.socket):
         """Handles client messages and packet processing."""
+
+        for handler in self.handlers:
+            handler.on_connection()
 
         while True:
             try:
@@ -182,89 +169,81 @@ class Server:
             except (ConnectionError, Exception) as e:
                 logger.warning(f"Client disconnected: {e}")
 
+    def handle_client_conn(self, client_sock: socket.socket):
+        connection_packet = Packet(PacketType.CONNECTION)
+        client_sock.sendall(connection_packet.serialize_with_length())
+
+        while True:
+            try:
+                status_packet = Packet(PacketType.STATUS, json.dumps(ServerStatus().__dict__).encode())
+                client_sock.sendall(status_packet.serialize_with_length())
+                sleep(0.1)
+            except (ConnectionError, Exception) as e:
+                logger.warning(f"Client connection handler disconnected: {e}")
+                with self.lock:
+                    if client_sock in self.clients:
+                        self.clients.remove(client_sock)
+                break
+
     def process_packet(self, packet: Packet, client_sock: socket.socket):
         """Finds the appropriate handler for a received packet."""
         for handler in self.handlers:
             if handler.check_handles(packet.packet_type):
                 handler.handle_packet(packet, client_sock)
 
+    def broadcast_packet(self, packet: Packet):
+        for client in self.clients:
+            client.sendall(packet.serialize_with_length())
+
+    @abstractmethod
+    def tick(self) -> None: pass
+
     def _broadcast_loop(self):
         while True:
-            self.broadcast_state()
+            self.tick()
             sleep(0.1)
 
-    def broadcast_state(self):
-        """Sends the latest game state to all clients."""
-        game_state = json.dumps(self.board.broadcast_state()).encode()
-        packet = Packet(PacketType.GAME_TICKDATA, game_state)
-        with self.lock:
-            for client in self.clients:
-                try:
-                    client.sendall(packet.serialize_with_length())
-                except:
-                    self.clients.remove(client)
-                    logger.warning("Client disconnected")
 
-class Client:
-    """Multiplayer game client that communicates with the server and tracks game state."""
+class Client(metaclass=ABCMeta):
+    """
+    Multiplayer game client that communicates with the server
+    Should be inherited
+    """
 
-    def __init__(self, address: str, port: int, player_name: str):
+    def __init__(self, address: str, port: int):
         """Initializes the client, connects to the server, and starts listening for updates."""
         self.server_address = (address, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.connect(self.server_address)
-        self.player_name = player_name
 
-        self.board = {}
-        self.current_turn = None
-        self.actions_remaining = 0
-        self.is_my_turn = False
-
-        self.listen_thread = threading.Thread(target=self.receive_updates, daemon=True)
+        self.listen_thread = threading.Thread(target=self.listen, daemon=True)
         self.listen_thread.start()
 
-    def send_action(self, action_type: str, details: Dict[str, Any] = {}):
-        """Sends a game action to the server if it's the player's turn and they have actions left."""
-        if not self.is_my_turn:
-            logger.warning(f"[{self.player_name}] It's not your turn!")
-            return
 
-        if self.actions_remaining <= 0:
-            logger.warning(f"[{self.player_name}] No actions left this turn!")
-            return
+    def send(self, pack: Packet) -> None:
+        self.sock.sendall(pack.serialize_with_length())
 
-        action = {
-            "player": self.player_name,
-            "action": action_type,
-            "details": details
-        }
-        packet = Packet(PacketType.GAME_ACTION, json.dumps(action).encode())
-        self.sock.sendall(packet.serialize_with_length())
+    @abstractmethod
+    def packet_callback(self, packet: Packet): pass
 
-        self.actions_remaining -= 1
-
-    def receive_updates(self):
+    def listen(self):
         """Listens for game state updates from the server and updates the client's local state."""
         while True:
             try:
-                packet = Packet.from_socket(self.sock, self.player_name)
+                packet = Packet.from_socket(self.sock)
                 if packet is None:
-                    logger.warning(f"[{self.player_name}] Received empty packet, disconnecting...")
+                    logger.warning(f"Received empty packet, disconnecting...")
                     break
-                
-                if packet.packet_type == PacketType.GAME_TICKDATA:
-                    game_state = json.loads(packet.data.decode())
-                    self.update_local_state(game_state)
+                self.packet_callback(packet)
                 
             except (ConnectionError, socket.error) as e:
-                logger.warning(f"[{self.player_name}] Connection error: {e}")
+                logger.warning(f"Connection error: {e}")
                 break
             except Exception as e:
-                logger.error(f"[{self.player_name}] Unexpected error: {e}")
+                logger.error(f"Unexpected error: {e}")
                 break
     
-    # Clean up on disconnect
         try:
             self.sock.close()
         except:
@@ -279,14 +258,6 @@ class Client:
         finally:
             self.sock.close()
 
-    def update_local_state(self, game_state: Dict[str, Any]):
-        """Updates the client's local copy of the board state and turn tracking."""
-        self.board = game_state
-
-        self.current_turn = game_state["current_turn"]
-        self.actions_remaining = game_state["actions_remaining"]
-        self.is_my_turn = self.current_turn == self.player_name
-
-
-        if self.is_my_turn:
-            logger.info(f"[{self.player_name}] It's your turn! You have {self.actions_remaining} actions.")
+def do_if(pack: Packet, t: PacketType, callback: Callable[[], None]) -> None:
+    if pack.packet_type == t:
+        callback()

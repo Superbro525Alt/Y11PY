@@ -11,6 +11,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{titlesec}
+\usepackage{pgfgantt}
 
 \geometry{a4paper, margin=1in}
 
@@ -71,63 +72,25 @@
 
 \section{Development Schedule}
 
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Week 1-2:} Research and System Architecture
-    \begin{itemize}
-        \item Analysis of original Clash Royale mechanics
-        \item Server-client architecture design
-        \item Technology stack selection
-        \item Project management setup
-    \end{itemize}
-    
-    \item \textbf{Week 3:} Problem Definition and Requirements
-    \begin{itemize}
-        \item Detailed problem description documentation
-        \item Functional and non-functional requirements specification
-        \item User stories and use case development
-        \item Feature prioritization
-    \end{itemize}
-    
-    \item \textbf{Week 4:} Core Algorithm Design
-    \begin{itemize}
-        \item Pseudocode development for game logic
-        \item Network protocol specification
-        \item Data structures design
-        \item Database schema planning
-    \end{itemize}
-    
-    \item \textbf{Week 5:} Algorithm Testing and Validation
-    \begin{itemize}
-        \item Trace table construction for logic verification
-        \item Edge case identification and handling
-        \item Logic refinement based on test results
-        \item Protocol simulation testing
-    \end{itemize}
-    
-    \item \textbf{Week 6-7:} Server Implementation
-    \begin{itemize}
-        \item Network communication setup
-        \item Game state management implementation
-        \item Player authentication system
-        \item Card deployment and battle mechanics coding
-    \end{itemize}
-    
-    \item \textbf{Week 8:} Client Implementation and Integration
-    \begin{itemize}
-        \item Client-side interface development
-        \item Server-client integration
-        \item Real-time gameplay testing
-        \item Bug fixing and optimization
-    \end{itemize}
-    
-    \item \textbf{Week 9:} Final Testing and Submission
-    \begin{itemize}
-        \item Comprehensive system testing
-        \item Documentation completion
-        \item Part 1 submission preparation
-        \item Project demonstration setup
-    \end{itemize}
-\end{itemize}
+\begin{ganttchart}[
+   vgrid={*{4}{gray, dotted}, *1{black, dashed}},
+   bar label node/.append style={align=left}
+   ]{1}{28}
+\gantttitle{Week 1}{7} \gantttitle{Week 2}{7} \gantttitle{Week 3}{7} \gantttitle{Week 4}{7} \\
+\ganttbar{Core Engine + Network}{1}{7} \\
+    \ganttbar{Engine Setup}{1}{3} \\
+    \ganttbar{Network Setup}{4}{7} \\
+\ganttbar{Gameplay Mechanics}{8}{14} \\
+    \ganttbar{ECS + Cards}{8}{10} \\
+    \ganttbar{Gameplay Logic}{11}{14} \\
+\ganttbar{Progression + Rewards}{15}{21} \\
+    \ganttbar{Progression}{15}{18} \\
+    \ganttbar{Database + Security}{19}{21} \\
+\ganttbar{Testing + Refinement}{22}{28} \\
+    \ganttbar{Core Testing}{22}{23} \\
+    \ganttbar{Gameplay Testing}{24}{26} \\
+    \ganttbar{Final Testing}{27}{28}
+\end{ganttchart}
 
 \section{Problem Outline}
 

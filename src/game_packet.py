@@ -1,5 +1,15 @@
+from dataclasses import dataclass
 import enum
 
+@dataclass 
+class MatchRequest:
+    trophies: int 
+    uuid: str
+
+@dataclass 
+class MatchFound:
+    match_uuid: str 
+    other_uuid: str
 
 class PacketType(enum.Enum):
     """Defines different types of network packets."""

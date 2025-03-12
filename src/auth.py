@@ -23,6 +23,7 @@ class ServerUserData:
     trophies: int
     decks: List[Deck]
     current_deck: int
+    current_battle: Optional[str]
 
 @dataclass
 class User:

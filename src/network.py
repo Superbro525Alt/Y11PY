@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections import abc
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 import enum
 from random import randint, random
 import socket
@@ -8,7 +8,7 @@ import struct
 import threading
 import json
 from time import sleep, time
-from typing import Callable, List, Optional, Dict, Any, Self
+from typing import Callable, List, Optional, Dict, Any, Self, Type, get_type_hints
 from board import Board
 from game_packet import PacketType
 from util import logger
@@ -20,6 +20,46 @@ class ServerStatus:
     pass
 
 import enum
+
+def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
+    """Deserializes a dictionary into a dataclass instance."""
+
+    if not isinstance(data, dict):
+        raise TypeError(f"Expected dict, got {type(data)}")
+
+    if not dataclass(target_type) is target_type:
+        raise TypeError(f"{target_type} is not a dataclass")
+
+    type_hints = get_type_hints(target_type)
+    field_values = {}
+
+    for field in fields(target_type):
+        field_name = field.name
+        field_type = type_hints.get(field_name, field.type) #get type hint, or field.type if not found
+
+        if field_name in data:
+            value = data[field_name]
+            if dataclass(field_type) is field_type and isinstance(value, dict): #Check if subobject is dataclass, and data is dict.
+                field_values[field_name] = deserialize_object(value, field_type)
+            elif hasattr(field_type, "__origin__") and field_type.__origin__ is list and isinstance(value, list): #List handling
+                inner_type = field_type.__args__[0]
+                if dataclass(inner_type) is inner_type:
+                    field_values[field_name] = [deserialize_object(item, inner_type) for item in value]
+                else:
+                    field_values[field_name] = value #No dataclass in list, so just return
+            elif hasattr(field_type, "__origin__") and field_type.__origin__ is dict and isinstance(value, dict): #dict handling
+                key_type = field_type.__args__[0]
+                value_type = field_type.__args__[1]
+                if dataclass(value_type) is value_type:
+                    field_values[field_name] = {deserialize_object(k, key_type): deserialize_object(v, value_type) if isinstance(v, dict) else v for k, v in value.items()}
+                else:
+                    field_values[field_name] = value #No dataclass in dict, so just return
+            else:
+                field_values[field_name] = value
+        else:
+            raise ValueError(f"Missing required field '{field_name}' in data")
+
+    return target_type(**field_values)
 
 def serialize_object(obj: Any):
     """ Recursively converts objects to dictionaries if they have `__dict__`. """
@@ -122,6 +162,9 @@ class NetworkObject:
     def on_connection(self) -> None: 
         pass
 
+    def tick(self) -> None:
+        pass
+
 class Server:
     """Multiplayer game server that manages clients and game state."""
 
@@ -201,6 +244,7 @@ class Server:
     def _broadcast_loop(self):
         while True:
             self.tick()
+            [o.tick() for o in self.handlers]
             sleep(0.1)
 
 

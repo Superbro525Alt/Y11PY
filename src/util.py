@@ -1,5 +1,9 @@
 import logging
+import json
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any, Union
 
+from chest import ChestRarity
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -62,3 +66,58 @@ def is_point_inside_circle(center_x: float, center_y: float, radius: float, poin
     distance = math.sqrt((point_x - center_x)**2 + (point_y - center_y)**2)
 
     return distance <= radius
+
+def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> Any:
+    """
+    Converts a JSON byte string into a nested dataclass structure.
+    """
+    json_data = json.loads(data.decode())
+    dataclass_definitions = {}
+
+    def _create_dataclass(name: str, data: Union[Dict[str, Any], List[Any]]) -> type:
+        """
+        Recursively creates dataclass definitions from a JSON dictionary or list of dictionaries.
+        """
+        if name in dataclass_definitions:
+            return dataclass_definitions[name]
+
+        if isinstance(data, list) and data and isinstance(data[0], dict): #list of dictionaries
+            sub_dataclass_name = "".join(word.capitalize() for word in name.split("_singular"))
+            if not sub_dataclass_name:
+                sub_dataclass_name = "".join(word.capitalize() for word in name.split("_"))
+            sub_dataclass = _create_dataclass(sub_dataclass_name, data[0])
+            return List[sub_dataclass]
+
+        if isinstance(data, list):
+            if data and isinstance(data[0], (int, float, str, bool)):
+                return List[type(data[0])]
+            else:
+                return List[Any]
+
+        if not isinstance(data, dict): #primitive types
+            return type(data)
+
+        fields = []
+        annotations = {}
+
+        for key, value in data.items():
+            field_type = type(value)
+
+            if isinstance(value, dict) or isinstance(value, list):
+                sub_dataclass_name = "".join(word.capitalize() for word in key.split("_"))
+                field_type = _create_dataclass(sub_dataclass_name, value)
+            else:
+                if key == "rarity":
+                    field_type = ChestRarity
+                else:
+                    field_type = type(value)
+
+            fields.append((key, field(default=None)))
+            annotations[key] = Optional[field_type]
+
+        new_dataclass = dataclass(type(name, (), {"__annotations__": annotations}))
+        dataclass_definitions[name] = new_dataclass
+        return new_dataclass
+
+    root_dataclass = _create_dataclass(root_dataclass_name, json_data)
+    return root_dataclass(**json_data)

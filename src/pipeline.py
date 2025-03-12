@@ -1146,9 +1146,6 @@ class FramePipeline(Generic[T]):
             t.cancel()
         return cancel
 
-# =============================================================================
-# Unit Tests (using pytest)
-# =============================================================================
 import pytest
 
 def test_basic_send_receive():

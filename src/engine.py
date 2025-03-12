@@ -12,6 +12,12 @@ import uuid
 
 from bindings import SDLWrapper, SDL_EventType, SDL_Scancode, SDL_Event
 
+from typing import List, Tuple
+
+def intersects(p: Tuple[float, float], v: List[Tuple[float, float]]) -> bool:
+    return sum((y1 > p[1]) != (y2 > p[1]) and p[0] < (x2 - x1) * (p[1] - y1) / (y2 - y1) + x1 
+               for (x1, y1), (x2, y2) in zip(v, v[1:] + v[:1])) % 2 == 1
+
 class EngineCode(Enum):
     COMPONENT_TICK = 1 
 
@@ -572,20 +578,35 @@ class Rect:
 
 # UIElement represents a UI component that can be animated.
 class UIElement:
-    def __init__(self, x: int, y: int, width: int, height: int, color: Tuple[int, int, int]=(200, 200, 200), opacity: float = 1.0):
+    def __init__(self, x: int, y: int, width: int, height: int, color: Tuple[int, int, int]=(200, 200, 200), opacity: float = 1.0, on_hover: Optional[Tuple[int, int, int]] = None):
         self.rect = Rect(x, y, width, height)
         self.color = color
         self.opacity = opacity
         self.visible = True
         self.animations: List[UIAnimation] = []
+        self.on_hover = on_hover
+
     def update(self, dt: float):
         for anim in self.animations:
             anim.update(dt)
         self.animations = [anim for anim in self.animations if not anim.finished]
     def render(self, sdl: SDLWrapper):
         if self.visible:
-            r, g, b = self.color
-            sdl.draw_rect(int(self.rect.x), int(self.rect.y), self.rect.w, self.rect.h, r, g, b)
+
+            mouse_pos = sdl.getMousePosition()
+            rect_x, rect_y, rect_w, rect_h = self.rect.x, self.rect.y, self.rect.w, self.rect.h
+
+            rect_vertices = [
+                (rect_x, rect_y),                        
+                (rect_x + rect_w, rect_y),               
+                (rect_x + rect_w, rect_y + rect_h),      
+                (rect_x, rect_y + rect_h)                
+            ]
+
+            r, g, b = self.on_hover if intersects(mouse_pos, rect_vertices) and self.on_hover else self.color
+
+            sdl.draw_rect(int(rect_x), int(rect_y), rect_w, rect_h, r, g, b)
+
     def add_animation(self, animation: "UIAnimation"):
         self.animations.append(animation)
 
@@ -660,6 +681,8 @@ class Engine(InternalEngine):
                 game_object.update(frame_data)
         self.ui_manager.update(dt)
 
+    def override_render(self) -> None: pass
+
     def render(self, override: bool = False):
         if not override:
             self.sdl.clear_screen(0, 0, 0)
@@ -669,6 +692,9 @@ class Engine(InternalEngine):
             for game_object in self.game_objects:
                 game_object.render(self.sdl, self.camera)
         self.ui_manager.render(self.sdl)
+
+        self.override_render()
+
         self.sdl.update_screen()
 
 # ---- Scene Management ----

@@ -1,15 +1,18 @@
 from dataclasses import dataclass
 import enum
 
-@dataclass 
+
+@dataclass
 class MatchRequest:
-    trophies: int 
+    trophies: int
     uuid: str
 
-@dataclass 
+
+@dataclass
 class MatchFound:
-    match_uuid: str 
+    match_uuid: str
     other_uuid: str
+
 
 class PacketType(enum.Enum):
     """Defines different types of network packets."""
@@ -433,4 +436,3 @@ class PacketType(enum.Enum):
     Purpose: Sends the result of a card donation.
     Payload: Success/failure status, updated player inventories.
     """
-

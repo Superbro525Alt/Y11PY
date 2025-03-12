@@ -9,12 +9,14 @@ from uuid import uuid4
 
 MAX_TROPHY_DIFF = 100
 
-@dataclass 
+
+@dataclass
 class MatchRequestSocket:
     inner: MatchRequest
     sock: socket
 
-@dataclass 
+
+@dataclass
 class Player:
     uuid: str
     sock: socket
@@ -22,11 +24,13 @@ class Player:
     next_card: Optional[Card]
     elixir: int
 
-@dataclass 
+
+@dataclass
 class Battle:
     p1: Player
     p2: Player
     uuid: str
+
 
 class Matchmaking:
     def __init__(self) -> None:
@@ -64,16 +68,43 @@ class Matchmaking:
             self.waiting.remove(pair[0])
             self.waiting.remove(pair[1])
 
-    def get_match(self, uuid: str, player_uuid: str) -> Tuple[Optional[Player], Optional[str]]:
-        return next(((p, m.p2.uuid if p is m.p1 else m.p1.uuid) for m in [self.matches.get(uuid)] if m for p in [m.p1, m.p2] if p.uuid == player_uuid), (None, None))
+    def get_match(
+        self, uuid: str, player_uuid: str
+    ) -> Tuple[Optional[Player], Optional[str]]:
+        return next(
+            (
+                (p, m.p2.uuid if p is m.p1 else m.p1.uuid)
+                for m in [self.matches.get(uuid)]
+                if m
+                for p in [m.p1, m.p2]
+                if p.uuid == player_uuid
+            ),
+            (None, None),
+        )
 
     def are_compatible(self, req1: MatchRequest, req2: MatchRequest) -> bool:
         trophy_difference = abs(req1.trophies - req2.trophies)
-        return trophy_difference <= MAX_TROPHY_DIFF 
+        return trophy_difference <= MAX_TROPHY_DIFF
 
     def handle_match(self, req1: MatchRequestSocket, req2: MatchRequestSocket) -> None:
         id = str(uuid4())
-        self.matches.update({id: Battle(Player(req1.inner.uuid, req1.sock, [], None, 0), Player(req2.inner.uuid, req2.sock, [], None, 0), id)})
+        self.matches.update(
+            {
+                id: Battle(
+                    Player(req1.inner.uuid, req1.sock, [], None, 0),
+                    Player(req2.inner.uuid, req2.sock, [], None, 0),
+                    id,
+                )
+            }
+        )
         print(str(self.matches))
-        req1.sock.sendall(Packet.from_struct(PacketType.MATCH_FOUND, MatchFound(id, req2.inner.uuid)).serialize_with_length())
-        req2.sock.sendall(Packet.from_struct(PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid)).serialize_with_length())
+        req1.sock.sendall(
+            Packet.from_struct(
+                PacketType.MATCH_FOUND, MatchFound(id, req2.inner.uuid)
+            ).serialize_with_length()
+        )
+        req2.sock.sendall(
+            Packet.from_struct(
+                PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid)
+            ).serialize_with_length()
+        )

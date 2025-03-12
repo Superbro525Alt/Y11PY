@@ -1,6 +1,20 @@
 from enum import Enum
 import threading, queue, time, bisect, asyncio, math, uuid, json, os, random
-from typing import Any, Callable, Dict, Optional, List, Generic, Self, Type, TypeVar, Iterator, Set, Union, overload
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    List,
+    Generic,
+    Self,
+    Type,
+    TypeVar,
+    Iterator,
+    Set,
+    Union,
+    overload,
+)
 from collections import deque, defaultdict
 import logging
 from dataclasses import dataclass, field
@@ -8,20 +22,27 @@ from functools import total_ordering
 from util import logger
 import datetime
 
-@dataclass 
-class StateData():
-    id: str = field() # uuid4() 
+
+@dataclass
+class StateData:
+    id: str = field()  # uuid4()
     state: Optional[Any] = field(default=None)
-    last_update: float = field(default_factory=lambda: datetime.datetime.now().timestamp())
+    last_update: float = field(
+        default_factory=lambda: datetime.datetime.now().timestamp()
+    )
+
 
 class EventType(Enum):
     UPDATE_STATE = 0
 
-@dataclass 
+
+@dataclass
 class Event:
     event_type: EventType
 
-T = TypeVar('T')
+
+T = TypeVar("T")
+
 
 @total_ordering
 @dataclass(order=False)
@@ -31,7 +52,7 @@ class Frame(Generic[T]):
     # The three fields used for ordering.
     available_at: float = field(default_factory=time.time)  # Defaults to current time.
     priority: int = 0  # Default priority.
-    id: int = 0        # Default ID (can be overridden by your pipeline logic).
+    id: int = 0  # Default ID (can be overridden by your pipeline logic).
 
     # Other fields (not used for ordering).
     metadata: Optional[Dict[str, Any]] = field(default=None, compare=False)
@@ -48,22 +69,28 @@ class Frame(Generic[T]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Frame):
             return NotImplemented
-        return (self._safe(self.available_at),
-                self._safe(self.priority),
-                self._safe(self.id)) == (
-                self._safe(other.available_at),
-                self._safe(other.priority),
-                self._safe(other.id))
+        return (
+            self._safe(self.available_at),
+            self._safe(self.priority),
+            self._safe(self.id),
+        ) == (
+            self._safe(other.available_at),
+            self._safe(other.priority),
+            self._safe(other.id),
+        )
 
     def __lt__(self, other: "Frame[T]") -> bool:
         if not isinstance(other, Frame):
             return NotImplemented
-        return (self._safe(self.available_at),
-                self._safe(self.priority),
-                self._safe(self.id)) < (
-                self._safe(other.available_at),
-                self._safe(other.priority),
-                self._safe(other.id))
+        return (
+            self._safe(self.available_at),
+            self._safe(self.priority),
+            self._safe(self.id),
+        ) < (
+            self._safe(other.available_at),
+            self._safe(other.priority),
+            self._safe(other.id),
+        )
 
     @staticmethod
     def _safe(v: Optional[Union[int, float]]) -> Union[int, float]:
@@ -71,33 +98,34 @@ class Frame(Generic[T]):
         Returns the value if not None, otherwise returns float('-inf').
         With the default values defined above, None is not expected.
         """
-        return v if v is not None else float('-inf')
+        return v if v is not None else float("-inf")
+
 
 class FramePipeline(Generic[T]):
-    """
+    """ """
 
-    """
-    def __init__(self,
-                 name: str = "FramePipeline",
-                 maxsize: Optional[int] = 1000,
-                 use_priority: bool = False,
-                 enable_delayed_delivery: bool = False,
-                 auto_purge_interval: Optional[float] = None,
-                 ack_timeout: Optional[float] = 2.0,
-                 max_retries: int = 3,
-                 global_rate_limit: Optional[float] = None,
-                 metrics_interval: Optional[float] = None,
-                 encrypt_func: Optional[Callable[[Any], Any]] = None,
-                 decrypt_func: Optional[Callable[[Any], Any]] = None,
-                 distributed_forwarder: Optional[Callable[[Frame[T]], None]] = None,
-                 backpressure_callback: Optional[Callable[[str, int], None]] = None,
-                 persist_file: Optional[str] = None,
-                 config_file: Optional[str] = None,
-                 load_shedding_threshold: Optional[int] = None,
-                 cluster_mode: bool = False,
-                 deduplication_window: float = 60.0,
-                 delivery_timeout: float = 5.0
-                 ) -> None:
+    def __init__(
+        self,
+        name: str = "FramePipeline",
+        maxsize: Optional[int] = 1000,
+        use_priority: bool = False,
+        enable_delayed_delivery: bool = False,
+        auto_purge_interval: Optional[float] = None,
+        ack_timeout: Optional[float] = 2.0,
+        max_retries: int = 3,
+        global_rate_limit: Optional[float] = None,
+        metrics_interval: Optional[float] = None,
+        encrypt_func: Optional[Callable[[Any], Any]] = None,
+        decrypt_func: Optional[Callable[[Any], Any]] = None,
+        distributed_forwarder: Optional[Callable[[Frame[T]], None]] = None,
+        backpressure_callback: Optional[Callable[[str, int], None]] = None,
+        persist_file: Optional[str] = None,
+        config_file: Optional[str] = None,
+        load_shedding_threshold: Optional[int] = None,
+        cluster_mode: bool = False,
+        deduplication_window: float = 60.0,
+        delivery_timeout: float = 5.0,
+    ) -> None:
 
         self.name = name
 
@@ -121,7 +149,9 @@ class FramePipeline(Generic[T]):
         self.consumer_filters: Dict[str, Optional[Callable[[Frame[T]], bool]]] = {}
         self.consumer_status: Dict[str, bool] = {}  # True means paused.
         self.consumer_maxsize: Dict[str, Optional[int]] = {}
-        self.consumer_overflow_policy: Dict[str, str] = {}  # "drop", "error", or "block"
+        self.consumer_overflow_policy: Dict[str, str] = (
+            {}
+        )  # "drop", "error", or "block"
         self.consumer_rate_limits: Dict[str, float] = {}
         self.consumer_last_receive: Dict[str, float] = {}
 
@@ -132,7 +162,7 @@ class FramePipeline(Generic[T]):
             "frames_dropped": 0,
             "frames_retried": 0,
             "frames_failed": 0,
-            "delivery_timeouts": 0
+            "delivery_timeouts": 0,
         }
         self.consumer_metrics: Dict[str, Dict[str, Union[int, float]]] = {}
 
@@ -145,7 +175,9 @@ class FramePipeline(Generic[T]):
         self.on_consumer_unregister: List[Callable[[str], None]] = []
         self.on_consumer_pause: List[Callable[[str], None]] = []
         self.on_consumer_resume: List[Callable[[str], None]] = []
-        self.on_consumer_circuit_break: List[Callable[[str], None]] = [self.circuit_break_hook_warn]
+        self.on_consumer_circuit_break: List[Callable[[str], None]] = [
+            self.circuit_break_hook_warn
+        ]
 
         self.sent_callbacks: List[Callable[[Frame[T]], None]] = []
         self.received_callbacks: List[Callable[[Frame[T]], None]] = []
@@ -153,14 +185,18 @@ class FramePipeline(Generic[T]):
         self.auto_purge_interval = auto_purge_interval
         self._auto_purge_thread: Optional[threading.Thread] = None
         if self.auto_purge_interval is not None:
-            self._auto_purge_thread = threading.Thread(target=self._auto_purge_loop, daemon=True)
+            self._auto_purge_thread = threading.Thread(
+                target=self._auto_purge_loop, daemon=True
+            )
             self._auto_purge_thread.start()
 
         self.ack_timeout = ack_timeout
         self.max_retries = max_retries
         self.delivery_timeout = delivery_timeout
         self.delivery_timeout_callback: Optional[Callable[[Any, str], None]] = None
-        self._ack_monitor_thread = threading.Thread(target=self._ack_monitor_loop, daemon=True)
+        self._ack_monitor_thread = threading.Thread(
+            target=self._ack_monitor_loop, daemon=True
+        )
         self._ack_monitor_thread.start()
 
         self.global_rate_limit: Optional[float] = global_rate_limit
@@ -191,7 +227,9 @@ class FramePipeline(Generic[T]):
         self.distributed_forwarder = distributed_forwarder
         self.backpressure_callback = backpressure_callback
 
-        self.consumer_info: Dict[str, Dict[str, Any]] = {}  # keys: "topic", "group", "access_token", "weight"
+        self.consumer_info: Dict[str, Dict[str, Any]] = (
+            {}
+        )  # keys: "topic", "group", "access_token", "weight"
         self.consumer_groups: Dict[str, List[str]] = defaultdict(list)
         self.group_rr_index: Dict[str, int] = {}
         self.consumer_validators: Dict[str, Optional[Callable[[Frame[T]], bool]]] = {}
@@ -206,7 +244,9 @@ class FramePipeline(Generic[T]):
         self.config_file = config_file
         if self.config_file:
             self._config_last_modified = os.path.getmtime(self.config_file)
-            self._config_thread = threading.Thread(target=self._config_reload_loop, daemon=True)
+            self._config_thread = threading.Thread(
+                target=self._config_reload_loop, daemon=True
+            )
             self._config_thread.start()
 
         self.load_shedding_threshold = load_shedding_threshold
@@ -225,26 +265,39 @@ class FramePipeline(Generic[T]):
         self.dedup_cache: Dict[str, float] = {}
 
         self.listeners: List[FrameListener] = []
-        self._listeners_thread = threading.Thread(target=self._listeners_loop, daemon=True)
+        self._listeners_thread = threading.Thread(
+            target=self._listeners_loop, daemon=True
+        )
         self._listeners_thread.start()
 
     def circuit_break_hook_warn(self, consumer_id: str) -> None:
-        logger.warning(f"Consumer {consumer_id} has been paused due to circuit breaking.")
+        logger.warning(
+            f"Consumer {consumer_id} has been paused due to circuit breaking."
+        )
 
     @staticmethod
     def get_consumer_id() -> str:
-        return uuid.uuid4().__str__();
+        return uuid.uuid4().__str__()
 
     @overload
     def attach(self, listener: "FrameListener") -> None: ...
 
     @overload
-    def attach(self, listener: Type["FrameListener"], *args: Any, **kwargs: Any) -> None: ...
+    def attach(
+        self, listener: Type["FrameListener"], *args: Any, **kwargs: Any
+    ) -> None: ...
 
     @overload
     def attach(self, listener: Callable[[Self], "FrameListener"]) -> None: ...
 
-    def attach(self, listener: Union["FrameListener", Type["FrameListener"], Callable[[Self], "FrameListener"]], *args: Any, **kwargs: Any) -> None:
+    def attach(
+        self,
+        listener: Union[
+            "FrameListener", Type["FrameListener"], Callable[[Self], "FrameListener"]
+        ],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         logger.info(f"Attaching Listener to: {self.name}")
         if True:
             if isinstance(listener, FrameListener):
@@ -254,14 +307,20 @@ class FramePipeline(Generic[T]):
             elif isinstance(listener, type) and issubclass(listener, FrameListener):
                 instance = listener(self, *args, **kwargs)
                 self.listeners.append(instance)
-                logger.info(f"Attached new FrameListener of type {listener.__name__} to: {self.name}")
+                logger.info(
+                    f"Attached new FrameListener of type {listener.__name__} to: {self.name}"
+                )
 
             elif callable(listener):
                 instance = listener(self)
                 self.listeners.append(instance)
-                logger.info(f"Attached function callback as FrameListener to: {self.name}")
+                logger.info(
+                    f"Attached function callback as FrameListener to: {self.name}"
+                )
             else:
-                raise TypeError("attach() accepts a FrameListener instance, a FrameListener subclass, or a callable.")
+                raise TypeError(
+                    "attach() accepts a FrameListener instance, a FrameListener subclass, or a callable."
+                )
 
     def _listeners_loop(self) -> None:
         while not self.closed:
@@ -271,13 +330,15 @@ class FramePipeline(Generic[T]):
     def _auto_purge_loop(self) -> None:
         """
         Runs in a background thread to periodically purge expired frames from all consumer queues.
-    
+
         The loop sleeps for self.auto_purge_interval seconds between purges. After each interval,
         it calls the purge_expired_frames() method to remove any frames whose expiration time
         has passed. The loop terminates when the pipeline is closed.
         """
         while not self.closed:
-            time.sleep(self.auto_purge_interval if self.auto_purge_interval is not None else 1)
+            time.sleep(
+                self.auto_purge_interval if self.auto_purge_interval is not None else 1
+            )
             self.purge_expired_frames()
 
     def _apply_global_rate_limit(self) -> None:
@@ -315,29 +376,46 @@ class FramePipeline(Generic[T]):
                 now = time.time()
                 for frame_id in list(self.delivery_times.keys()):
                     delivery_time = self.delivery_times[frame_id]
-                    if now - delivery_time >= self.ack_timeout if self.ack_timeout is not None else 5:
+                    if (
+                        now - delivery_time >= self.ack_timeout
+                        if self.ack_timeout is not None
+                        else 5
+                    ):
                         if frame_id not in self.delivered_frames:
                             continue
                         target_consumers = self.delivered_frames[frame_id]
                         acked = self.acknowledgments.get(frame_id, set())
                         for consumer_id in target_consumers - acked:
                             self.metrics["frames_retried"] += 1
-                            logger.info(f"{self.name} Retrying frame {frame_id} for consumer {consumer_id}")
-                            self.consumer_failures[consumer_id] = self.consumer_failures.get(consumer_id, 0) + 1
+                            logger.info(
+                                f"{self.name} Retrying frame {frame_id} for consumer {consumer_id}"
+                            )
+                            self.consumer_failures[consumer_id] = (
+                                self.consumer_failures.get(consumer_id, 0) + 1
+                            )
                             if now - delivery_time >= self.delivery_timeout:
                                 self.metrics["delivery_timeouts"] += 1
                                 if self.delivery_timeout_callback:
                                     try:
-                                        self.delivery_timeout_callback(frame_id, consumer_id)
+                                        self.delivery_timeout_callback(
+                                            frame_id, consumer_id
+                                        )
                                     except Exception as e:
-                                        logger.error(f"Delivery timeout callback error: {e}")
-                            if self.consumer_failures[consumer_id] >= self.circuit_breaker_threshold:
+                                        logger.error(
+                                            f"Delivery timeout callback error: {e}"
+                                        )
+                            if (
+                                self.consumer_failures[consumer_id]
+                                >= self.circuit_breaker_threshold
+                            ):
                                 self.pause_consumer(consumer_id)
                                 for hook in self.on_consumer_circuit_break:
                                     try:
                                         hook(consumer_id)
                                     except Exception as e:
-                                        logger.error(f"Error in circuit breaker hook: {e}")
+                                        logger.error(
+                                            f"Error in circuit breaker hook: {e}"
+                                        )
                         del self.delivery_times[frame_id]
             time.sleep(0.5)
 
@@ -347,32 +425,39 @@ class FramePipeline(Generic[T]):
     def _config_reload_loop(self) -> None:
         while not self.closed:
             try:
-                current = os.path.getmtime(self.config_file if self.config_file else "./config")
+                current = os.path.getmtime(
+                    self.config_file if self.config_file else "./config"
+                )
                 if current != self._config_last_modified:
                     self._config_last_modified = current
                     self._reload_config()
             except Exception as e:
                 logger.error(f"Config reload error: {e}")
             time.sleep(2)
+
     def _reload_config(self) -> None:
         try:
             with open(self.config_file if self.config_file else "./config", "r") as f:
                 config = json.load(f)
             for cid, settings in config.get("consumers", {}).items():
                 if cid in self.consumers:
-                    self.update_consumer_config(cid,
-                                                max_queue_size=settings.get("max_queue_size"),
-                                                overflow_policy=settings.get("overflow_policy"),
-                                                rate_limit=settings.get("rate_limit"))
+                    self.update_consumer_config(
+                        cid,
+                        max_queue_size=settings.get("max_queue_size"),
+                        overflow_policy=settings.get("overflow_policy"),
+                        rate_limit=settings.get("rate_limit"),
+                    )
                     logger.info(f"Reloaded config for consumer {cid}.")
         except Exception as e:
             logger.error(f"Error reloading config: {e}")
 
-    def send_request(self,
-                     frame: T,
-                     metadata: Optional[Dict[str, Any]] = None,
-                     timeout: Optional[float] = 5.0,
-                     **kwargs) -> Optional[Frame[T]]:
+    def send_request(
+        self,
+        frame: T,
+        metadata: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = 5.0,
+        **kwargs,
+    ) -> Optional[Frame[T]]:
         correlation_id = str(uuid.uuid4())
         kwargs["correlation_id"] = correlation_id
         event = threading.Event()
@@ -385,11 +470,11 @@ class FramePipeline(Generic[T]):
         else:
             self.pending_requests.pop(correlation_id, None)
             return None
+
     def process_response(self, frame: Frame[T]) -> None:
         if frame.correlation_id and frame.correlation_id in self.pending_requests:
             self.request_responses[frame.correlation_id] = frame
             self.pending_requests[frame.correlation_id].set()
-
 
     def _run_enrich_plugins(self, frame_obj: Frame[T]) -> Frame[T]:
         for plugin in self.enrich_plugins:
@@ -411,7 +496,7 @@ class FramePipeline(Generic[T]):
             "available_at": frame_obj.available_at,
             "correlation_id": frame_obj.correlation_id,
             "topic": frame_obj.topic,
-            "annotations": frame_obj.annotations
+            "annotations": frame_obj.annotations,
         }
         for plugin in self.serialize_plugins:
             try:
@@ -419,6 +504,7 @@ class FramePipeline(Generic[T]):
             except Exception as e:
                 logger.error(f"Error in serialize plugin: {e}")
         return record
+
     def _run_deserialize_plugins(self, record: Dict[str, Any]) -> Frame[T]:
         frame_obj = Frame(
             id=record["id"],
@@ -431,7 +517,7 @@ class FramePipeline(Generic[T]):
             available_at=record.get("available_at"),
             correlation_id=record.get("correlation_id"),
             topic=record.get("topic"),
-            annotations=record.get("annotations", {})
+            annotations=record.get("annotations", {}),
         )
         for plugin in self.deserialize_plugins:
             try:
@@ -451,7 +537,10 @@ class FramePipeline(Generic[T]):
 
     def _should_shed(self, frame_obj: Frame[T]) -> bool:
         if self.load_shedding_threshold is not None:
-            if self.queue.qsize() > self.load_shedding_threshold and frame_obj.priority > 5:
+            if (
+                self.queue.qsize() > self.load_shedding_threshold
+                and frame_obj.priority > 5
+            ):
                 return True
         return False
 
@@ -461,7 +550,11 @@ class FramePipeline(Generic[T]):
             if now - self.dedup_cache[correlation_id] < self.deduplication_window:
                 return True
         self.dedup_cache[correlation_id] = now
-        keys_to_delete = [cid for cid, tstamp in self.dedup_cache.items() if now - tstamp >= self.deduplication_window]
+        keys_to_delete = [
+            cid
+            for cid, tstamp in self.dedup_cache.items()
+            if now - tstamp >= self.deduplication_window
+        ]
         for cid in keys_to_delete:
             del self.dedup_cache[cid]
         return False
@@ -474,29 +567,36 @@ class FramePipeline(Generic[T]):
                 logger.error(f"Error in pre-send hook: {e}")
         return frame_obj
 
-    def send(self,
-             frame: T,
-             metadata: Optional[Dict[str, Any]] = None,
-             required_by: Optional[List[str]] = None,
-             timeout: Optional[float] = None,
-             priority: Optional[int] = None,
-             ttl: Optional[float] = None,
-             delay: Optional[float] = None,
-             correlation_id: Optional[str] = None,
-             topic: Optional[str] = None,
-             sender_id: Optional[str] = None
-             ) -> None:
+    def send(
+        self,
+        frame: T,
+        metadata: Optional[Dict[str, Any]] = None,
+        required_by: Optional[List[str]] = None,
+        timeout: Optional[float] = None,
+        priority: Optional[int] = None,
+        ttl: Optional[float] = None,
+        delay: Optional[float] = None,
+        correlation_id: Optional[str] = None,
+        topic: Optional[str] = None,
+        sender_id: Optional[str] = None,
+    ) -> None:
         with self.condition:
             if self.closed:
                 raise RuntimeError("Pipeline is closed.")
             self._apply_global_rate_limit()
             self.frame_counter += 1
             now = time.time()
-            avail_at = now + delay if (delay is not None and self.enable_delayed_delivery) else now
+            avail_at = (
+                now + delay
+                if (delay is not None and self.enable_delayed_delivery)
+                else now
+            )
             if correlation_id is None:
                 correlation_id = str(uuid.uuid4())
             if self._check_dedup(correlation_id):
-                logger.info(f"Duplicate frame with correlation_id {correlation_id} detected; dropping.")
+                logger.info(
+                    f"Duplicate frame with correlation_id {correlation_id} detected; dropping."
+                )
                 return
             frame_obj = Frame(
                 data=frame,
@@ -508,7 +608,7 @@ class FramePipeline(Generic[T]):
                 expire_at=(now + ttl) if ttl is not None else None,
                 available_at=avail_at,
                 correlation_id=correlation_id,
-                topic=topic
+                topic=topic,
             )
             self.metrics["frames_sent"] += 1
             frame_obj = self._run_pre_send_hooks(frame_obj)
@@ -561,12 +661,18 @@ class FramePipeline(Generic[T]):
                 info = self.consumer_info.get(consumer_id, {})
                 required_token = info.get("access_token")
                 if required_token is not None:
-                    if not (metadata and metadata.get("access_token") == required_token):
-                        logger.info(f"Frame {frame_obj.id} not delivered to consumer '{consumer_id}' due to access token mismatch.")
+                    if not (
+                        metadata and metadata.get("access_token") == required_token
+                    ):
+                        logger.info(
+                            f"Frame {frame_obj.id} not delivered to consumer '{consumer_id}' due to access token mismatch."
+                        )
                         continue
                 validator = self.consumer_validators.get(consumer_id)
                 if validator and not validator(frame_obj):
-                    logger.info(f"Frame {frame_obj.id} rejected by validator for consumer '{consumer_id}'.")
+                    logger.info(
+                        f"Frame {frame_obj.id} rejected by validator for consumer '{consumer_id}'."
+                    )
                     continue
                 consumer_queue = self.consumers[consumer_id]
                 max_q = self.consumer_maxsize.get(consumer_id)
@@ -587,7 +693,9 @@ class FramePipeline(Generic[T]):
                     if overflow == "drop":
                         self.metrics["frames_dropped"] += 1
                         self.consumer_metrics[consumer_id]["frames_dropped"] += 1
-                        logger.warning(f"Frame dropped for consumer '{consumer_id}' due to full queue.")
+                        logger.warning(
+                            f"Frame dropped for consumer '{consumer_id}' due to full queue."
+                        )
                         continue
                     elif overflow == "error":
                         raise RuntimeError(f"Consumer '{consumer_id}' queue is full.")
@@ -642,11 +750,13 @@ class FramePipeline(Generic[T]):
                 logger.error(f"Error in receive interceptor: {e}")
         return frame_obj
 
-    def _insort_consumer_queue(self, queue_list: List[Frame[T]], frame_obj: Frame[T]) -> None:
+    def _insort_consumer_queue(
+        self, queue_list: List[Frame[T]], frame_obj: Frame[T]
+    ) -> None:
         """
         Inserts 'frame_obj' into 'queue_list', maintaining the sorted order.
         The frames are sorted by a tuple key: (available_at, priority, id).
-    
+
         Parameters:
             queue_list (List[Frame[T]]): The list of frames (assumed to be already sorted).
             frame_obj (Frame[T]): The frame to insert.
@@ -664,7 +774,9 @@ class FramePipeline(Generic[T]):
                 lo = mid + 1
         queue_list.insert(lo, frame_obj)
 
-    def receive(self, consumer_id: str, block: bool = True, timeout: Optional[float] = None) -> Optional[Frame[T]]:
+    def receive(
+        self, consumer_id: str, block: bool = True, timeout: Optional[float] = None
+    ) -> Optional[Frame[T]]:
         with self.condition:
             if consumer_id not in self.consumers:
                 self.register_consumer(consumer_id)
@@ -672,7 +784,11 @@ class FramePipeline(Generic[T]):
             start_time = time.monotonic()
             while True:
                 if self.consumer_status.get(consumer_id, False):
-                    remaining = None if timeout is None else timeout - (time.monotonic() - start_time)
+                    remaining = (
+                        None
+                        if timeout is None
+                        else timeout - (time.monotonic() - start_time)
+                    )
                     if timeout is not None and remaining is not None and remaining <= 0:
                         return None
                     self.condition.wait(timeout=remaining)
@@ -688,10 +804,15 @@ class FramePipeline(Generic[T]):
 
                 frame_obj = self._consumer_queue_pop(consumer_id)
                 if frame_obj is not None:
-                    if frame_obj.expire_at is not None and time.time() > frame_obj.expire_at:
+                    if (
+                        frame_obj.expire_at is not None
+                        and time.time() > frame_obj.expire_at
+                    ):
                         self.metrics["frames_expired"] += 1
                         self.consumer_metrics[consumer_id]["frames_expired"] += 1
-                        logger.debug(f"Expired frame dropped for consumer '{consumer_id}': {frame_obj}")
+                        logger.debug(
+                            f"Expired frame dropped for consumer '{consumer_id}': {frame_obj}"
+                        )
                         continue
 
                     if frame_obj.available_at and frame_obj.available_at > time.time():
@@ -710,16 +831,22 @@ class FramePipeline(Generic[T]):
                     if filter_fn is not None:
                         try:
                             if not filter_fn(frame_obj):
-                                logger.debug(f"Frame {frame_obj.id} filtered out for consumer '{consumer_id}'.")
+                                logger.debug(
+                                    f"Frame {frame_obj.id} filtered out for consumer '{consumer_id}'."
+                                )
                                 continue
                         except Exception as e:
-                            logger.error(f"Error applying filter for consumer '{consumer_id}': {e}")
+                            logger.error(
+                                f"Error applying filter for consumer '{consumer_id}': {e}"
+                            )
                             continue
 
                     self.metrics["frames_received"] += 1
                     self.consumer_metrics[consumer_id]["frames_received"] += 1
                     delay_time = max(0.0, time.time() - frame_obj.available_at)
-                    self.consumer_metrics[consumer_id]["total_frame_delay"] += delay_time
+                    self.consumer_metrics[consumer_id][
+                        "total_frame_delay"
+                    ] += delay_time
                     self.consumer_metrics[consumer_id]["frame_delay_count"] += 1
                     self.consumer_last_receive[consumer_id] = time.time()
 
@@ -748,14 +875,18 @@ class FramePipeline(Generic[T]):
 
                     logger.debug(f"Frame received by {consumer_id}: {frame_obj}")
 
-                # Acknowledge the frame
+                    # Acknowledge the frame
                     self.acknowledge(consumer_id, frame_obj.id)
                     return frame_obj
 
                 if not block:
                     return None
 
-                remaining = None if timeout is None else timeout - (time.monotonic() - start_time)
+                remaining = (
+                    None
+                    if timeout is None
+                    else timeout - (time.monotonic() - start_time)
+                )
                 if timeout is not None and remaining is not None and remaining <= 0:
                     return None
 
@@ -772,7 +903,9 @@ class FramePipeline(Generic[T]):
             frames.append(f)
         return frames
 
-    def iterate_frames(self, consumer_id: str, timeout: Optional[float] = None) -> Iterator[Frame[T]]:
+    def iterate_frames(
+        self, consumer_id: str, timeout: Optional[float] = None
+    ) -> Iterator[Frame[T]]:
         while True:
             f = self.receive(consumer_id, block=True, timeout=timeout)
             if f is None:
@@ -813,8 +946,16 @@ class FramePipeline(Generic[T]):
             if self.acknowledgments[frame_id] == delivered:
                 for callback in self.acknowledged_callbacks:
                     try:
-                        dummy = Frame(data=None, metadata=None, timestamp=0, sender_id=None,
-                                      id=frame_id, priority=0, expire_at=None, available_at=0)
+                        dummy = Frame(
+                            data=None,
+                            metadata=None,
+                            timestamp=0,
+                            sender_id=None,
+                            id=frame_id,
+                            priority=0,
+                            expire_at=None,
+                            available_at=0,
+                        )
                         callback(dummy)
                     except Exception as e:
                         logger.error(f"Acknowledged callback error: {e}")
@@ -838,10 +979,9 @@ class FramePipeline(Generic[T]):
                 self.queue.put(f)
             self.condition.notify_all()
 
-    def transactional_send(self,
-                           frames: List[T],
-                           metadata: Optional[Dict[str, Any]] = None,
-                           **kwargs) -> None:
+    def transactional_send(
+        self, frames: List[T], metadata: Optional[Dict[str, Any]] = None, **kwargs
+    ) -> None:
         successful = []
         try:
             for f in frames:
@@ -850,24 +990,37 @@ class FramePipeline(Generic[T]):
         except Exception as e:
             logger.error(f"Transactional send failed: {e}. Rolling back.")
             for f in successful:
-                dummy = Frame(data=f, metadata=metadata, timestamp=time.time(),
-                              sender_id=self.sender_id, id=self.frame_counter, priority=0,
-                              expire_at=None, available_at=time.time(), correlation_id=str(uuid.uuid4()))
+                dummy = Frame(
+                    data=f,
+                    metadata=metadata,
+                    timestamp=time.time(),
+                    sender_id=self.sender_id,
+                    id=self.frame_counter,
+                    priority=0,
+                    expire_at=None,
+                    available_at=time.time(),
+                    correlation_id=str(uuid.uuid4()),
+                )
                 self.add_to_dead_letter(dummy)
             raise
-
 
     async def async_send(self, *args, **kwargs) -> None:
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self.send, *args, **kwargs)
 
-    async def async_receive(self, consumer_id: str, block: bool = True, timeout: Optional[float] = None) -> Optional[Frame[T]]:
+    async def async_receive(
+        self, consumer_id: str, block: bool = True, timeout: Optional[float] = None
+    ) -> Optional[Frame[T]]:
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.receive, consumer_id, block, timeout)
+        return await loop.run_in_executor(
+            None, self.receive, consumer_id, block, timeout
+        )
 
     def start_metrics_server(self, port: int = 8000) -> None:
         from http.server import BaseHTTPRequestHandler, HTTPServer
+
         pipeline = self
+
         class MetricsHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 if self.path == "/metrics":
@@ -877,7 +1030,9 @@ class FramePipeline(Generic[T]):
                         lines.append(f"pipeline_{k} {v}")
                     for cid, m in metrics["consumers"].items():
                         for k, v in m.items():
-                            lines.append(f'pipeline_consumer{{id="{cid}",metric="{k}"}} {v}')
+                            lines.append(
+                                f'pipeline_consumer{{id="{cid}",metric="{k}"}} {v}'
+                            )
                     output = "\n".join(lines)
                     self.send_response(200)
                     self.send_header("Content-type", "text/plain; version=0.0.4")
@@ -885,11 +1040,11 @@ class FramePipeline(Generic[T]):
                     self.wfile.write(output.encode("utf-8"))
                 else:
                     self.send_error(404)
+
         server = HTTPServer(("", port), MetricsHandler)
         t = threading.Thread(target=server.serve_forever, daemon=True)
         t.start()
         logger.info(f"Metrics server started on port {port}.")
-
 
     def _weighted_round_robin(self, group: str) -> str:
         members = self.consumer_groups.get(group, [])
@@ -911,18 +1066,19 @@ class FramePipeline(Generic[T]):
         self.group_rr_index[group] = index + 1
         return members[0]
 
-    def register_consumer(self,
-                          consumer_id: str,
-                          filter_fn: Optional[Callable[[Frame[T]], bool]] = None,
-                          max_queue_size: Optional[int] = None,
-                          overflow_policy: str = "drop",
-                          rate_limit: Optional[float] = None,
-                          topic: str = "default",
-                          group: Optional[str] = None,
-                          validate_func: Optional[Callable[[Frame[T]], bool]] = None,
-                          access_token: Optional[str] = None,
-                          weight: int = 1
-                          ) -> None:
+    def register_consumer(
+        self,
+        consumer_id: str,
+        filter_fn: Optional[Callable[[Frame[T]], bool]] = None,
+        max_queue_size: Optional[int] = None,
+        overflow_policy: str = "drop",
+        rate_limit: Optional[float] = None,
+        topic: str = "default",
+        group: Optional[str] = None,
+        validate_func: Optional[Callable[[Frame[T]], bool]] = None,
+        access_token: Optional[str] = None,
+        weight: int = 1,
+    ) -> None:
         with self.lock:
             if consumer_id in self.consumers:
                 raise ValueError(f"Consumer '{consumer_id}' is already registered.")
@@ -936,7 +1092,9 @@ class FramePipeline(Generic[T]):
             if overflow_policy not in ("drop", "error", "block"):
                 raise ValueError("overflow_policy must be 'drop', 'error', or 'block'")
             self.consumer_overflow_policy[consumer_id] = overflow_policy
-            self.consumer_rate_limits[consumer_id] = rate_limit if rate_limit is not None else float("inf")
+            self.consumer_rate_limits[consumer_id] = (
+                rate_limit if rate_limit is not None else float("inf")
+            )
             self.consumer_last_receive[consumer_id] = 0.0
             self.consumer_metrics[consumer_id] = {
                 "frames_received": 0,
@@ -946,13 +1104,20 @@ class FramePipeline(Generic[T]):
                 "frame_delay_count": 0,
             }
             self.consumer_failures[consumer_id] = 0
-            self.consumer_info[consumer_id] = {"topic": topic, "group": group, "access_token": access_token, "weight": weight}
+            self.consumer_info[consumer_id] = {
+                "topic": topic,
+                "group": group,
+                "access_token": access_token,
+                "weight": weight,
+            }
             self.consumer_validators[consumer_id] = validate_func
             if group is not None:
                 self.consumer_groups[group].append(consumer_id)
                 if group not in self.group_rr_index:
                     self.group_rr_index[group] = 0
-            logger.info(f"Consumer '{consumer_id}' registered on topic '{topic}' with group '{group}', weight {weight}.")
+            logger.info(
+                f"Consumer '{consumer_id}' registered on topic '{topic}' with group '{group}', weight {weight}."
+            )
             for hook in self.on_consumer_register:
                 try:
                     hook(consumer_id)
@@ -1010,12 +1175,13 @@ class FramePipeline(Generic[T]):
                 except Exception as e:
                     logger.error(f"Error in on_consumer_resume hook: {e}")
 
-    def update_consumer_config(self,
-                               consumer_id: str,
-                               max_queue_size: Optional[int] = None,
-                               overflow_policy: Optional[str] = None,
-                               rate_limit: Optional[float] = None
-                               ) -> None:
+    def update_consumer_config(
+        self,
+        consumer_id: str,
+        max_queue_size: Optional[int] = None,
+        overflow_policy: Optional[str] = None,
+        rate_limit: Optional[float] = None,
+    ) -> None:
         with self.lock:
             if consumer_id not in self.consumers:
                 raise ValueError(f"Consumer '{consumer_id}' not registered.")
@@ -1023,7 +1189,9 @@ class FramePipeline(Generic[T]):
                 self.consumer_maxsize[consumer_id] = max_queue_size
             if overflow_policy is not None:
                 if overflow_policy not in ("drop", "error", "block"):
-                    raise ValueError("overflow_policy must be 'drop', 'error', or 'block'")
+                    raise ValueError(
+                        "overflow_policy must be 'drop', 'error', or 'block'"
+                    )
                 self.consumer_overflow_policy[consumer_id] = overflow_policy
             if rate_limit is not None:
                 self.consumer_rate_limits[consumer_id] = rate_limit
@@ -1051,7 +1219,9 @@ class FramePipeline(Generic[T]):
 
             return {
                 "global": self.metrics.copy(),
-                "consumers": {cid: m.copy() for cid, m in self.consumer_metrics.items()},
+                "consumers": {
+                    cid: m.copy() for cid, m in self.consumer_metrics.items()
+                },
                 "consumer_average_delay": consumer_avg_delay,
             }
 
@@ -1062,7 +1232,7 @@ class FramePipeline(Generic[T]):
             dead_letter_count = len(self.dead_letter_queue)
             consumer_info = self.consumer_info.copy()
             consumer_groups = dict(self.consumer_groups)
-        metrics = self.get_metrics()  
+        metrics = self.get_metrics()
         return {
             "queue_size": queue_size,
             "consumer_count": consumer_count,
@@ -1115,22 +1285,30 @@ class FramePipeline(Generic[T]):
         with self.lock:
             return self.closed
 
-    def schedule_frame(self,
-                       interval: float,
-                       frame: T,
-                       metadata: Optional[Dict[str, Any]] = None,
-                       required_by: Optional[List[str]] = None,
-                       priority: Optional[int] = None,
-                       ttl: Optional[float] = None,
-                       delay: Optional[float] = None,
-                       correlation_id: Optional[str] = None,
-                       topic: Optional[str] = None
-                       ) -> Callable[[], None]:
+    def schedule_frame(
+        self,
+        interval: float,
+        frame: T,
+        metadata: Optional[Dict[str, Any]] = None,
+        required_by: Optional[List[str]] = None,
+        priority: Optional[int] = None,
+        ttl: Optional[float] = None,
+        delay: Optional[float] = None,
+        correlation_id: Optional[str] = None,
+        topic: Optional[str] = None,
+    ) -> Callable[[], None]:
         def _send_and_reschedule():
             try:
-                self.send(frame, metadata=metadata, required_by=required_by,
-                          priority=priority, ttl=ttl, delay=delay,
-                          correlation_id=correlation_id, topic=topic)
+                self.send(
+                    frame,
+                    metadata=metadata,
+                    required_by=required_by,
+                    priority=priority,
+                    ttl=ttl,
+                    delay=delay,
+                    correlation_id=correlation_id,
+                    topic=topic,
+                )
             except Exception as e:
                 logger.error(f"Error sending scheduled frame: {e}")
             if not self.closed:
@@ -1138,15 +1316,20 @@ class FramePipeline(Generic[T]):
                 with self.lock:
                     self.scheduled_tasks.append(t)
                 t.start()
+
         t = threading.Timer(interval, _send_and_reschedule)
         with self.lock:
             self.scheduled_tasks.append(t)
         t.start()
+
         def cancel():
             t.cancel()
+
         return cancel
 
+
 import pytest
+
 
 def test_basic_send_receive():
     pipeline = FramePipeline[int]()
@@ -1156,6 +1339,7 @@ def test_basic_send_receive():
     assert frame is not None and frame.data == 42
     pipeline.close()
 
+
 def test_consumer_filtering():
     pipeline = FramePipeline[int]()
     pipeline.register_consumer("even_consumer", filter_fn=lambda f: f.data % 2 == 0)
@@ -1163,7 +1347,7 @@ def test_consumer_filtering():
     pipeline.send(3)
     pipeline.send(4)
     frame_even = pipeline.receive("even_consumer", block=False)
-    print(frame_even);
+    print(frame_even)
     assert frame_even is not None and frame_even.data == 4
     frame_all1 = pipeline.receive("all_consumer", block=False)
     frame_all2 = pipeline.receive("all_consumer", block=False)
@@ -1171,18 +1355,26 @@ def test_consumer_filtering():
     assert received_data == [3, 4]
     pipeline.close()
 
+
 def test_consumer_groups_and_topics():
     pipeline = FramePipeline[int]()
-    pipeline.register_consumer("news_consumer_1", topic="news", group="group1", weight=3)
-    pipeline.register_consumer("news_consumer_2", topic="news", group="group1", weight=1)
+    pipeline.register_consumer(
+        "news_consumer_1", topic="news", group="group1", weight=3
+    )
+    pipeline.register_consumer(
+        "news_consumer_2", topic="news", group="group1", weight=1
+    )
     pipeline.register_consumer("sports_consumer", topic="sports")
     pipeline.send(100, topic="news")
-    received = pipeline.batch_receive("news_consumer_1", 1) + pipeline.batch_receive("news_consumer_2", 1)
+    received = pipeline.batch_receive("news_consumer_1", 1) + pipeline.batch_receive(
+        "news_consumer_2", 1
+    )
     assert len(received) == 1 and received[0].data == 100
     pipeline.send(200, topic="sports")
     frame_sports = pipeline.receive("sports_consumer", block=False)
     assert frame_sports is not None and frame_sports.data == 200
     pipeline.close()
+
 
 def test_persistence_and_replay(tmp_path):
     persist_file = str(tmp_path / "pipeline.log")
@@ -1194,6 +1386,7 @@ def test_persistence_and_replay(tmp_path):
     assert any("persisted frame" in record["data"] for record in replayed)
     pipeline.close()
 
+
 def test_encryption_decryption():
     encrypt = lambda d: d[::-1] if isinstance(d, str) else d
     decrypt = lambda d: d[::-1] if isinstance(d, str) else d
@@ -1204,11 +1397,13 @@ def test_encryption_decryption():
     assert frame is not None and frame.data == "hello"
     pipeline.close()
 
+
 def test_interceptors():
     def send_interceptor(frame: Frame[str]) -> Frame[str]:
         if isinstance(frame.data, str):
             frame.data += "-intercepted"
         return frame
+
     pipeline = FramePipeline[str]()
     pipeline.send_interceptors.append(send_interceptor)
     pipeline.register_consumer("consumer1")
@@ -1216,6 +1411,7 @@ def test_interceptors():
     frame = pipeline.receive("consumer1", block=False)
     assert frame is not None and frame.data == "data-intercepted"
     pipeline.close()
+
 
 def test_correlation_id():
     pipeline = FramePipeline[int]()
@@ -1225,16 +1421,20 @@ def test_correlation_id():
     assert frame is not None and frame.correlation_id is not None
     pipeline.close()
 
+
 def test_distributed_forwarder():
     forwarded = []
+
     def forwarder(frame: Frame[int]):
         forwarded.append(frame.data)
+
     pipeline = FramePipeline[int](distributed_forwarder=forwarder)
     pipeline.register_consumer("consumer1")
     pipeline.send(777)
     time.sleep(0.1)
     assert 777 in forwarded
     pipeline.close()
+
 
 def test_transactional_send():
     pipeline = FramePipeline[int]()
@@ -1247,6 +1447,7 @@ def test_transactional_send():
     assert len(frames) == 3
     pipeline.close()
 
+
 @pytest.mark.asyncio
 async def test_async_send_receive():
     pipeline = FramePipeline[int]()
@@ -1255,6 +1456,7 @@ async def test_async_send_receive():
     frame = await pipeline.async_receive("async_consumer", block=True, timeout=1)
     assert frame is not None and frame.data == 123
     pipeline.close()
+
 
 def test_iterate_frames():
     pipeline = FramePipeline[int]()
@@ -1266,6 +1468,7 @@ def test_iterate_frames():
     assert [f.data for f in frames] == list(range(5))
     pipeline.close()
 
+
 def test_schedule_frame():
     pipeline = FramePipeline[int]()
     pipeline.register_consumer("scheduler_consumer")
@@ -1276,17 +1479,25 @@ def test_schedule_frame():
     cancel()
     pipeline.close()
 
+
 def test_dead_letter_queue():
     pipeline = FramePipeline[int]()
     try:
         pipeline.transactional_send([111, 222])
     except Exception:
         pass
-    dummy = Frame(available_at=time.time(), priority=0, id=999, data=999, correlation_id=str(uuid.uuid4()))
+    dummy = Frame(
+        available_at=time.time(),
+        priority=0,
+        id=999,
+        data=999,
+        correlation_id=str(uuid.uuid4()),
+    )
     pipeline.add_to_dead_letter(dummy)
     dl = pipeline.get_dead_letter_frames()
     assert any(f.id == 999 for f in dl)
     pipeline.close()
+
 
 def test_health_check():
     pipeline = FramePipeline[int]()
@@ -1295,6 +1506,7 @@ def test_health_check():
     health = pipeline.health_check()
     assert "queue_size" in health and health["consumer_count"] >= 1
     pipeline.close()
+
 
 def test_deduplication():
     pipeline = FramePipeline[int](deduplication_window=2.0)
@@ -1312,8 +1524,10 @@ def test_pre_send_and_pre_delivery_hooks():
     def pre_send(frame: Frame[str]) -> Frame[str]:
         frame.data = "pre_send_" + frame.data
         return frame
+
     def pre_delivery(frame: Frame[str], cid: str):
         frame.data = frame.data + "_pre_delivery"
+
     pipeline = FramePipeline[str]()
     pipeline.pre_send_callbacks.append(pre_send)
     pipeline.pre_delivery_callbacks.append(pre_delivery)
@@ -1323,8 +1537,15 @@ def test_pre_send_and_pre_delivery_hooks():
     assert frame is not None and frame.data == "pre_send_data_pre_delivery"
     pipeline.close()
 
+
 class FrameListener:
-    def __init__(self, pipeline: FramePipeline[Any], on_tick: Optional[Callable[[Frame[Any]], None]] = None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        pipeline: FramePipeline[Any],
+        on_tick: Optional[Callable[[Frame[Any]], None]] = None,
+        *args,
+        **kwargs,
+    ) -> None:
         self.pipeline = pipeline
         self.on_tick = on_tick
 
@@ -1342,18 +1563,24 @@ class FrameListener:
         else:
             time.sleep(0.1)
 
+
 def frame_printer(pipeline: FramePipeline[Any]) -> FrameListener:
     """
     Continuously receives frames from the pipeline using the given consumer ID.
     When a frame is received, it is printed to standard output.
     The thread exits when the pipeline is closed.
     """
-    
+
     return FrameListener(pipeline, lambda frame: print("Frame Listener:", frame))
 
 
 class PipelineSupplier(Generic[T]):
-    def __init__(self, event_pipeline: FramePipeline[Event], state_pipeline: FramePipeline[StateData], initial: Optional[T] = None):
+    def __init__(
+        self,
+        event_pipeline: FramePipeline[Event],
+        state_pipeline: FramePipeline[StateData],
+        initial: Optional[T] = None,
+    ):
         self.event_pipeline = event_pipeline
         self.state_pipeline = state_pipeline
         self.state = initial
@@ -1364,7 +1591,9 @@ class PipelineSupplier(Generic[T]):
 
     def supply(self, frame: Frame[Event]) -> None:
         if frame.data.event_type == EventType.UPDATE_STATE:
-            self.state_pipeline.send(StateData(id=self.id, state=self.state), sender_id=self.id)
+            self.state_pipeline.send(
+                StateData(id=self.id, state=self.state), sender_id=self.id
+            )
 
     def update(self, new: Optional[T]) -> None:
         self.state = new
@@ -1372,11 +1601,12 @@ class PipelineSupplier(Generic[T]):
     def get_id(self) -> str:
         return self.id
 
+
 class PipelineState(Generic[T]):
     def __init__(self, id: str, state_pipeline: FramePipeline[StateData]) -> None:
         self.id = id
         self.state_pipeline = state_pipeline
-        
+
         self.current: Optional[T] = None
 
         self.state_pipeline.attach(FrameListener, self.update)
@@ -1392,12 +1622,20 @@ class PipelineState(Generic[T]):
         if frame.data.id == self.id:
             self.current = frame.data.state
 
+
 class ManagedState(Generic[T]):
-    def __init__(self, initial: T, event_pipeline: FramePipeline[Event], state_pipeline: FramePipeline[StateData]) -> None:
+    def __init__(
+        self,
+        initial: T,
+        event_pipeline: FramePipeline[Event],
+        state_pipeline: FramePipeline[StateData],
+    ) -> None:
         self.event_pipeline = event_pipeline
         self.state_pipeline = state_pipeline
 
-        self.supplier = PipelineSupplier(self.event_pipeline, self.state_pipeline, initial)
+        self.supplier = PipelineSupplier(
+            self.event_pipeline, self.state_pipeline, initial
+        )
         self.state = PipelineState.from_supplier(self.supplier)
 
     def get(self) -> Optional[T]:
@@ -1405,4 +1643,3 @@ class ManagedState(Generic[T]):
 
     def update(self, new: Optional[T]):
         self.supplier.update(new)
-

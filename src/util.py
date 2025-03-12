@@ -5,15 +5,17 @@ from typing import Optional, List, Dict, Any, Union
 
 from chest import ChestRarity
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 from typing import Generic, TypeVar
 import math
 
-T = TypeVar('T')
-U = TypeVar('U')
+T = TypeVar("T")
+U = TypeVar("U")
+
 
 class Pair(Generic[T, U]):
     """
@@ -39,16 +41,19 @@ class Pair(Generic[T, U]):
         return (self.first, self.second)
 
     @classmethod
-    def from_tuple(cls, tup: tuple[T, U]) -> 'Pair[T, U]':
+    def from_tuple(cls, tup: tuple[T, U]) -> "Pair[T, U]":
         if not isinstance(tup, tuple) or len(tup) != 2:
             raise TypeError("Input must be a tuple of length 2")
         return cls(tup[0], tup[1])
-    
+
     def __iter__(self):
         yield self.first
         yield self.second
 
-def is_point_inside_circle(center_x: float, center_y: float, radius: float, point_x: float, point_y: float):
+
+def is_point_inside_circle(
+    center_x: float, center_y: float, radius: float, point_x: float, point_y: float
+):
     """
     Checks if a point is inside a circle.
 
@@ -63,9 +68,10 @@ def is_point_inside_circle(center_x: float, center_y: float, radius: float, poin
         True if the point is inside or on the circle, False otherwise.
     """
 
-    distance = math.sqrt((point_x - center_x)**2 + (point_y - center_y)**2)
+    distance = math.sqrt((point_x - center_x) ** 2 + (point_y - center_y) ** 2)
 
     return distance <= radius
+
 
 def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> Any:
     """
@@ -81,10 +87,16 @@ def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> An
         if name in dataclass_definitions:
             return dataclass_definitions[name]
 
-        if isinstance(data, list) and data and isinstance(data[0], dict): #list of dictionaries
-            sub_dataclass_name = "".join(word.capitalize() for word in name.split("_singular"))
+        if (
+            isinstance(data, list) and data and isinstance(data[0], dict)
+        ):  # list of dictionaries
+            sub_dataclass_name = "".join(
+                word.capitalize() for word in name.split("_singular")
+            )
             if not sub_dataclass_name:
-                sub_dataclass_name = "".join(word.capitalize() for word in name.split("_"))
+                sub_dataclass_name = "".join(
+                    word.capitalize() for word in name.split("_")
+                )
             sub_dataclass = _create_dataclass(sub_dataclass_name, data[0])
             return List[sub_dataclass]
 
@@ -94,7 +106,7 @@ def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> An
             else:
                 return List[Any]
 
-        if not isinstance(data, dict): #primitive types
+        if not isinstance(data, dict):  # primitive types
             return type(data)
 
         fields = []
@@ -104,7 +116,9 @@ def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> An
             field_type = type(value)
 
             if isinstance(value, dict) or isinstance(value, list):
-                sub_dataclass_name = "".join(word.capitalize() for word in key.split("_"))
+                sub_dataclass_name = "".join(
+                    word.capitalize() for word in key.split("_")
+                )
                 field_type = _create_dataclass(sub_dataclass_name, value)
             else:
                 if key == "rarity":

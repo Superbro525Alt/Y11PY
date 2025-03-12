@@ -5,6 +5,7 @@ from game_packet import PacketType
 from network import Packet, Server
 from concurrent.futures import ThreadPoolExecutor
 from time import sleep
+
 if __name__ == "__main__":
     GameServer()
     g1 = Game("0")
@@ -16,4 +17,3 @@ if __name__ == "__main__":
         input(">>>")
         g1.client.start_matchmaking()
         g2.client.start_matchmaking()
-

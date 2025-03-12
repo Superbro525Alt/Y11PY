@@ -6,18 +6,20 @@ from card import Card
 
 
 class ChestRarity(enum.Enum):
-    WOOD = 0,
-    SILVER = 1,
-    GOLD = 2,
-    GIANT = 3,
+    WOOD = (0,)
+    SILVER = (1,)
+    GOLD = (2,)
+    GIANT = (3,)
     DEV = 4
+
 
 @dataclass
 class Chest:
     cards: List[Card]
     gold: int
     gems: int
-    rarity: str 
+    rarity: str
+
 
 def generate_chest(rarity: ChestRarity) -> Chest:
     match (rarity):

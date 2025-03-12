@@ -3,11 +3,13 @@ from typing import List
 
 from card import Card
 
-@dataclass 
+
+@dataclass
 class ShopCard:
     card: Card
     price: int
 
-@dataclass 
+
+@dataclass
 class Shop:
     cards: List[ShopCard]

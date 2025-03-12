@@ -15,11 +15,14 @@ from util import logger
 import select
 from uuid import uuid4
 
-@dataclass 
+
+@dataclass
 class ServerStatus:
     pass
 
+
 import enum
+
 
 def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
     """Deserializes a dictionary into a dataclass instance."""
@@ -35,25 +38,50 @@ def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
 
     for field in fields(target_type):
         field_name = field.name
-        field_type = type_hints.get(field_name, field.type) #get type hint, or field.type if not found
+        field_type = type_hints.get(
+            field_name, field.type
+        )  # get type hint, or field.type if not found
 
         if field_name in data:
             value = data[field_name]
-            if dataclass(field_type) is field_type and isinstance(value, dict): #Check if subobject is dataclass, and data is dict.
+            if dataclass(field_type) is field_type and isinstance(
+                value, dict
+            ):  # Check if subobject is dataclass, and data is dict.
                 field_values[field_name] = deserialize_object(value, field_type)
-            elif hasattr(field_type, "__origin__") and field_type.__origin__ is list and isinstance(value, list): #List handling
+            elif (
+                hasattr(field_type, "__origin__")
+                and field_type.__origin__ is list
+                and isinstance(value, list)
+            ):  # List handling
                 inner_type = field_type.__args__[0]
                 if dataclass(inner_type) is inner_type:
-                    field_values[field_name] = [deserialize_object(item, inner_type) for item in value]
+                    field_values[field_name] = [
+                        deserialize_object(item, inner_type) for item in value
+                    ]
                 else:
-                    field_values[field_name] = value #No dataclass in list, so just return
-            elif hasattr(field_type, "__origin__") and field_type.__origin__ is dict and isinstance(value, dict): #dict handling
+                    field_values[field_name] = (
+                        value  # No dataclass in list, so just return
+                    )
+            elif (
+                hasattr(field_type, "__origin__")
+                and field_type.__origin__ is dict
+                and isinstance(value, dict)
+            ):  # dict handling
                 key_type = field_type.__args__[0]
                 value_type = field_type.__args__[1]
                 if dataclass(value_type) is value_type:
-                    field_values[field_name] = {deserialize_object(k, key_type): deserialize_object(v, value_type) if isinstance(v, dict) else v for k, v in value.items()}
+                    field_values[field_name] = {
+                        deserialize_object(k, key_type): (
+                            deserialize_object(v, value_type)
+                            if isinstance(v, dict)
+                            else v
+                        )
+                        for k, v in value.items()
+                    }
                 else:
-                    field_values[field_name] = value #No dataclass in dict, so just return
+                    field_values[field_name] = (
+                        value  # No dataclass in dict, so just return
+                    )
             else:
                 field_values[field_name] = value
         else:
@@ -61,8 +89,9 @@ def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
 
     return target_type(**field_values)
 
+
 def serialize_object(obj: Any):
-    """ Recursively converts objects to dictionaries if they have `__dict__`. """
+    """Recursively converts objects to dictionaries if they have `__dict__`."""
     if isinstance(obj, (int, float, str, bool, type(None))):  # Handle primitives
         return obj
     elif isinstance(obj, list):  # Handle lists
@@ -74,9 +103,15 @@ def serialize_object(obj: Any):
     else:
         raise TypeError(f"Type {type(obj)} is not JSON serializable")
 
-def recv_all(sock: socket.socket, length: int, timeout: Optional[float] = None, id: Optional[str] = None) -> Optional[bytes]:
+
+def recv_all(
+    sock: socket.socket,
+    length: int,
+    timeout: Optional[float] = None,
+    id: Optional[str] = None,
+) -> Optional[bytes]:
     """Receives exactly 'length' bytes from the socket with an optional timeout."""
-    data = b''
+    data = b""
     remaining = length
 
     while remaining > 0:
@@ -101,6 +136,7 @@ def recv_all(sock: socket.socket, length: int, timeout: Optional[float] = None, 
 
 class Packet:
     """Represents a network packet that is serialized for transmission."""
+
     HEADER_FORMAT = "<II"
     HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
@@ -119,7 +155,9 @@ class Packet:
         return header + self.data
 
     @staticmethod
-    def from_socket(sock: socket.socket, id: Optional[str] = None, timeout: bool = False) -> Optional["Packet"]:
+    def from_socket(
+        sock: socket.socket, id: Optional[str] = None, timeout: bool = False
+    ) -> Optional["Packet"]:
         """Receives a packet from a socket."""
         t = None
         if timeout:
@@ -141,9 +179,10 @@ class Packet:
         data = recv_all(sock, data_length)
         return Packet(packet_type, data)
 
+
 class NetworkObject:
     """Base class for handling specific packet types."""
-    
+
     def __init__(self):
         self._handles = self.get_supported_packets()
 
@@ -159,11 +198,12 @@ class NetworkObject:
         """Checks if this network object can handle a given packet type."""
         return packet_type in self._handles
 
-    def on_connection(self) -> None: 
+    def on_connection(self) -> None:
         pass
 
     def tick(self) -> None:
         pass
+
 
 class Server:
     """Multiplayer game server that manages clients and game state."""
@@ -193,8 +233,12 @@ class Server:
             logger.info(f"Client connected: {addr}")
             with self.lock:
                 self.clients.append(client_sock)
-            threading.Thread(target=self.handle_client, args=(client_sock,), daemon=True).start()
-            threading.Thread(target=self.handle_client_conn, args=(client_sock,), daemon=True).start()
+            threading.Thread(
+                target=self.handle_client, args=(client_sock,), daemon=True
+            ).start()
+            threading.Thread(
+                target=self.handle_client_conn, args=(client_sock,), daemon=True
+            ).start()
 
     def handle_client(self, client_sock: socket.socket):
         """Handles client messages and packet processing."""
@@ -218,7 +262,9 @@ class Server:
 
         while True:
             try:
-                status_packet = Packet(PacketType.STATUS, json.dumps(ServerStatus().__dict__).encode())
+                status_packet = Packet(
+                    PacketType.STATUS, json.dumps(ServerStatus().__dict__).encode()
+                )
                 client_sock.sendall(status_packet.serialize_with_length())
                 sleep(0.1)
             except (ConnectionError, Exception) as e:
@@ -239,7 +285,8 @@ class Server:
             client.sendall(packet.serialize_with_length())
 
     @abstractmethod
-    def tick(self) -> None: pass
+    def tick(self) -> None:
+        pass
 
     def _broadcast_loop(self):
         while True:
@@ -264,12 +311,12 @@ class Client(metaclass=ABCMeta):
         self.listen_thread = threading.Thread(target=self.listen, daemon=True)
         self.listen_thread.start()
 
-
     def send(self, pack: Packet) -> None:
         self.sock.sendall(pack.serialize_with_length())
 
     @abstractmethod
-    def packet_callback(self, packet: Packet): pass
+    def packet_callback(self, packet: Packet):
+        pass
 
     def listen(self):
         """Listens for game state updates from the server and updates the client's local state."""
@@ -280,14 +327,14 @@ class Client(metaclass=ABCMeta):
                     logger.warning(f"Received empty packet, disconnecting...")
                     break
                 self.packet_callback(packet)
-                
+
             except (ConnectionError, socket.error) as e:
                 logger.warning(f"Connection error: {e}")
                 break
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
                 break
-    
+
         try:
             self.sock.close()
         except:
@@ -301,6 +348,7 @@ class Client(metaclass=ABCMeta):
             pass
         finally:
             self.sock.close()
+
 
 def do_if(pack: Packet, t: PacketType, callback: Callable[[], None]) -> None:
     if pack.packet_type == t:

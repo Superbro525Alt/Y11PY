@@ -6,15 +6,17 @@ from chest import Chest
 from clan import Clan
 
 
-@dataclass 
+@dataclass
 class LoginRequest:
     password_hash: str
     username: str
 
-@dataclass 
+
+@dataclass
 class LoginResponse:
     uuid: str
     username: str
+
 
 @dataclass
 class ServerUserData:
@@ -25,12 +27,14 @@ class ServerUserData:
     current_deck: int
     current_battle: Optional[str]
 
+
 @dataclass
 class User:
     username: str
-    uuid: str 
+    uuid: str
     pass_hash: str
     data: ServerUserData
+
 
 class UserMap:
     def __init__(self, initial_users: List[User]) -> None:
@@ -46,6 +50,7 @@ class UserMap:
     def find_uuid(self, uuid: str) -> Optional[User]:
         return self.users_by_uuid.get(uuid)
 
-@dataclass 
+
+@dataclass
 class DataRequest:
     uuid: str

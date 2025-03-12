@@ -1,13 +1,15 @@
 import json
 import random
-from typing import Any, Dict, List 
+from typing import Any, Dict, List
 
 
 def pretty_print_board(board_state):
     """Prints the game board in a readable format."""
     print("\n" + "=" * 50)
     print(f" 🌍 PANDEMIC GAME BOARD - TURN {board_state['turn']} 🌍")
-    print(f"Current Turn: {board_state['current_turn']} | Actions Left: {board_state['actions_remaining']}")
+    print(
+        f"Current Turn: {board_state['current_turn']} | Actions Left: {board_state['actions_remaining']}"
+    )
     print("=" * 50)
 
     # Print Players
@@ -19,68 +21,393 @@ def pretty_print_board(board_state):
     print("\n🏙️ Cities:")
     for city, data in board_state["cities"].items():
         research_center = "🏥" if data["research_center"] else "   "
-        diseases = ", ".join([f"{color}: {count}" for color, count in data.get("disease", {}).items()])
+        diseases = ", ".join(
+            [f"{color}: {count}" for color, count in data.get("disease", {}).items()]
+        )
         diseases = diseases if diseases else "None"
         print(f"  {research_center} {city:<15} | Diseases: {diseases}")
 
     print("\n" + "=" * 50)
 
+
 class Board:
     CITIES = {
-        "San Francisco": {"neighbors": ["Los Angeles", "Chicago", "Tokyo", "Manila"], "research_center": False, "disease": {}, "x": -2, "y": 2},
-        "Los Angeles": {"neighbors": ["San Francisco", "Mexico City", "Sydney", "Chicago"], "research_center": False, "disease": {}, "x": -3, "y": 1},
-        "Chicago": {"neighbors": ["San Francisco", "Los Angeles", "Montreal", "Atlanta", "Mexico City"], "research_center": False, "disease": {}, "x": -1, "y": 2},
-        "Montreal": {"neighbors": ["Chicago", "New York", "Washington"], "research_center": False, "disease": {}, "x": 0, "y": 3},
-        "New York": {"neighbors": ["Montreal", "Washington", "Madrid", "London"], "research_center": False, "disease": {}, "x": 1, "y": 3},
-        "Washington": {"neighbors": ["New York", "Montreal", "Miami", "Atlanta"], "research_center": False, "disease": {}, "x": 1, "y": 2},
-        "Atlanta": {"neighbors": ["Chicago", "Washington", "Miami"], "research_center": True, "disease": {}, "x": 0, "y": 1},
-        "Miami": {"neighbors": ["Washington", "Atlanta", "Bogotá", "Mexico City"], "research_center": False, "disease": {}, "x": 2, "y": 1},
-        "Mexico City": {"neighbors": ["Los Angeles", "Chicago", "Miami", "Bogotá", "Lima"], "research_center": False, "disease": {}, "x": -2, "y": -1},
-        "Bogotá": {"neighbors": ["Mexico City", "Miami", "Lima", "São Paulo", "Buenos Aires"], "research_center": False, "disease": {}, "x": 1, "y": -2},
-        "Lima": {"neighbors": ["Mexico City", "Bogotá", "Santiago"], "research_center": False, "disease": {}, "x": 0, "y": -3},
-        "Santiago": {"neighbors": ["Lima"], "research_center": False, "disease": {}, "x": -1, "y": -4},
-        "Buenos Aires": {"neighbors": ["Bogotá", "São Paulo"], "research_center": False, "disease": {}, "x": 2, "y": -3},
-        "São Paulo": {"neighbors": ["Bogotá", "Buenos Aires", "Madrid", "Lagos"], "research_center": False, "disease": {}, "x": 2, "y": -2},
-        "Lagos": {"neighbors": ["São Paulo", "Kinshasa", "Khartoum"], "research_center": False, "disease": {}, "x": 3, "y": -1},
-        "Khartoum": {"neighbors": ["Lagos", "Kinshasa", "Johannesburg", "Cairo"], "research_center": False, "disease": {}, "x": 4, "y": 0},
-        "Kinshasa": {"neighbors": ["Lagos", "Khartoum", "Johannesburg"], "research_center": False, "disease": {}, "x": 3, "y": -2},
-        "Johannesburg": {"neighbors": ["Kinshasa", "Khartoum"], "research_center": False, "disease": {}, "x": 4, "y": -2},
-        "Madrid": {"neighbors": ["New York", "São Paulo", "Paris", "London", "Algiers"], "research_center": False, "disease": {}, "x": 2, "y": 2},
-        "London": {"neighbors": ["New York", "Madrid", "Paris", "Essen"], "research_center": False, "disease": {}, "x": 1, "y": 4},
-        "Paris": {"neighbors": ["London", "Madrid", "Essen", "Algiers", "Milan"], "research_center": False, "disease": {}, "x": 2, "y": 4},
-        "Essen": {"neighbors": ["London", "Paris", "Milan", "St. Petersburg"], "research_center": False, "disease": {}, "x": 2, "y": 5},
-        "Milan": {"neighbors": ["Essen", "Paris", "Istanbul"], "research_center": False, "disease": {}, "x": 3, "y": 4},
-        "Algiers": {"neighbors": ["Madrid", "Paris", "Cairo", "Istanbul"], "research_center": False, "disease": {}, "x": 3, "y": 2},
-        "Cairo": {"neighbors": ["Algiers", "Istanbul", "Baghdad", "Khartoum"], "research_center": False, "disease": {}, "x": 4, "y": 1},
-        "Istanbul": {"neighbors": ["Milan", "Algiers", "Cairo", "Baghdad", "Moscow", "St. Petersburg"], "research_center": False, "disease": {}, "x": 4, "y": 3},
-        "Moscow": {"neighbors": ["St. Petersburg", "Istanbul", "Tehran"], "research_center": False, "disease": {}, "x": 5, "y": 4},
-        "St. Petersburg": {"neighbors": ["Essen", "Istanbul", "Moscow"], "research_center": False, "disease": {}, "x": 4, "y": 5},
-        "Baghdad": {"neighbors": ["Istanbul", "Cairo", "Riyadh", "Tehran", "Karachi"], "research_center": False, "disease": {}, "x": 5, "y": 2},
-        "Manila": {"neighbors": ["Taipei", "San Francisco", "Ho Chi Minh City", "Sydney", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": -1},
-        "Sydney": {"neighbors": ["Jakarta", "Los Angeles", "Manila"], "research_center": False, "disease": {}, "x": -5, "y": -3},
-        "Tehran": {"neighbors": ["Baghdad", "Moscow", "Delhi", "Karachi"], "research_center": False, "disease": {}, "x": 6, "y": 3},
-        "Tokyo": {"neighbors": ["Seoul", "Shanghai", "San Francisco", "Osaka"], "research_center": False, "disease": {}, "x": -3, "y": 4},
-        "Delhi": {"neighbors": ["Tehran", "Karachi", "Mumbai", "Chennai", "Kolkata"], "research_center": False, "disease": {}, "x": 7, "y": 2},
-        "Ho Chi Minh City": {"neighbors": ["Jakarta", "Bangkok", "Manila", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": -2},
-        "Hong Kong": {"neighbors": ["Shanghai", "Taipei", "Manila", "Ho Chi Minh City", "Bangkok", "Kolkata"], "research_center": False, "disease": {}, "x": -3, "y": -2},
-        "Jakarta": {"neighbors": ["Chennai", "Bangkok", "Ho Chi Minh City", "Sydney"], "research_center": False, "disease": {}, "x": -5, "y": -2},
-    "Karachi": {"neighbors": ["Baghdad", "Tehran", "Delhi", "Mumbai", "Riyadh"], "research_center": False, "disease": {}, "x": 6, "y": 1},
-        "Osaka": {"neighbors": ["Taipei", "Tokyo"], "research_center": False, "disease": {}, "x": -2, "y": 3},
-        "Riyadh": {"neighbors": ["Baghdad", "Karachi", "Cairo"], "research_center": False, "disease": {}, "x": 6, "y": 0},
-        "Seoul": {"neighbors": ["Beijing", "Shanghai", "Tokyo"], "research_center": False, "disease": {}, "x": -2, "y": 5},
-        "Shanghai": {"neighbors": ["Beijing", "Seoul", "Tokyo", "Taipei", "Hong Kong"], "research_center": False, "disease": {}, "x": -3, "y": 3},
-        "Taipei": {"neighbors": ["Shanghai", "Hong Kong", "Osaka", "Manila"], "research_center": False, "disease": {}, "x": -3, "y": 2},
-        "Bangkok": {"neighbors": ["Kolkata", "Chennai", "Jakarta", "Ho Chi Minh City", "Hong Kong"], "research_center": False, "disease": {}, "x": -4, "y": 0},
-        "Beijing": {"neighbors": ["Shanghai", "Seoul"], "research_center": False, "disease": {}, "x": -3, "y": 5},
-        "Chennai": {"neighbors": ["Mumbai", "Delhi", "Kolkata", "Bangkok", "Jakarta"], "research_center": False, "disease": {}, "x": 8, "y": 1},
-        "Kolkata": {"neighbors": ["Delhi", "Chennai", "Bangkok", "Hong Kong"], "research_center": False, "disease": {}, "x": 7, "y": 0},
-        "Mumbai": {"neighbors": ["Karachi", "Delhi", "Chennai"], "research_center": False, "disease": {}, "x": 7, "y": 2},
+        "San Francisco": {
+            "neighbors": ["Los Angeles", "Chicago", "Tokyo", "Manila"],
+            "research_center": False,
+            "disease": {},
+            "x": -2,
+            "y": 2,
+        },
+        "Los Angeles": {
+            "neighbors": ["San Francisco", "Mexico City", "Sydney", "Chicago"],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": 1,
+        },
+        "Chicago": {
+            "neighbors": [
+                "San Francisco",
+                "Los Angeles",
+                "Montreal",
+                "Atlanta",
+                "Mexico City",
+            ],
+            "research_center": False,
+            "disease": {},
+            "x": -1,
+            "y": 2,
+        },
+        "Montreal": {
+            "neighbors": ["Chicago", "New York", "Washington"],
+            "research_center": False,
+            "disease": {},
+            "x": 0,
+            "y": 3,
+        },
+        "New York": {
+            "neighbors": ["Montreal", "Washington", "Madrid", "London"],
+            "research_center": False,
+            "disease": {},
+            "x": 1,
+            "y": 3,
+        },
+        "Washington": {
+            "neighbors": ["New York", "Montreal", "Miami", "Atlanta"],
+            "research_center": False,
+            "disease": {},
+            "x": 1,
+            "y": 2,
+        },
+        "Atlanta": {
+            "neighbors": ["Chicago", "Washington", "Miami"],
+            "research_center": True,
+            "disease": {},
+            "x": 0,
+            "y": 1,
+        },
+        "Miami": {
+            "neighbors": ["Washington", "Atlanta", "Bogotá", "Mexico City"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": 1,
+        },
+        "Mexico City": {
+            "neighbors": ["Los Angeles", "Chicago", "Miami", "Bogotá", "Lima"],
+            "research_center": False,
+            "disease": {},
+            "x": -2,
+            "y": -1,
+        },
+        "Bogotá": {
+            "neighbors": ["Mexico City", "Miami", "Lima", "São Paulo", "Buenos Aires"],
+            "research_center": False,
+            "disease": {},
+            "x": 1,
+            "y": -2,
+        },
+        "Lima": {
+            "neighbors": ["Mexico City", "Bogotá", "Santiago"],
+            "research_center": False,
+            "disease": {},
+            "x": 0,
+            "y": -3,
+        },
+        "Santiago": {
+            "neighbors": ["Lima"],
+            "research_center": False,
+            "disease": {},
+            "x": -1,
+            "y": -4,
+        },
+        "Buenos Aires": {
+            "neighbors": ["Bogotá", "São Paulo"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": -3,
+        },
+        "São Paulo": {
+            "neighbors": ["Bogotá", "Buenos Aires", "Madrid", "Lagos"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": -2,
+        },
+        "Lagos": {
+            "neighbors": ["São Paulo", "Kinshasa", "Khartoum"],
+            "research_center": False,
+            "disease": {},
+            "x": 3,
+            "y": -1,
+        },
+        "Khartoum": {
+            "neighbors": ["Lagos", "Kinshasa", "Johannesburg", "Cairo"],
+            "research_center": False,
+            "disease": {},
+            "x": 4,
+            "y": 0,
+        },
+        "Kinshasa": {
+            "neighbors": ["Lagos", "Khartoum", "Johannesburg"],
+            "research_center": False,
+            "disease": {},
+            "x": 3,
+            "y": -2,
+        },
+        "Johannesburg": {
+            "neighbors": ["Kinshasa", "Khartoum"],
+            "research_center": False,
+            "disease": {},
+            "x": 4,
+            "y": -2,
+        },
+        "Madrid": {
+            "neighbors": ["New York", "São Paulo", "Paris", "London", "Algiers"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": 2,
+        },
+        "London": {
+            "neighbors": ["New York", "Madrid", "Paris", "Essen"],
+            "research_center": False,
+            "disease": {},
+            "x": 1,
+            "y": 4,
+        },
+        "Paris": {
+            "neighbors": ["London", "Madrid", "Essen", "Algiers", "Milan"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": 4,
+        },
+        "Essen": {
+            "neighbors": ["London", "Paris", "Milan", "St. Petersburg"],
+            "research_center": False,
+            "disease": {},
+            "x": 2,
+            "y": 5,
+        },
+        "Milan": {
+            "neighbors": ["Essen", "Paris", "Istanbul"],
+            "research_center": False,
+            "disease": {},
+            "x": 3,
+            "y": 4,
+        },
+        "Algiers": {
+            "neighbors": ["Madrid", "Paris", "Cairo", "Istanbul"],
+            "research_center": False,
+            "disease": {},
+            "x": 3,
+            "y": 2,
+        },
+        "Cairo": {
+            "neighbors": ["Algiers", "Istanbul", "Baghdad", "Khartoum"],
+            "research_center": False,
+            "disease": {},
+            "x": 4,
+            "y": 1,
+        },
+        "Istanbul": {
+            "neighbors": [
+                "Milan",
+                "Algiers",
+                "Cairo",
+                "Baghdad",
+                "Moscow",
+                "St. Petersburg",
+            ],
+            "research_center": False,
+            "disease": {},
+            "x": 4,
+            "y": 3,
+        },
+        "Moscow": {
+            "neighbors": ["St. Petersburg", "Istanbul", "Tehran"],
+            "research_center": False,
+            "disease": {},
+            "x": 5,
+            "y": 4,
+        },
+        "St. Petersburg": {
+            "neighbors": ["Essen", "Istanbul", "Moscow"],
+            "research_center": False,
+            "disease": {},
+            "x": 4,
+            "y": 5,
+        },
+        "Baghdad": {
+            "neighbors": ["Istanbul", "Cairo", "Riyadh", "Tehran", "Karachi"],
+            "research_center": False,
+            "disease": {},
+            "x": 5,
+            "y": 2,
+        },
+        "Manila": {
+            "neighbors": [
+                "Taipei",
+                "San Francisco",
+                "Ho Chi Minh City",
+                "Sydney",
+                "Hong Kong",
+            ],
+            "research_center": False,
+            "disease": {},
+            "x": -4,
+            "y": -1,
+        },
+        "Sydney": {
+            "neighbors": ["Jakarta", "Los Angeles", "Manila"],
+            "research_center": False,
+            "disease": {},
+            "x": -5,
+            "y": -3,
+        },
+        "Tehran": {
+            "neighbors": ["Baghdad", "Moscow", "Delhi", "Karachi"],
+            "research_center": False,
+            "disease": {},
+            "x": 6,
+            "y": 3,
+        },
+        "Tokyo": {
+            "neighbors": ["Seoul", "Shanghai", "San Francisco", "Osaka"],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": 4,
+        },
+        "Delhi": {
+            "neighbors": ["Tehran", "Karachi", "Mumbai", "Chennai", "Kolkata"],
+            "research_center": False,
+            "disease": {},
+            "x": 7,
+            "y": 2,
+        },
+        "Ho Chi Minh City": {
+            "neighbors": ["Jakarta", "Bangkok", "Manila", "Hong Kong"],
+            "research_center": False,
+            "disease": {},
+            "x": -4,
+            "y": -2,
+        },
+        "Hong Kong": {
+            "neighbors": [
+                "Shanghai",
+                "Taipei",
+                "Manila",
+                "Ho Chi Minh City",
+                "Bangkok",
+                "Kolkata",
+            ],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": -2,
+        },
+        "Jakarta": {
+            "neighbors": ["Chennai", "Bangkok", "Ho Chi Minh City", "Sydney"],
+            "research_center": False,
+            "disease": {},
+            "x": -5,
+            "y": -2,
+        },
+        "Karachi": {
+            "neighbors": ["Baghdad", "Tehran", "Delhi", "Mumbai", "Riyadh"],
+            "research_center": False,
+            "disease": {},
+            "x": 6,
+            "y": 1,
+        },
+        "Osaka": {
+            "neighbors": ["Taipei", "Tokyo"],
+            "research_center": False,
+            "disease": {},
+            "x": -2,
+            "y": 3,
+        },
+        "Riyadh": {
+            "neighbors": ["Baghdad", "Karachi", "Cairo"],
+            "research_center": False,
+            "disease": {},
+            "x": 6,
+            "y": 0,
+        },
+        "Seoul": {
+            "neighbors": ["Beijing", "Shanghai", "Tokyo"],
+            "research_center": False,
+            "disease": {},
+            "x": -2,
+            "y": 5,
+        },
+        "Shanghai": {
+            "neighbors": ["Beijing", "Seoul", "Tokyo", "Taipei", "Hong Kong"],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": 3,
+        },
+        "Taipei": {
+            "neighbors": ["Shanghai", "Hong Kong", "Osaka", "Manila"],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": 2,
+        },
+        "Bangkok": {
+            "neighbors": [
+                "Kolkata",
+                "Chennai",
+                "Jakarta",
+                "Ho Chi Minh City",
+                "Hong Kong",
+            ],
+            "research_center": False,
+            "disease": {},
+            "x": -4,
+            "y": 0,
+        },
+        "Beijing": {
+            "neighbors": ["Shanghai", "Seoul"],
+            "research_center": False,
+            "disease": {},
+            "x": -3,
+            "y": 5,
+        },
+        "Chennai": {
+            "neighbors": ["Mumbai", "Delhi", "Kolkata", "Bangkok", "Jakarta"],
+            "research_center": False,
+            "disease": {},
+            "x": 8,
+            "y": 1,
+        },
+        "Kolkata": {
+            "neighbors": ["Delhi", "Chennai", "Bangkok", "Hong Kong"],
+            "research_center": False,
+            "disease": {},
+            "x": 7,
+            "y": 0,
+        },
+        "Mumbai": {
+            "neighbors": ["Karachi", "Delhi", "Chennai"],
+            "research_center": False,
+            "disease": {},
+            "x": 7,
+            "y": 2,
+        },
     }
 
     def __init__(self, player_names: List[str]):
         """Initialize the board with cities, players, diseases, and turn tracking."""
         self.cities = {city: data.copy() for city, data in self.CITIES.items()}
-        self.players = {name: {"location": "Atlanta", "role": None} for name in player_names}
+        self.players = {
+            name: {"location": "Atlanta", "role": None} for name in player_names
+        }
         self.turn_order = list(self.players.keys())  # Order of turns
         self.current_turn_index = 0  # Index of whose turn it is
         self.actions_per_turn = 4
@@ -101,7 +428,7 @@ class Board:
         if self.get_current_player() != player:
             print(f"{player} cannot move, it's not their turn.")
             return False
-        
+
         if destination in self.CITIES[self.players[player]["location"]]["neighbors"]:
             self.players[player]["location"] = destination
             self.actions_remaining -= 1
@@ -183,7 +510,9 @@ class Board:
 
         city = self.infection_deck.pop(0)
         disease_type = random.choice(["blue", "red", "yellow", "black"])
-        self.cities[city]["disease"][disease_type] = self.cities[city]["disease"].get(disease_type, 0) + 1
+        self.cities[city]["disease"][disease_type] = (
+            self.cities[city]["disease"].get(disease_type, 0) + 1
+        )
         print(f"{city} infected with {disease_type}.")
 
     def tick_turn(self):
@@ -206,9 +535,8 @@ class Board:
             "diseases": self.diseases,
             "outbreaks": self.outbreaks,
             "turn": self.turn,
-            "infection_deck": self.infection_deck
+            "infection_deck": self.infection_deck,
         }
 
     def __repr__(self):
         return json.dumps(self.broadcast_state(), indent=2)
-

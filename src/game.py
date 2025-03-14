@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import deque
 import enum
+from functools import partial
 import json
 from logging import warn
 from random import randint, random
@@ -11,6 +12,7 @@ from types import SimpleNamespace
 from typing import Callable, Deque, Dict, List, Optional
 
 from numpy import average
+from copy import copy
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
 from game_packet import MatchRequest, PacketType
 from matchmaking import Matchmaking
@@ -203,6 +205,7 @@ class GameNetworkClient(Client):
         self.auth_state.requested = False
 
     def packet_callback(self, packet: Packet):
+        # print(packet)
         do_if(
             packet, PacketType.CONNECTION, lambda: self.update_connection_status(True)
         )
@@ -257,7 +260,10 @@ class NetworkStateObject(NetworkObject):
                     str(i),
                     str(i),
                     ServerUserData(
-                        [generate_chest(ChestRarity.GOLD) for i in range(randint(0, 4))],
+                        [
+                            generate_chest(ChestRarity.GOLD)
+                            for i in range(randint(0, 4))
+                        ],
                         None,
                         0,
                         [
@@ -384,7 +390,7 @@ class Game(Engine):
         """Initializes all scenes and UI elements."""
 
         # Latency Display (Present in All Scenes)
-        self.latency_display = UIElement(20, 20, 150, 40, color=(50, 50, 50))
+        self.latency_display = UIElement(20, 20, 200, 30, color=(50, 50, 50))
         self.main_menu_scene.add_ui_element(self.latency_display)
         self.battle_scene.add_ui_element(self.latency_display)
 
@@ -426,11 +432,40 @@ class Game(Engine):
         )
         self.battle_scene.add_ui_element(self.battle_bg)
 
-        self.elixir_display = UIElement(50, 100, 200, 50, color=(0, 0, 255))
+        self.elixir_display = UIElement(
+            20,  # Center horizontally
+            80,  # Near the bottom
+            100,  # Wider
+            30,
+            color=(0, 0, 255),
+        )
+
         self.battle_scene.add_ui_element(self.elixir_display)
 
-        self.hand_display = UIElement(50, 180, 400, 50, color=(100, 100, 100))
-        self.battle_scene.add_ui_element(self.hand_display)
+        # Spreading Hand Cards More Evenly Across the Bottom
+        self.hand_buttons = []
+        hand_card_width = 120
+        hand_card_height = 160
+        spacing = 20
+        hand_start_x = (self.sdl.get_width() - (hand_card_width * 4 + spacing * 3)) // 2
+        hand_y = self.sdl.get_height() - 180
+
+        for i in range(4):  # Assuming a 4-card hand
+            card_x = hand_start_x + i * (hand_card_width + spacing)
+
+            card_button = UIButton(
+                card_x,
+                hand_y,
+                hand_card_width,
+                hand_card_height,
+                self.text_renderer,
+                color=(150, 150, 150),
+                on_hover=(200, 200, 200),  # Add slight transparency on hover
+                callback=None,
+                text="Card",
+            )
+            self.battle_scene.add_ui_element(card_button)
+            self.hand_buttons.append(card_button)
 
         # Register Scenes
         self.scene_manager.add_scene(self.main_menu_scene)
@@ -486,9 +521,9 @@ class Game(Engine):
 
     def get_latency_color(self):
         """Returns latency color (green, yellow, or red) based on latency."""
-        if average(self.latency) < 50:
+        if average(self.latency) < 120:
             return (0, 255, 0)  # Green
-        elif average(self.latency) < 150:
+        elif average(self.latency) < 200:
             return (255, 255, 0)  # Yellow
         else:
             return (255, 0, 0)  # Red
@@ -520,7 +555,7 @@ class Game(Engine):
         """Handles UI text rendering, including latency, player stats, and battle info."""
         latency_color = self.get_latency_color()
         latency_text = f"Latency: {int(average(self.latency))}ms"
-        self.text_renderer.draw_text(latency_text, 30, 30, latency_color)
+        self.text_renderer.draw_text(latency_text, 20, 20, latency_color)
 
         # If in menu, show player info
         if self.scene_manager.current_scene == self.main_menu_scene:
@@ -535,16 +570,14 @@ class Game(Engine):
         elif self.scene_manager.current_scene == self.battle_scene:
             if self.client.state and self.client.state.battle_state:
                 elixir_text = f"Elixir: {self.client.state.battle_state.elixir}"
-                self.text_renderer.draw_text(elixir_text, 60, 110, (0, 255, 255))
+                self.text_renderer.draw_text(elixir_text, 20, 80, (0, 255, 255))
 
-                hand_text = "Hand: " + ", ".join(
-                    [card.name for card in self.client.state.battle_state.hand]
-                )
-                self.text_renderer.draw_text(hand_text, 60, 190, (255, 255, 255))
+                for i, card in enumerate(self.client.state.battle_state.hand):
+                    if i < len(self.hand_buttons):
+                        self.hand_buttons[i].text = card.name
+                        self.hand_buttons[i].callback = partial(
+                            self.card_pressed, self.client.state.battle_state.hand[i]
+                        )
 
-                next_card_text = (
-                    f"Next: {self.client.state.battle_state.next.name}"
-                    if self.client.state.battle_state.next
-                    else "Next: None"
-                )
-                self.text_renderer.draw_text(next_card_text, 60, 240, (150, 150, 255))
+    def card_pressed(self, card: Card):
+        print(card)

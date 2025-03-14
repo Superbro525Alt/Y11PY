@@ -65,6 +65,9 @@ class Card:
         None  # Damage dealt when deploying (e.g., Electro Wizard)
     )
 
+    def tick(self) -> None:
+        print(self.name)
+
 
 @dataclass
 class Deck:

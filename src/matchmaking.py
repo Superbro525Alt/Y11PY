@@ -1,11 +1,13 @@
 import collections
 from dataclasses import dataclass
 from enum import Enum
+from logging import Logger
+import logging
 from os import pardir
 from socket import socket
 import threading
 import time
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Self, Tuple
 
 from card import Card, Deck
 from game_packet import MatchFound, MatchRequest, PacketType
@@ -16,6 +18,7 @@ import random
 from util import Mutex
 
 MAX_TROPHY_DIFF = 100
+
 
 @dataclass
 class MatchRequestSocket:
@@ -49,29 +52,43 @@ def network_player(p: Player) -> NetworkPlayer:
         p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir
     )
 
+
 class Owner(Enum):
     SELF = 0
     OTHER = 1
 
-@dataclass 
+
+@dataclass
 class UnitData:
-    x: int 
+    x: int
     y: int
     current_target: Optional["Unit"]
     hitpoints: int
 
-@dataclass 
+
+@dataclass
 class Unit:
     underlying: Card
     owner: Owner
     unit_data: UnitData
+
+
+@dataclass
+class IDUnit:
+    inner: Unit
+    id: str
+
+    @classmethod
+    def from_unit(cls, unit: Unit) -> Self:
+        return cls(unit, str(uuid4()))
+
 
 @dataclass
 class Battle:
     p1: Player
     p2: Player
     uuid: str
-    units: List[Unit]
+    units: List[IDUnit]
 
 
 class MatchThread:
@@ -80,8 +97,10 @@ class MatchThread:
 
     def __init__(self, initial_state: Battle) -> None:
         self.thread = threading.Thread(target=self.loop, daemon=True)
+        self.fixed_thread = threading.Thread(target=self.fixed_tick, daemon=True)
         self.state = Mutex(initial_state)
         self.thread.start()
+        self.fixed_thread.start()
 
     def start(self) -> None:
         self.thread.start()
@@ -112,11 +131,32 @@ class MatchThread:
 
         self.state.set_data(state)
 
+    def fixed_tick(self) -> None:
+        while True:
+            state = self.state.get_data()
+
+            if not state:
+                continue
+
+            for unit in state.units:
+                unit.inner.underlying.tick()
+                if unit.inner.underlying.hitpoints is not None:
+                    if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
+                        state.units.remove(unit)
+
     def get_state(self) -> Battle:
         data = self.state.get_data()
         if not data:
             raise ValueError("State Data is null")
         return data
+
+    def add_unit(self, unit: Unit) -> None:
+        state = self.state.get_data()
+
+        if not state:
+            return
+
+        state.units.append(IDUnit.from_unit(unit))
 
 
 class Matchmaking:
@@ -226,7 +266,7 @@ class Matchmaking:
                             0,
                         ),
                         id,
-                        []
+                        [],
                     )
                 ),
             }
@@ -242,5 +282,7 @@ class Matchmaking:
                 PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid)
             ).serialize_with_length()
         )
+
+        logging.info("Match Found")
 
         return id

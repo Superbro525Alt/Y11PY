@@ -248,6 +248,9 @@ class Packet:
         data = recv_all(sock, data_length)
         return Packet(packet_type, data)
 
+    def __str__(self) -> str:
+        return f"<Packet type={self.packet_type}>"
+
 
 class NetworkObject:
     """Base class for handling specific packet types."""
@@ -345,9 +348,14 @@ class Server:
 
     def process_packet(self, packet: Packet, client_sock: socket.socket):
         """Finds the appropriate handler for a received packet."""
+        handled = False
         for handler in self.handlers:
             if handler.check_handles(packet.packet_type):
                 handler.handle_packet(packet, client_sock)
+                handled = True
+
+        if not handled:
+            logger.warning(f"Packet not handled: {packet}")
 
     def broadcast_packet(self, packet: Packet):
         for client in self.clients:

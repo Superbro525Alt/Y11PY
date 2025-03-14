@@ -138,7 +138,9 @@ def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> An
     root_dataclass = _create_dataclass(root_dataclass_name, json_data)
     return root_dataclass(**json_data)
 
-T = TypeVar('T')
+
+T = TypeVar("T")
+
 
 class Mutex(Generic[T]):
     """
@@ -174,7 +176,7 @@ class Mutex(Generic[T]):
         with self._lock:
             self._data = new_data
 
-    def __enter__(self) -> 'Mutex[T]':
+    def __enter__(self) -> "Mutex[T]":
         """Context manager enter method."""
         self.acquire()
         return self

@@ -288,3 +288,13 @@ std::tuple<int, int> SDLWrapper::getMousePosition() {
     return std::make_tuple(x, y); // Return the tuple
 }
 
+bool SDLWrapper::isMouseButtonDown(Uint8 button) {
+    return SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(button);
+}
+
+bool SDLWrapper::isWindowFocused() {
+    if (!window) return false;
+    Uint32 flags = SDL_GetWindowFlags(window);
+    return (flags & SDL_WINDOW_INPUT_FOCUS) != 0;
+}
+

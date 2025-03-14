@@ -1,11 +1,16 @@
+import collections
 from dataclasses import dataclass
+from os import pardir
 from socket import socket
-from typing import Dict, List, Optional, Tuple
+import threading
+import time
+from typing import Callable, Dict, List, Optional, Tuple
 
-from card import Card
+from card import Card, Deck
 from game_packet import MatchFound, MatchRequest, PacketType
 from network import Packet
 from uuid import uuid4
+import random
 
 MAX_TROPHY_DIFF = 100
 
@@ -22,8 +27,21 @@ class Player:
     sock: socket
     hand: List[Card]
     next_card: Optional[Card]
+    deck: Optional[Deck]
+    remaining_in_deck: List[Card]
     elixir: int
 
+@dataclass 
+class NetworkPlayer:
+    uuid: str
+    hand: List[Card]
+    next_card: Optional[Card]
+    deck: Optional[Deck]
+    remaining_in_deck: List[Card]
+    elixir: int
+
+def network_player(p: Player) -> NetworkPlayer:
+    return NetworkPlayer(p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir)
 
 @dataclass
 class Battle:
@@ -31,11 +49,38 @@ class Battle:
     p2: Player
     uuid: str
 
+class MatchThread:
+    def __init__(self, initial_state: Battle) -> None:
+        self.thread = threading.Thread(target=self.loop, daemon=True)
+        self.state = initial_state
+        self.thread.start()
+
+    def start(self) -> None:
+        self.thread.start()
+
+    def end(self) -> None:
+        self.thread.join()
+
+    def loop(self) -> None:
+        while True:
+            start_time = time.monotonic()
+            self.tick()
+            elapsed_time = time.monotonic() - start_time
+            sleep_time = 1 - elapsed_time
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+    def tick(self) -> None:
+        self.state.p1.elixir += 1
+        self.state.p2.elixir += 1
+
+    def get_state(self) -> Battle:
+        return self.state
 
 class Matchmaking:
     def __init__(self) -> None:
         self.waiting: List[MatchRequestSocket] = []
-        self.matches: Dict[str, Battle] = {}
+        self.matches: Dict[str, MatchThread] = {}
 
     def request(self, d: MatchRequest, s: socket) -> None:
         for c in self.waiting:
@@ -43,12 +88,13 @@ class Matchmaking:
                 return
 
         for m in self.matches.values():
-            if m.p1.uuid == d.uuid or m.p2.uuid == d.uuid:
+            if m.get_state().p1.uuid == d.uuid or m.get_state().p2.uuid == d.uuid:
                 return
 
+        # print(d)
         self.waiting.append(MatchRequestSocket(d, s))
 
-    def tick(self) -> None:
+    def tick(self, update_battle: Callable[[str, Optional[str]], None]) -> None:
         if len(self.waiting) < 2:
             return
 
@@ -64,19 +110,22 @@ class Matchmaking:
             i += 1
 
         for pair in matched_pairs:
-            self.handle_match(pair[0], pair[1])
+            # print(pair[0], pair[1])
+            i = self.handle_match(pair[0], pair[1])
+            update_battle(pair[0].inner.uuid, i)
+            update_battle(pair[1].inner.uuid, i)
             self.waiting.remove(pair[0])
             self.waiting.remove(pair[1])
 
     def get_match(
         self, uuid: str, player_uuid: str
-    ) -> Tuple[Optional[Player], Optional[str]]:
+    ) -> Tuple[Optional[NetworkPlayer], Optional[str]]:
         return next(
             (
-                (p, m.p2.uuid if p is m.p1 else m.p1.uuid)
+                (p, m.get_state().p2.uuid if p is m.get_state().p1 else m.get_state().p1.uuid)
                 for m in [self.matches.get(uuid)]
                 if m
-                for p in [m.p1, m.p2]
+                for p in [network_player(m.get_state().p1), network_player(m.get_state().p2)]
                 if p.uuid == player_uuid
             ),
             (None, None),
@@ -86,18 +135,31 @@ class Matchmaking:
         trophy_difference = abs(req1.trophies - req2.trophies)
         return trophy_difference <= MAX_TROPHY_DIFF
 
-    def handle_match(self, req1: MatchRequestSocket, req2: MatchRequestSocket) -> None:
+    def handle_match(self, req1: MatchRequestSocket, req2: MatchRequestSocket) -> str:
         id = str(uuid4())
+        p1_initial = random.sample(req1.inner.deck.cards, 4)
+        p1_remaining = [item for item in req1.inner.deck.cards if item not in p1_initial]
+        random.shuffle(p1_remaining)
+        p1_next = p1_remaining.pop()
+
+        p2_initial = random.sample(req2.inner.deck.cards, 4)
+        p2_remaining = [item for item in req2.inner.deck.cards if item not in p2_initial]
+        random.shuffle(p2_remaining)
+        p2_next = p2_remaining.pop()
+
+
         self.matches.update(
             {
-                id: Battle(
-                    Player(req1.inner.uuid, req1.sock, [], None, 0),
-                    Player(req2.inner.uuid, req2.sock, [], None, 0),
-                    id,
-                )
+                id: MatchThread(
+                        Battle(
+                            Player(req1.inner.uuid, req1.sock, p1_initial, p1_next, req1.inner.deck, p1_remaining, 0),
+                            Player(req2.inner.uuid, req2.sock, p2_initial, p2_next, req2.inner.deck, p2_remaining, 0),
+                            id
+                        )
+                ),
             }
         )
-        print(str(self.matches))
+
         req1.sock.sendall(
             Packet.from_struct(
                 PacketType.MATCH_FOUND, MatchFound(id, req2.inner.uuid)
@@ -108,3 +170,5 @@ class Matchmaking:
                 PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid)
             ).serialize_with_length()
         )
+
+        return id

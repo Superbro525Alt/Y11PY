@@ -60,6 +60,8 @@ public:
     int getHeight() const;
 
     std::tuple<int, int> getMousePosition(); // Return tuple of x and y
+    bool isMouseButtonDown(Uint8 button);
+    bool isWindowFocused();
 
 private:
     SDL_Window* window = nullptr;

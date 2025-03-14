@@ -14,6 +14,4 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: g2.start(), daemon=True).start()
 
     while True:
-        input(">>>")
-        g1.client.start_matchmaking()
-        g2.client.start_matchmaking()
+        pass

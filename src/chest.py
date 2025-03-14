@@ -18,18 +18,18 @@ class Chest:
     cards: List[Card]
     gold: int
     gems: int
-    rarity: str
+    rarity: ChestRarity 
 
 
 def generate_chest(rarity: ChestRarity) -> Chest:
     match (rarity):
         case ChestRarity.WOOD:
-            return Chest([], 0, 0, rarity.__str__())
+            return Chest([], 0, 0, rarity)
         case ChestRarity.SILVER:
-            return Chest([], 0, 0, rarity.__str__())
+            return Chest([], 0, 0, rarity)
         case ChestRarity.GOLD:
-            return Chest([], 0, 0, rarity.__str__())
+            return Chest([], 0, 0, rarity)
         case ChestRarity.GIANT:
-            return Chest([], 0, 0, rarity.__str__())
+            return Chest([], 0, 0, rarity)
         case ChestRarity.DEV:
-            return Chest([], 0, 0, rarity.__str__())
+            return Chest([], 0, 0, rarity)

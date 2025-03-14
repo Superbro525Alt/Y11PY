@@ -1,3 +1,4 @@
+#include "SDL_mouse.h"
 #include "wrapper.h" // Your SDLWrapper header file
 #include <pybind11/pybind11.h>
 #include <SDL2/SDL_render.h> // You might need this for other functions
@@ -71,7 +72,9 @@ PYBIND11_MODULE(bindings, m) {
 
         .def("get_width", &SDLWrapper::getWidth, "Gets window width")
         .def("get_height", &SDLWrapper::getHeight, "Gets window height")
-        .def("getMousePosition", &SDLWrapper::getMousePosition, "Get mouse position (relative to center)");
+        .def("getMousePosition", &SDLWrapper::getMousePosition, "Get mouse position (relative to center)")
+        .def("is_mouse_button_down", &SDLWrapper::isMouseButtonDown, "Checks if a mouse button is pressed", py::arg("button"))
+    .def("is_window_focused", &SDLWrapper::isWindowFocused, "Checks if the SDL window is focused");
 
     // Example of how to bind an enum
     py::enum_<SDL_BlendMode>(m, "BlendMode")
@@ -189,4 +192,11 @@ py::enum_<SDL_Scancode>(m, "SDL_Scancode")
 
     py::class_<SDL_Keysym>(m, "SDL_Keysym")
         .def_readwrite("scancode", &SDL_Keysym::scancode);
+  m.attr("SDL_BUTTON_LEFT") = SDL_BUTTON_LEFT;
+m.attr("SDL_BUTTON_MIDDLE") = SDL_BUTTON_MIDDLE;
+m.attr("SDL_BUTTON_RIGHT") = SDL_BUTTON_RIGHT;
+m.attr("SDL_BUTTON_X1") = SDL_BUTTON_X1;
+m.attr("SDL_BUTTON_X2") = SDL_BUTTON_X2;
+
+
 }

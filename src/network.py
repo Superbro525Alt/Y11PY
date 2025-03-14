@@ -14,6 +14,7 @@ from game_packet import PacketType
 from util import logger
 import select
 from uuid import uuid4
+from enum import Enum
 
 
 @dataclass
@@ -23,9 +24,8 @@ class ServerStatus:
 
 import enum
 
-
 def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
-    """Deserializes a dictionary into a dataclass instance."""
+    """Deserializes a dictionary into a dataclass instance, handling nested objects."""
 
     if not isinstance(data, dict):
         raise TypeError(f"Expected dict, got {type(data)}")
@@ -38,50 +38,57 @@ def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
 
     for field in fields(target_type):
         field_name = field.name
-        field_type = type_hints.get(
-            field_name, field.type
-        )  # get type hint, or field.type if not found
+        field_type = type_hints.get(field_name, field.type)
 
         if field_name in data:
             value = data[field_name]
-            if dataclass(field_type) is field_type and isinstance(
-                value, dict
-            ):  # Check if subobject is dataclass, and data is dict.
+
+            if dataclass(field_type) is field_type and isinstance(value, dict):
                 field_values[field_name] = deserialize_object(value, field_type)
-            elif (
-                hasattr(field_type, "__origin__")
-                and field_type.__origin__ is list
-                and isinstance(value, list)
-            ):  # List handling
+            elif hasattr(field_type, "__origin__") and field_type.__origin__ is list and isinstance(value, list):
                 inner_type = field_type.__args__[0]
                 if dataclass(inner_type) is inner_type:
-                    field_values[field_name] = [
-                        deserialize_object(item, inner_type) for item in value
-                    ]
+                    field_values[field_name] = [deserialize_object(item, inner_type) for item in value]
+                elif hasattr(inner_type, "__origin__") and inner_type.__origin__ is dict:
+                    key_type = inner_type.__args__[0]
+                    value_type = inner_type.__args__[1]
+                    field_values[field_name] = [{key_type(k): (deserialize_object(v, value_type) if isinstance(v, dict) else v) for k, v in item.items()} for item in value]
                 else:
-                    field_values[field_name] = (
-                        value  # No dataclass in list, so just return
-                    )
-            elif (
-                hasattr(field_type, "__origin__")
-                and field_type.__origin__ is dict
-                and isinstance(value, dict)
-            ):  # dict handling
+                    field_values[field_name] = [inner_type(item) if issubclass(inner_type, Enum) else item for item in value]
+
+            elif hasattr(field_type, "__origin__") and field_type.__origin__ is dict and isinstance(value, dict):
                 key_type = field_type.__args__[0]
                 value_type = field_type.__args__[1]
                 if dataclass(value_type) is value_type:
                     field_values[field_name] = {
-                        deserialize_object(k, key_type): (
-                            deserialize_object(v, value_type)
-                            if isinstance(v, dict)
-                            else v
+                        (key_type(k) if issubclass(key_type, Enum) else k): (
+                            deserialize_object(v, value_type) if isinstance(v, dict) else (value_type(v) if issubclass(value_type, Enum) else v)
                         )
                         for k, v in value.items()
                     }
+                elif hasattr(value_type, "__origin__") and value_type.__origin__ is list:
+                    inner_value_type = value_type.__args__[0]
+                    field_values[field_name] = {
+                        (key_type(k) if issubclass(key_type, Enum) else k): [deserialize_object(vi, inner_value_type) if isinstance(vi, dict) else vi for vi in v] for k, v in value.items()
+                    }
+                elif hasattr(value_type, "__origin__") and value_type.__origin__ is dict:
+                    inner_key_type = value_type.__args__[0]
+                    inner_value_type = value_type.__args__[1]
+                    field_values[field_name] = {
+                        (key_type(k) if issubclass(key_type, Enum) else k): {inner_key_type(ik): (deserialize_object(iv, inner_value_type) if isinstance(iv, dict) else iv) for ik, iv in v.items()} for k, v in value.items()
+                    }
                 else:
-                    field_values[field_name] = (
-                        value  # No dataclass in dict, so just return
-                    )
+                    field_values[field_name] = {
+                        (key_type(k) if issubclass(key_type, Enum) else k): (
+                            value_type(v) if issubclass(value_type, Enum) else v
+                        )
+                        for k, v in value.items()
+                    }
+            elif issubclass(field_type, Enum) and isinstance(value, (str, int)):
+                try:
+                    field_values[field_name] = field_type(value)
+                except ValueError:
+                    raise ValueError(f"Invalid enum value '{value}' for {field_type.__name__}")
             else:
                 field_values[field_name] = value
         else:
@@ -89,19 +96,28 @@ def deserialize_object(data: Any, target_type: Type[Any]) -> Any:
 
     return target_type(**field_values)
 
-
 def serialize_object(obj: Any):
-    """Recursively converts objects to dictionaries if they have `__dict__`."""
+    """Recursively converts objects to dictionaries if they have `__dict__`.
+    Handles tuples as well.
+    """
     if isinstance(obj, (int, float, str, bool, type(None))):  # Handle primitives
         return obj
     elif isinstance(obj, list):  # Handle lists
         return [serialize_object(item) for item in obj]
+    elif isinstance(obj, tuple):  # Handle tuples
+        return [serialize_object(item) for item in obj]
     elif isinstance(obj, dict):  # Handle dictionaries
-        return {key: serialize_object(value) for key, value in obj.items()}
+        return {serialize_object(key): serialize_object(value) for key, value in obj.items()}
+    elif isinstance(obj, enum.Enum): #handle enums
+        return obj.value
     elif hasattr(obj, "__dict__"):  # Handle custom objects
-        return {key: serialize_object(value) for key, value in obj.__dict__.items()}
+        result = {}
+        for key, value in obj.__dict__.items():
+            if not key.startswith("_"): #prevent serializing private variables
+                result[key] = serialize_object(value)
+        return result
     else:
-        raise TypeError(f"Type {type(obj)} is not JSON serializable")
+        raise TypeError(f"Type {type(obj)} ({obj}) is not JSON serializable")
 
 
 def recv_all(

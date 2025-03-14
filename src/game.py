@@ -1,11 +1,16 @@
 from abc import ABCMeta, abstractmethod
+from collections import deque
 import enum
 import json
+from logging import warn
 from random import randint
 from socket import socket
 from threading import Lock
+from time import time
 from types import SimpleNamespace
 from typing import Callable, Deque, Dict, List, Optional
+
+from numpy import average
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
 from game_packet import MatchRequest, PacketType
 from matchmaking import Matchmaking
@@ -17,13 +22,14 @@ from network import (
     ServerStatus,
     deserialize_object,
     do_if,
+    serialize_object,
 )
 from dataclasses import dataclass
 import datetime
 from chest import Chest, ChestRarity, generate_chest
 from clan import Clan
 from shop import Shop
-from card import ARCHER, GIANT, Deck, Card
+from card import ARCANE_CANNON, EARTHQUAKE, GOBLIN_SHAMAN, ICE_SPIKES, LUMBERJACK_GOBLIN, POISON_TOWER, ROCK_GOLEM, SKY_ARCHER, Deck, Card
 from engine import (
     Camera,
     Camera3D,
@@ -31,10 +37,12 @@ from engine import (
     EngineCode,
     EngineFrameData,
     GameObject,
+    Scene,
     TextRenderer,
     Transform,
     Transform3D,
     UIAnimation,
+    UIButton,
     UIElement,
 )
 from pipeline import Event, FramePipeline, StateData
@@ -145,7 +153,8 @@ class GameNetworkClient(Client):
                 )
             )
 
-        # print(f"{self.name}: {self.state}")
+        # if self.state and self.state.battle_state:
+            # print(f"{self.name}: {self.state.battle_state.elixir}")
 
     #
     def tick_state(self, data: bytes) -> None:
@@ -203,12 +212,15 @@ class GameNetworkClient(Client):
 
     def start_matchmaking(self) -> bool:
         if not self.state or not self.state.menu_state or not self.auth_state.uuid:
+            print("[client] Invalid game/auth state")
             return False
+
+        print("[client] Request matchmaking")
 
         self.send(
             Packet.from_struct(
                 PacketType.MATCH_REQUEST,
-                MatchRequest(self.state.menu_state.trophies, self.auth_state.uuid),
+                MatchRequest(self.state.menu_state.trophies, self.auth_state.uuid, self.state.menu_state.decks[self.state.menu_state.deck_idx]),
             )
         )
 
@@ -233,7 +245,7 @@ class NetworkStateObject(NetworkObject):
                         [generate_chest(ChestRarity.GOLD)],
                         None,
                         0,
-                        [Deck([ARCHER, GIANT])],
+                        [Deck([GOBLIN_SHAMAN, ROCK_GOLEM, ICE_SPIKES, POISON_TOWER, SKY_ARCHER, EARTHQUAKE, LUMBERJACK_GOBLIN, ARCANE_CANNON])],
                         0,
                         None,
                     ),
@@ -272,10 +284,12 @@ class NetworkStateObject(NetworkObject):
                     found.data.current_deck,
                     found.data.trophies,
                 )
+
                 if found.data.current_battle:
                     found_match, other_uuid = self.matchmaking.get_match(
                         found.data.current_battle, data.uuid
                     )
+
                     if found_match and other_uuid:
                         state.battle_state = BattleState(
                             found_match.elixir,
@@ -284,17 +298,22 @@ class NetworkStateObject(NetworkObject):
                             found.data.current_battle,
                             other_uuid,
                         )
+
                 client_sock.sendall(
                     Packet.from_struct(
-                        PacketType.SERVER_CLIENT_SYNC, state
+                        PacketType.SERVER_CLIENT_SYNC, state 
                     ).serialize_with_length()
                 )
         elif packet.packet_type == PacketType.MATCH_REQUEST:
-            data = MatchRequest(**json.loads(packet.data.decode()))
+            data = json.loads(
+                packet.data.decode(), object_hook=lambda d: SimpleNamespace(**d)
+            )
+
             self.matchmaking.request(data, client_sock)
 
     def tick(self):
-        self.matchmaking.tick()
+        self.matchmaking.tick(lambda user_id, battle_id: self.users.update_battle(user_id, battle_id))
+
 
 
 class GameServer(Server):
@@ -303,7 +322,6 @@ class GameServer(Server):
 
     def tick(self) -> None:
         pass
-
 
 class Game(Engine):
     def __init__(self, name: str):
@@ -321,26 +339,27 @@ class Game(Engine):
         )
 
         self.camera = Camera((0, 0), zoom=0.75, screen_width=1200, screen_height=800)
-
         self.name = name
-
-    def tick(self):
-        self.client.tick()
-
-    def start(self):
-        self.run(self.tick)
-
-    def setup(self):
-        self.text_renderer = TextRenderer(self.sdl)
-        self.text_renderer.load_font(
-            "/usr/share/fonts/adobe-source-sans/SourceSansPro-Regular.otf", 24
-        )
-
         self.client = GameNetworkClient(self.name)
+        self.matchmaking_started = False  # To track matchmaking state
 
-        self.setup_ui()
+        self.latency: Deque[int] = deque([0], maxlen=10)  # Track server latency
+        self.ui_buttons = []
 
-    def setup_ui(self):
+        # Register scenes
+        self.main_menu_scene = Scene("main_menu")
+        self.battle_scene = Scene("battle")
+
+
+    def setup_scenes(self):
+        """Initializes all scenes and UI elements."""
+
+        # Latency Display (Present in All Scenes)
+        self.latency_display = UIElement(20, 20, 150, 40, color=(50, 50, 50))
+        self.main_menu_scene.add_ui_element(self.latency_display)
+        self.battle_scene.add_ui_element(self.latency_display)
+
+    # Main Menu UI
         title_banner = UIElement(
             int(self.sdl.get_width() / 6),
             50,
@@ -348,44 +367,134 @@ class Game(Engine):
             100,
             color=(255, 215, 0),
         )
+        self.main_menu_scene.add_ui_element(title_banner)
 
-        self.ui_manager.add_element(title_banner)
+        # Show player trophies
+        self.trophy_display = UIElement(50, 180, 200, 50, color=(100, 100, 100))
+        self.main_menu_scene.add_ui_element(self.trophy_display)
 
-        bottom_bar = UIElement(
-            0,
-            self.sdl.get_height() - 120,
-            self.sdl.get_width(),
-            120,
-            color=(40, 40, 60),
+    # Chest info
+        self.chest_display = UIElement(50, 250, 400, 50, color=(150, 150, 150))
+        self.main_menu_scene.add_ui_element(self.chest_display)
+
+    # Matchmaking button
+        start_button = UIButton(
+            (self.sdl.get_width() - 200) // 2,
+            350,
+            200,
+            80,
+            self.text_renderer,
+            color=(0, 200, 0),
+            on_hover=(0, 255, 0),
+            callback=self.start_matchmaking,
+            text="Start"
         )
-        self.ui_manager.add_element(bottom_bar)
+        self.main_menu_scene.add_ui_element(start_button)
 
-        button_width = 120
-        button_spacing = 40
-        start_x = (self.sdl.get_width() - (button_width * 4 + button_spacing * 3)) // 2
-        button_labels = ["Cards", "Battle", "Shop", "Clan"]
+    # Battle Scene UI
+        self.battle_bg = UIElement(0, 0, self.sdl.get_width(), self.sdl.get_height(), color=(40, 40, 40))
+        self.battle_scene.add_ui_element(self.battle_bg)
 
-        for i, label in enumerate(button_labels):
-            button = UIElement(
-                start_x + i * (button_width + button_spacing),
-                self.sdl.get_height() - 100,
-                button_width,
-                80,
-                color=(200, 200, 255),
-                on_hover=(255, 0, 0),
-            )
+        self.elixir_display = UIElement(50, 100, 200, 50, color=(0, 0, 255))
+        self.battle_scene.add_ui_element(self.elixir_display)
 
-            self.ui_manager.add_element(button)
+        self.hand_display = UIElement(50, 180, 400, 50, color=(100, 100, 100))
+        self.battle_scene.add_ui_element(self.hand_display)
+
+    # Register Scenes
+        self.scene_manager.add_scene(self.main_menu_scene)
+        self.scene_manager.add_scene(self.battle_scene)
+
+    def tick(self):
+        """Handles game updates."""
+        self.client.tick()
+        self.update_latency()
+
+        if self.client.state and self.client.state.battle_state is not None and self.scene_manager.current_scene is not None and self.scene_manager.current_scene != "battle":
+            self.start_battle()
+        elif self.client.state and self.client.battle_client is None and self.scene_manager.current_scene is not None and self.scene_manager.current_scene != "main_menu":
+            self.go_to_main_menu()
+
+
+    def start(self):
+        """Starts the game loop."""
+        self.run(self.tick)
+
+    def start_battle(self):
+        """Switches to the battle scene."""
+        self.scene_manager.load_scene("battle")
+
+    def go_to_main_menu(self):
+        """Returns to the main menu."""
+        self.scene_manager.load_scene("main_menu")
+
+    def update_latency(self):
+        """Fetch latency from the game client."""
+        if self.client.connection_status.last_connection is not None:
+            self.latency.append(int(round((datetime.datetime.now() - self.client.connection_status.last_connection).microseconds / 1000, 0)))
+
+    def get_latency_color(self):
+        """Returns latency color (green, yellow, or red) based on latency."""
+        if average(self.latency) < 50:
+            return (0, 255, 0)  # Green
+        elif average(self.latency) < 150:
+            return (255, 255, 0)  # Yellow
+        else:
+            return (255, 0, 0)  # Red
+
+    def setup(self):
+        """Initial setup for the game."""
+        self.text_renderer = TextRenderer(self.sdl)
+        self.text_renderer.load_font(
+            "/usr/share/fonts/adobe-source-sans/SourceSansPro-Regular.otf", 24
+        )
+
+        self.setup_scenes()
+        self.scene_manager.load_scene("main_menu")
+
+        # self.client = GameNetworkClient(self.name)
+        
+
+    def start_matchmaking(self):
+        """Starts matchmaking when the 'Battle' button is pressed."""
+        if not self.matchmaking_started:
+            print(f"[Matchmaking, {self.name}] Searching for a battle...")
+            self.matchmaking_started = True
+            if self.client.start_matchmaking():
+                self.matchmaking_started = True
+            else:
+                self.matchmaking_started = False
+                print(f"[Matchmaking, {self.name}] Unable to start matchmaking.")
 
     def override_render(self):
-        for i, label in enumerate(["Cards", "Battle", "Shop", "Clan"]):
-            x = (self.sdl.get_width() - (120 * 4 + 40 * 3)) // 2 + i * (120 + 40)
-            y = self.sdl.get_height() - 100
+        """Handles UI text rendering, including latency, player stats, and battle info."""
+        latency_color = self.get_latency_color()
+        latency_text = f"Latency: {int(average(self.latency))}ms"
+        self.text_renderer.draw_text(latency_text, 30, 30, latency_color) 
 
-            text_width = self.text_renderer.get_text_width(label)
-            text_height = self.text_renderer.get_font_height(label)
+        # If in menu, show player info
+        if self.scene_manager.current_scene == self.main_menu_scene:
+            if self.client.state and self.client.state.menu_state:
+                trophies_text = f"Trophies: {self.client.state.menu_state.trophies}"
+                self.text_renderer.draw_text(trophies_text, 60, 190, (255, 255, 0))
 
-            x_centered = x + (120 - text_width) // 2
-            y_centered = y + (80 - text_height) // 2
+                chest_text = f"Chests: {len(self.client.state.menu_state.chests)}"
+                self.text_renderer.draw_text(chest_text, 60, 260, (200, 200, 200))
 
-            self.text_renderer.draw_text(label, x_centered, y_centered, (255, 255, 255))
+        # If in battle, show battle state
+        elif self.scene_manager.current_scene == self.battle_scene:
+            if self.client.state and self.client.state.battle_state:
+                elixir_text = f"Elixir: {self.client.state.battle_state.elixir}"
+                self.text_renderer.draw_text(elixir_text, 60, 110, (0, 255, 255))
+
+                hand_text = "Hand: " + ", ".join(
+                    [card.name for card in self.client.state.battle_state.hand]
+                )
+                self.text_renderer.draw_text(hand_text, 60, 190, (255, 255, 255))
+
+                next_card_text = (
+                    f"Next: {self.client.state.battle_state.next.name}"
+                    if self.client.state.battle_state.next
+                    else "Next: None"
+                )
+                self.text_renderer.draw_text(next_card_text, 60, 240, (150, 150, 255))

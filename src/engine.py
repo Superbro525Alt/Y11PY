@@ -781,7 +781,7 @@ class UIElement:
         self.animations: List[UIAnimation] = []
         self.on_hover = on_hover
 
-    def update(self, dt: float):
+    def update(self, dt: float, sdl: SDLWrapper):
         for anim in self.animations:
             anim.update(dt)
         self.animations = [anim for anim in self.animations if not anim.finished]
@@ -847,6 +847,82 @@ class UIAnimation:
         if t >= 1.0:
             self.finished = True
 
+class UIButton(UIElement):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        text_renderer: "TextRenderer",
+        text: str = "",
+        color: Tuple[int, int, int] = (200, 200, 255),
+        on_hover: Optional[Tuple[int, int, int]] = (255, 0, 0),
+        callback: Optional[Callable[[], None]] = None,
+        text_color: Tuple[int, int, int] = (255, 255, 255),
+        font_size: int = 24,
+    ):
+        """
+        A UI button that executes a callback when clicked and displays text.
+
+        :param x: X position of the button
+        :param y: Y position of the button
+        :param width: Button width
+        :param height: Button height
+        :param text_renderer: Shared text renderer to draw text
+        :param text: Text to display on the button
+        :param color: Default button color
+        :param on_hover: Button color when hovered
+        :param callback: Function to execute when clicked
+        :param text_color: Color of the text
+        :param font_size: Font size for the button text
+        """
+        super().__init__(x, y, width, height, color, on_hover=on_hover)
+        self.callback = callback
+        self.text_renderer = text_renderer  # Store reference to TextRenderer
+        self.text = text
+        self.text_color = text_color
+        self.font_size = font_size
+
+    def render(self, sdl: SDLWrapper):
+        """Renders the button and its text."""
+        if not self.visible:
+            return
+
+        # Determine button color (hover effect)
+        mouse_pos = sdl.getMousePosition()
+        rect_x, rect_y, rect_w, rect_h = self.rect.x, self.rect.y, self.rect.w, self.rect.h
+        rect_vertices = [
+            (rect_x, rect_y),
+            (rect_x + rect_w, rect_y),
+            (rect_x + rect_w, rect_y + rect_h),
+            (rect_x, rect_y + rect_h),
+        ]
+        r, g, b = self.on_hover if intersects(mouse_pos, rect_vertices) else self.color
+
+        # Draw button rectangle
+        sdl.fill_rect(rect_x, rect_y, rect_w, rect_h, r, g, b)
+
+        # Draw text centered in the button
+        text_width = self.text_renderer.get_text_width(self.text)
+        text_height = self.text_renderer.get_font_height(self.text)
+
+        text_x = rect_x + (rect_w - text_width) // 2
+        text_y = rect_y + (rect_h - text_height) // 2
+
+        self.text_renderer.draw_text(self.text, text_x, text_y, self.text_color)
+
+    def update(self, dt: float, sdl: SDLWrapper):
+        """Checks if the button was clicked and executes the callback."""
+        mouse_pos = sdl.getMousePosition()
+        mouse_pressed = sdl.is_mouse_button_down(bindings.SDL_BUTTON_LEFT)
+
+        if self.rect.x <= mouse_pos[0] <= self.rect.x + self.rect.w and \
+           self.rect.y <= mouse_pos[1] <= self.rect.y + self.rect.h:
+            if mouse_pressed and self.callback and sdl.is_window_focused():
+                self.callback()
+
+
 
 # UIManager holds and updates all UI elements.
 class UIManager:
@@ -856,9 +932,9 @@ class UIManager:
     def add_element(self, element: UIElement):
         self.ui_elements.append(element)
 
-    def update(self, dt: float):
+    def update(self, dt: float, sdl: SDLWrapper):
         for element in self.ui_elements:
-            element.update(dt)
+            element.update(dt, sdl)
 
     def render(self, sdl: SDLWrapper):
         for element in self.ui_elements:
@@ -886,7 +962,7 @@ class Engine(InternalEngine):
         super().__init__(
             pipeline, event_pipeline, state_pipeline, window_title, width, height
         )
-        self.scene_manager = SceneManager()
+        self.scene_manager = SceneManager(self.sdl)
         self.input_manager = InputManager()
         self.ui_manager = UIManager()
         self.audio_manager = AudioManager()
@@ -908,11 +984,12 @@ class Engine(InternalEngine):
         self.last_time = current_time
         frame_data = EngineFrameData(EngineCode.COMPONENT_TICK, self.sdl, self.camera)
         if self.scene_manager.current_scene:
-            self.scene_manager.current_scene.update(frame_data)
+            self.scene_manager.current_scene.update(frame_data, self.sdl)
         else:
             for game_object in self.game_objects:
                 game_object.update(frame_data)
-        self.ui_manager.update(dt)
+
+        self.ui_manager.update(dt, self.sdl)
 
     def override_render(self) -> None:
         pass
@@ -949,12 +1026,12 @@ class Scene:
     def add_ui_element(self, element: UIElement):
         self.ui_elements.append(element)
 
-    def update(self, frame_data: EngineFrameData):
+    def update(self, frame_data: EngineFrameData, sdl: SDLWrapper):
         for obj in self.game_objects:
             obj.update(frame_data)
         # Assume a fixed dt for UI elements (or pass in a dt from engine)
         for ui in self.ui_elements:
-            ui.update(1 / 60.0)
+            ui.update(1 / 60.0, sdl)
 
     def render(self, sdl: bindings.SDLWrapper, camera: Union[Camera, Camera3D]):
         for obj in self.game_objects:
@@ -964,9 +1041,10 @@ class Scene:
 
 
 class SceneManager:
-    def __init__(self):
+    def __init__(self, sdl: SDLWrapper):
         self.current_scene: Optional[Scene] = None
         self.scenes: Dict[str, Scene] = {}
+        self.sdl: SDLWrapper = sdl
 
     def add_scene(self, scene: Scene):
         self.scenes[scene.name] = scene
@@ -979,7 +1057,7 @@ class SceneManager:
 
     def update(self, frame_data: EngineFrameData):
         if self.current_scene:
-            self.current_scene.update(frame_data)
+            self.current_scene.update(frame_data, self.sdl)
 
     def render(self, sdl: bindings.SDLWrapper, camera: Union[Camera, Camera3D]):
         if self.current_scene:
@@ -1019,7 +1097,7 @@ class TextRenderer:
         """Loads a font. Returns True on success, False on failure."""
         self.font = self.sdl.load_font(path, size)
         self.font_path = path
-        return self.font is not None  # Return True if font loaded successfully
+        return self.font
 
     def set_font_size(self, size: int):
         """Sets the font size.  Reloads the font if necessary."""

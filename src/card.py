@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
-
 class CardType(Enum):
     TROOP = "Troop"
     BUILDING = "Building"
@@ -70,56 +69,210 @@ class Card:
 class Deck:
     cards: List[Card]
 
-
-ARCHER = Card(
-    name="Archer",
+GOBLIN_SHAMAN = Card(
+    name="Goblin Shaman",
     elixir_cost=3,
     card_type=CardType.TROOP,
-    rarity=Rarity.COMMON,
-    hitpoints=250,
-    damage=100,
-    attack_speed=1.2,
-    range=5.0,
+    rarity=Rarity.RARE,
+    hitpoints=350,
+    damage=80,
+    attack_speed=1.8,
+    range=4.5,
     movement_speed=MovementSpeed.MEDIUM,
-    targets=[TargetType.AIR, TargetType.GROUND],
+    targets=[TargetType.GROUND, TargetType.AIR],
     damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Heals nearby allies for 50 HP every 3 seconds.",
 )
 
-GIANT = Card(
-    name="Giant",
-    elixir_cost=5,
+ROCK_GOLEM = Card(
+    name="Rock Golem",
+    elixir_cost=6,
+    card_type=CardType.TROOP,
+    rarity=Rarity.EPIC,
+    hitpoints=3000,
+    damage=300,
+    attack_speed=2.0,
+    range=1.0,
+    movement_speed=MovementSpeed.SLOW,
+    targets=[TargetType.BUILDINGS, TargetType.GROUND],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Upon death, splits into two smaller Rock Golems with half HP and damage.",
+)
+
+ICE_SPIKES = Card(
+    name="Ice Spikes",
+    elixir_cost=3,
+    card_type=CardType.SPELL,
+    rarity=Rarity.COMMON,
+    damage=150,
+    effect_radius=3.0,
+    duration=2.0,
+    damage_type=DamageType.SPELL,
+    special_ability="Slows enemy movement and attack speed by 30% for the duration.",
+)
+
+POISON_TOWER = Card(
+    name="Poison Tower",
+    elixir_cost=4,
+    card_type=CardType.BUILDING,
+    rarity=Rarity.RARE,
+    hitpoints=1100,
+    damage=30,
+    attack_speed=1.0,
+    range=6.0,
+    targets=[TargetType.GROUND, TargetType.AIR],
+    damage_type=DamageType.AREA_DAMAGE,
+    building_lifetime=40.0,
+    special_ability="Deals poison damage over time, reducing enemy healing by 50%.",
+)
+
+SKY_ARCHER = Card(
+    name="Sky Archer",
+    elixir_cost=4,
+    card_type=CardType.TROOP,
+    rarity=Rarity.EPIC,
+    hitpoints=400,
+    damage=150,
+    attack_speed=1.5,
+    range=7.0,
+    movement_speed=MovementSpeed.FAST,
+    targets=[TargetType.AIR],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Ignores ground units, can only be targeted by air units and spells.",
+)
+
+EARTHQUAKE = Card(
+    name="Earthquake",
+    elixir_cost=3,
+    card_type=CardType.SPELL,
+    rarity=Rarity.EPIC,
+    damage=200,
+    effect_radius=4.0,
+    duration=3.0,
+    damage_type=DamageType.SPELL,
+    special_ability="Deals extra damage to buildings, stuns ground units for 0.5 seconds upon impact.",
+)
+
+LUMBERJACK_GOBLIN = Card(
+    name="Lumberjack Goblin",
+    elixir_cost=4,
     card_type=CardType.TROOP,
     rarity=Rarity.RARE,
-    hitpoints=2200,
-    damage=250,
-    attack_speed=1.5,
-    range=0.5,
-    movement_speed=MovementSpeed.SLOW,
-    targets=[TargetType.BUILDINGS],
-    damage_type=DamageType.SINGLE_TARGET,
-)
-
-FIREBALL = Card(
-    name="Fireball",
-    elixir_cost=4,
-    card_type=CardType.SPELL,
-    rarity=Rarity.RARE,
-    damage=575,
-    effect_radius=2.5,
-    duration=0.5,
-    damage_type=DamageType.SPELL,
-)
-
-CANNON = Card(
-    name="Cannon",
-    elixir_cost=3,
-    card_type=CardType.BUILDING,
-    rarity=Rarity.COMMON,
-    hitpoints=900,
-    damage=150,
-    attack_speed=0.8,
-    range=5.5,
+    hitpoints=600,
+    damage=200,
+    attack_speed=0.9,
+    range=1.0,
+    movement_speed=MovementSpeed.VERY_FAST,
     targets=[TargetType.GROUND],
     damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Drops a Rage spell upon death.",
+)
+
+ARCANE_CANNON = Card(
+    name="Arcane Cannon",
+    elixir_cost=5,
+    card_type=CardType.BUILDING,
+    rarity=Rarity.EPIC,
+    hitpoints=1200,
+    damage=250,
+    attack_speed=2.0,
+    range=6.5,
+    targets=[TargetType.BOTH],
+    damage_type=DamageType.SPLASH,
+    building_lifetime=35.0,
+    special_ability="Attacks both ground and air with splash damage.",
+)
+
+SPECTRAL_KNIGHT = Card(
+    name="Spectral Knight",
+    elixir_cost=4,
+    card_type=CardType.TROOP,
+    rarity=Rarity.LEGENDARY,
+    hitpoints=800,
+    damage=220,
+    attack_speed=1.1,
+    range=1.2,
+    movement_speed=MovementSpeed.FAST,
+    targets=[TargetType.GROUND],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Phases through units, immune to ground traps.",
+)
+
+MIRROR_IMAGE = Card(
+    name="Mirror Image",
+    elixir_cost=3,
+    card_type=CardType.SPELL,
+    rarity=Rarity.LEGENDARY,
+    duration=5.0,
+    damage_type=DamageType.SPELL,
+    special_ability="Creates two weaker copies of the last deployed troop.",
+)
+
+VOLCANO_TRAP = Card(
+    name="Volcano Trap",
+    elixir_cost=4,
+    card_type=CardType.BUILDING,
+    rarity=Rarity.EPIC,
+    building_lifetime=20.0,
+    special_ability="Activates when a ground unit approaches, erupting and dealing massive area damage.",
+    effect_radius=3.5,
+    damage=800,
+    damage_type=DamageType.AREA_DAMAGE
+)
+
+TIME_WIZARD = Card(
+    name="Time Wizard",
+    elixir_cost=5,
+    card_type=CardType.TROOP,
+    rarity=Rarity.LEGENDARY,
+    hitpoints=650,
+    damage=180,
+    attack_speed=1.7,
+    range=5.0,
+    movement_speed=MovementSpeed.MEDIUM,
+    targets=[TargetType.BOTH],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Has a 30% chance to slow down enemy attack speed and movement by 50% for 2 seconds with each attack.",
+)
+
+GOBLIN_DRILL = Card(
+    name="Goblin Drill",
+    elixir_cost=4,
+    card_type=CardType.BUILDING,
+    rarity=Rarity.EPIC,
     building_lifetime=30.0,
+    special_ability="Periodically spawns Goblins from underground near enemy towers.",
+    spawn_units=["Goblin"],
+    attack_speed=10, #placeholder, does not attack
+    targets=[], #does not attack
+)
+
+SHADOW_ASSASSIN = Card(
+    name="Shadow Assassin",
+    elixir_cost=3,
+    card_type=CardType.TROOP,
+    rarity=Rarity.LEGENDARY,
+    hitpoints=500,
+    damage=280,
+    attack_speed=1.0,
+    range=1.0,
+    movement_speed=MovementSpeed.VERY_FAST,
+    targets=[TargetType.GROUND],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Becomes invisible for 3 seconds after deploying or when out of combat for 5 seconds. Deals double damage when attacking from invisibility.",
+)
+
+ELIXIR_GOLEM = Card(
+    name="Elixir Golem",
+    elixir_cost=3,
+    card_type=CardType.TROOP,
+    rarity=Rarity.EPIC,
+    hitpoints=1800,
+    damage=100,
+    attack_speed=1.3,
+    range=1.0,
+    movement_speed=MovementSpeed.MEDIUM,
+    targets=[TargetType.BUILDINGS,TargetType.GROUND],
+    damage_type=DamageType.SINGLE_TARGET,
+    special_ability="Upon death, splits into two Elixir Blobs which give the opponent 1 elixir each when killed.",
 )

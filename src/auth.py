@@ -50,6 +50,13 @@ class UserMap:
     def find_uuid(self, uuid: str) -> Optional[User]:
         return self.users_by_uuid.get(uuid)
 
+    def update_battle(self, user_id: str, battle_id: Optional[str]):
+        user = self.find_uuid(user_id)
+        if user:
+            user.data.current_battle = battle_id
+            self.users.update({user_id: user})
+        
+
 
 @dataclass
 class DataRequest:

@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 import enum
 
+from card import Deck
+
 
 @dataclass
 class MatchRequest:
     trophies: int
     uuid: str
+    deck: Deck
 
 
 @dataclass

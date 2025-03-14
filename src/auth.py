@@ -55,7 +55,6 @@ class UserMap:
         if user:
             user.data.current_battle = battle_id
             self.users.update({user_id: user})
-        
 
 
 @dataclass

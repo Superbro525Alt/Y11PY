@@ -847,6 +847,7 @@ class UIAnimation:
         if t >= 1.0:
             self.finished = True
 
+
 class UIButton(UIElement):
     def __init__(
         self,
@@ -891,7 +892,12 @@ class UIButton(UIElement):
 
         # Determine button color (hover effect)
         mouse_pos = sdl.getMousePosition()
-        rect_x, rect_y, rect_w, rect_h = self.rect.x, self.rect.y, self.rect.w, self.rect.h
+        rect_x, rect_y, rect_w, rect_h = (
+            self.rect.x,
+            self.rect.y,
+            self.rect.w,
+            self.rect.h,
+        )
         rect_vertices = [
             (rect_x, rect_y),
             (rect_x + rect_w, rect_y),
@@ -917,11 +923,12 @@ class UIButton(UIElement):
         mouse_pos = sdl.getMousePosition()
         mouse_pressed = sdl.is_mouse_button_down(bindings.SDL_BUTTON_LEFT)
 
-        if self.rect.x <= mouse_pos[0] <= self.rect.x + self.rect.w and \
-           self.rect.y <= mouse_pos[1] <= self.rect.y + self.rect.h:
+        if (
+            self.rect.x <= mouse_pos[0] <= self.rect.x + self.rect.w
+            and self.rect.y <= mouse_pos[1] <= self.rect.y + self.rect.h
+        ):
             if mouse_pressed and self.callback and sdl.is_window_focused():
                 self.callback()
-
 
 
 # UIManager holds and updates all UI elements.

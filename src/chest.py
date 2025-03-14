@@ -18,7 +18,7 @@ class Chest:
     cards: List[Card]
     gold: int
     gems: int
-    rarity: ChestRarity 
+    rarity: ChestRarity
 
 
 def generate_chest(rarity: ChestRarity) -> Chest:

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
+
 class CardType(Enum):
     TROOP = "Troop"
     BUILDING = "Building"
@@ -68,6 +69,7 @@ class Card:
 @dataclass
 class Deck:
     cards: List[Card]
+
 
 GOBLIN_SHAMAN = Card(
     name="Goblin Shaman",
@@ -217,7 +219,7 @@ VOLCANO_TRAP = Card(
     special_ability="Activates when a ground unit approaches, erupting and dealing massive area damage.",
     effect_radius=3.5,
     damage=800,
-    damage_type=DamageType.AREA_DAMAGE
+    damage_type=DamageType.AREA_DAMAGE,
 )
 
 TIME_WIZARD = Card(
@@ -243,8 +245,8 @@ GOBLIN_DRILL = Card(
     building_lifetime=30.0,
     special_ability="Periodically spawns Goblins from underground near enemy towers.",
     spawn_units=["Goblin"],
-    attack_speed=10, #placeholder, does not attack
-    targets=[], #does not attack
+    attack_speed=10,  # placeholder, does not attack
+    targets=[],  # does not attack
 )
 
 SHADOW_ASSASSIN = Card(
@@ -272,7 +274,7 @@ ELIXIR_GOLEM = Card(
     attack_speed=1.3,
     range=1.0,
     movement_speed=MovementSpeed.MEDIUM,
-    targets=[TargetType.BUILDINGS,TargetType.GROUND],
+    targets=[TargetType.BUILDINGS, TargetType.GROUND],
     damage_type=DamageType.SINGLE_TARGET,
     special_ability="Upon death, splits into two Elixir Blobs which give the opponent 1 elixir each when killed.",
 )

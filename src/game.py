@@ -29,7 +29,18 @@ import datetime
 from chest import Chest, ChestRarity, generate_chest
 from clan import Clan
 from shop import Shop
-from card import ARCANE_CANNON, EARTHQUAKE, GOBLIN_SHAMAN, ICE_SPIKES, LUMBERJACK_GOBLIN, POISON_TOWER, ROCK_GOLEM, SKY_ARCHER, Deck, Card
+from card import (
+    ARCANE_CANNON,
+    EARTHQUAKE,
+    GOBLIN_SHAMAN,
+    ICE_SPIKES,
+    LUMBERJACK_GOBLIN,
+    POISON_TOWER,
+    ROCK_GOLEM,
+    SKY_ARCHER,
+    Deck,
+    Card,
+)
 from engine import (
     Camera,
     Camera3D,
@@ -154,7 +165,7 @@ class GameNetworkClient(Client):
             )
 
         # if self.state and self.state.battle_state:
-            # print(f"{self.name}: {self.state.battle_state.elixir}")
+        # print(f"{self.name}: {self.state.battle_state.elixir}")
 
     #
     def tick_state(self, data: bytes) -> None:
@@ -220,7 +231,11 @@ class GameNetworkClient(Client):
         self.send(
             Packet.from_struct(
                 PacketType.MATCH_REQUEST,
-                MatchRequest(self.state.menu_state.trophies, self.auth_state.uuid, self.state.menu_state.decks[self.state.menu_state.deck_idx]),
+                MatchRequest(
+                    self.state.menu_state.trophies,
+                    self.auth_state.uuid,
+                    self.state.menu_state.decks[self.state.menu_state.deck_idx],
+                ),
             )
         )
 
@@ -245,7 +260,20 @@ class NetworkStateObject(NetworkObject):
                         [generate_chest(ChestRarity.GOLD)],
                         None,
                         0,
-                        [Deck([GOBLIN_SHAMAN, ROCK_GOLEM, ICE_SPIKES, POISON_TOWER, SKY_ARCHER, EARTHQUAKE, LUMBERJACK_GOBLIN, ARCANE_CANNON])],
+                        [
+                            Deck(
+                                [
+                                    GOBLIN_SHAMAN,
+                                    ROCK_GOLEM,
+                                    ICE_SPIKES,
+                                    POISON_TOWER,
+                                    SKY_ARCHER,
+                                    EARTHQUAKE,
+                                    LUMBERJACK_GOBLIN,
+                                    ARCANE_CANNON,
+                                ]
+                            )
+                        ],
                         0,
                         None,
                     ),
@@ -301,7 +329,7 @@ class NetworkStateObject(NetworkObject):
 
                 client_sock.sendall(
                     Packet.from_struct(
-                        PacketType.SERVER_CLIENT_SYNC, state 
+                        PacketType.SERVER_CLIENT_SYNC, state
                     ).serialize_with_length()
                 )
         elif packet.packet_type == PacketType.MATCH_REQUEST:
@@ -312,8 +340,9 @@ class NetworkStateObject(NetworkObject):
             self.matchmaking.request(data, client_sock)
 
     def tick(self):
-        self.matchmaking.tick(lambda user_id, battle_id: self.users.update_battle(user_id, battle_id))
-
+        self.matchmaking.tick(
+            lambda user_id, battle_id: self.users.update_battle(user_id, battle_id)
+        )
 
 
 class GameServer(Server):
@@ -322,6 +351,7 @@ class GameServer(Server):
 
     def tick(self) -> None:
         pass
+
 
 class Game(Engine):
     def __init__(self, name: str):
@@ -350,7 +380,6 @@ class Game(Engine):
         self.main_menu_scene = Scene("main_menu")
         self.battle_scene = Scene("battle")
 
-
     def setup_scenes(self):
         """Initializes all scenes and UI elements."""
 
@@ -359,7 +388,7 @@ class Game(Engine):
         self.main_menu_scene.add_ui_element(self.latency_display)
         self.battle_scene.add_ui_element(self.latency_display)
 
-    # Main Menu UI
+        # Main Menu UI
         title_banner = UIElement(
             int(self.sdl.get_width() / 6),
             50,
@@ -373,11 +402,11 @@ class Game(Engine):
         self.trophy_display = UIElement(50, 180, 200, 50, color=(100, 100, 100))
         self.main_menu_scene.add_ui_element(self.trophy_display)
 
-    # Chest info
+        # Chest info
         self.chest_display = UIElement(50, 250, 400, 50, color=(150, 150, 150))
         self.main_menu_scene.add_ui_element(self.chest_display)
 
-    # Matchmaking button
+        # Matchmaking button
         start_button = UIButton(
             (self.sdl.get_width() - 200) // 2,
             350,
@@ -387,12 +416,14 @@ class Game(Engine):
             color=(0, 200, 0),
             on_hover=(0, 255, 0),
             callback=self.start_matchmaking,
-            text="Start"
+            text="Start",
         )
         self.main_menu_scene.add_ui_element(start_button)
 
-    # Battle Scene UI
-        self.battle_bg = UIElement(0, 0, self.sdl.get_width(), self.sdl.get_height(), color=(40, 40, 40))
+        # Battle Scene UI
+        self.battle_bg = UIElement(
+            0, 0, self.sdl.get_width(), self.sdl.get_height(), color=(40, 40, 40)
+        )
         self.battle_scene.add_ui_element(self.battle_bg)
 
         self.elixir_display = UIElement(50, 100, 200, 50, color=(0, 0, 255))
@@ -401,7 +432,7 @@ class Game(Engine):
         self.hand_display = UIElement(50, 180, 400, 50, color=(100, 100, 100))
         self.battle_scene.add_ui_element(self.hand_display)
 
-    # Register Scenes
+        # Register Scenes
         self.scene_manager.add_scene(self.main_menu_scene)
         self.scene_manager.add_scene(self.battle_scene)
 
@@ -410,11 +441,20 @@ class Game(Engine):
         self.client.tick()
         self.update_latency()
 
-        if self.client.state and self.client.state.battle_state is not None and self.scene_manager.current_scene is not None and self.scene_manager.current_scene != "battle":
+        if (
+            self.client.state
+            and self.client.state.battle_state is not None
+            and self.scene_manager.current_scene is not None
+            and self.scene_manager.current_scene != "battle"
+        ):
             self.start_battle()
-        elif self.client.state and self.client.battle_client is None and self.scene_manager.current_scene is not None and self.scene_manager.current_scene != "main_menu":
+        elif (
+            self.client.state
+            and self.client.battle_client is None
+            and self.scene_manager.current_scene is not None
+            and self.scene_manager.current_scene != "main_menu"
+        ):
             self.go_to_main_menu()
-
 
     def start(self):
         """Starts the game loop."""
@@ -431,7 +471,18 @@ class Game(Engine):
     def update_latency(self):
         """Fetch latency from the game client."""
         if self.client.connection_status.last_connection is not None:
-            self.latency.append(int(round((datetime.datetime.now() - self.client.connection_status.last_connection).microseconds / 1000, 0)))
+            self.latency.append(
+                int(
+                    round(
+                        (
+                            datetime.datetime.now()
+                            - self.client.connection_status.last_connection
+                        ).microseconds
+                        / 1000,
+                        0,
+                    )
+                )
+            )
 
     def get_latency_color(self):
         """Returns latency color (green, yellow, or red) based on latency."""
@@ -453,7 +504,6 @@ class Game(Engine):
         self.scene_manager.load_scene("main_menu")
 
         # self.client = GameNetworkClient(self.name)
-        
 
     def start_matchmaking(self):
         """Starts matchmaking when the 'Battle' button is pressed."""
@@ -470,7 +520,7 @@ class Game(Engine):
         """Handles UI text rendering, including latency, player stats, and battle info."""
         latency_color = self.get_latency_color()
         latency_text = f"Latency: {int(average(self.latency))}ms"
-        self.text_renderer.draw_text(latency_text, 30, 30, latency_color) 
+        self.text_renderer.draw_text(latency_text, 30, 30, latency_color)
 
         # If in menu, show player info
         if self.scene_manager.current_scene == self.main_menu_scene:

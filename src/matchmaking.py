@@ -31,7 +31,8 @@ class Player:
     remaining_in_deck: List[Card]
     elixir: int
 
-@dataclass 
+
+@dataclass
 class NetworkPlayer:
     uuid: str
     hand: List[Card]
@@ -40,14 +41,19 @@ class NetworkPlayer:
     remaining_in_deck: List[Card]
     elixir: int
 
+
 def network_player(p: Player) -> NetworkPlayer:
-    return NetworkPlayer(p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir)
+    return NetworkPlayer(
+        p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir
+    )
+
 
 @dataclass
 class Battle:
     p1: Player
     p2: Player
     uuid: str
+
 
 class MatchThread:
     def __init__(self, initial_state: Battle) -> None:
@@ -76,6 +82,7 @@ class MatchThread:
 
     def get_state(self) -> Battle:
         return self.state
+
 
 class Matchmaking:
     def __init__(self) -> None:
@@ -122,10 +129,20 @@ class Matchmaking:
     ) -> Tuple[Optional[NetworkPlayer], Optional[str]]:
         return next(
             (
-                (p, m.get_state().p2.uuid if p is m.get_state().p1 else m.get_state().p1.uuid)
+                (
+                    p,
+                    (
+                        m.get_state().p2.uuid
+                        if p is m.get_state().p1
+                        else m.get_state().p1.uuid
+                    ),
+                )
                 for m in [self.matches.get(uuid)]
                 if m
-                for p in [network_player(m.get_state().p1), network_player(m.get_state().p2)]
+                for p in [
+                    network_player(m.get_state().p1),
+                    network_player(m.get_state().p2),
+                ]
                 if p.uuid == player_uuid
             ),
             (None, None),
@@ -138,24 +155,43 @@ class Matchmaking:
     def handle_match(self, req1: MatchRequestSocket, req2: MatchRequestSocket) -> str:
         id = str(uuid4())
         p1_initial = random.sample(req1.inner.deck.cards, 4)
-        p1_remaining = [item for item in req1.inner.deck.cards if item not in p1_initial]
+        p1_remaining = [
+            item for item in req1.inner.deck.cards if item not in p1_initial
+        ]
         random.shuffle(p1_remaining)
         p1_next = p1_remaining.pop()
 
         p2_initial = random.sample(req2.inner.deck.cards, 4)
-        p2_remaining = [item for item in req2.inner.deck.cards if item not in p2_initial]
+        p2_remaining = [
+            item for item in req2.inner.deck.cards if item not in p2_initial
+        ]
         random.shuffle(p2_remaining)
         p2_next = p2_remaining.pop()
-
 
         self.matches.update(
             {
                 id: MatchThread(
-                        Battle(
-                            Player(req1.inner.uuid, req1.sock, p1_initial, p1_next, req1.inner.deck, p1_remaining, 0),
-                            Player(req2.inner.uuid, req2.sock, p2_initial, p2_next, req2.inner.deck, p2_remaining, 0),
-                            id
-                        )
+                    Battle(
+                        Player(
+                            req1.inner.uuid,
+                            req1.sock,
+                            p1_initial,
+                            p1_next,
+                            req1.inner.deck,
+                            p1_remaining,
+                            0,
+                        ),
+                        Player(
+                            req2.inner.uuid,
+                            req2.sock,
+                            p2_initial,
+                            p2_next,
+                            req2.inner.deck,
+                            p2_remaining,
+                            0,
+                        ),
+                        id,
+                    )
                 ),
             }
         )

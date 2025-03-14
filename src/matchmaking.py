@@ -9,13 +9,14 @@ import threading
 import time
 from typing import Callable, Dict, List, Optional, Self, Tuple
 
-from card import Card, Deck
+from card import Card, Deck, card_tick
 from game_packet import MatchFound, MatchRequest, PacketType
 from network import Packet
 from uuid import uuid4
 import random
 
 from util import Mutex
+from util import logger
 
 MAX_TROPHY_DIFF = 100
 
@@ -54,8 +55,8 @@ def network_player(p: Player) -> NetworkPlayer:
 
 
 class Owner(Enum):
-    SELF = 0
-    OTHER = 1
+    P1 = 0
+    P2 = 1
 
 
 @dataclass
@@ -81,6 +82,14 @@ class IDUnit:
     @classmethod
     def from_unit(cls, unit: Unit) -> Self:
         return cls(unit, str(uuid4()))
+
+
+@dataclass
+class UnitDeployRequest:
+    pos: Tuple[int, int]
+    card: Card
+    owner: str
+    battle_id: str
 
 
 @dataclass
@@ -139,7 +148,7 @@ class MatchThread:
                 continue
 
             for unit in state.units:
-                unit.inner.underlying.tick()
+                card_tick(unit.inner.underlying)
                 if unit.inner.underlying.hitpoints is not None:
                     if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
                         state.units.remove(unit)
@@ -157,6 +166,15 @@ class MatchThread:
             return
 
         state.units.append(IDUnit.from_unit(unit))
+
+        logger.info("Unit Deployed")
+
+    def get_player_as_enum(self, uuid: str) -> Owner:
+        d = self.state.get_data()
+        if d and d.p1.uuid == uuid:
+            return Owner.P1
+        else:
+            return Owner.P2
 
 
 class Matchmaking:
@@ -286,3 +304,14 @@ class Matchmaking:
         logging.info("Match Found")
 
         return id
+
+    def deploy_unit(self, req: UnitDeployRequest, match_id: str) -> None:
+        m = self.matches.get(match_id)
+        if m is not None and req.card.hitpoints is not None:
+            self.matches[match_id].add_unit(
+                Unit(
+                    req.card,
+                    m.get_player_as_enum(req.owner),
+                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints),
+                )
+            )

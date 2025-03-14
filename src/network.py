@@ -9,7 +9,6 @@ import threading
 import json
 from time import sleep, time
 from typing import Callable, List, Optional, Dict, Any, Self, Type, get_type_hints
-from board import Board
 from game_packet import PacketType
 from util import logger
 import select

@@ -9,13 +9,13 @@ from socket import socket
 from threading import Lock
 from time import time
 from types import SimpleNamespace
-from typing import Callable, Deque, Dict, List, Optional
+from typing import Callable, Deque, Dict, List, Optional, Tuple
 
 from numpy import average
 from copy import copy
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
 from game_packet import MatchRequest, PacketType
-from matchmaking import Matchmaking
+from matchmaking import Matchmaking, UnitDeployRequest
 from network import (
     Client,
     NetworkObject,
@@ -115,21 +115,29 @@ class GameState:
 
 
 class BattleClient:
-    def __init__(self) -> None:
+    def __init__(self, send: Callable[[Packet], None]) -> None:
         self.battle_state: Optional[BattleState] = None
+        self.send = send
 
-    def tick(
-        self, state: Optional[GameState], respond: Callable[[Packet], None]
-    ) -> None:
+    def tick(self, state: Optional[GameState]) -> None:
         if state and state.battle_state:
             self.battle_state = state.battle_state
+
+    def place_unit(self, card: Card, location: Tuple[int, int], id: str) -> None:
+        if self.battle_state:
+            self.send(
+                Packet.from_struct(
+                    PacketType.DEPLOY_UNIT,
+                    UnitDeployRequest(location, card, id, self.battle_state.match_uuid),
+                )
+            )
 
 
 class GameNetworkClient(Client):
     def __init__(self, name: str):
         super().__init__("127.0.0.1", 12345)
 
-        self.battle_client = BattleClient()
+        self.battle_client = BattleClient(self.send)
 
         self.state_lock = Lock()
         self.status_lock = Lock()
@@ -182,7 +190,7 @@ class GameNetworkClient(Client):
                     f"Transmitted Game State was in an invalid format: {e}"
                 )
 
-            self.battle_client.tick(self.state, self.send)
+            self.battle_client.tick(self.state)
 
     def update_status(self, data: bytes) -> None:
         with self.status_lock:
@@ -244,6 +252,15 @@ class GameNetworkClient(Client):
 
         return True
 
+    def deploy_unit(self, card: Card, pos: Tuple[int, int]) -> None:
+        if (
+            self.auth_state
+            and self.auth_state.uuid
+            and self.state
+            and self.state.battle_state
+        ):
+            self.battle_client.place_unit(card, pos, self.auth_state.uuid)
+
 
 class NetworkStateObject(NetworkObject):
     def __init__(self):
@@ -252,6 +269,7 @@ class NetworkStateObject(NetworkObject):
             PacketType.LOGIN,
             PacketType.CLIENT_SERVER_SYNC,
             PacketType.MATCH_REQUEST,
+            PacketType.DEPLOY_UNIT,
         ]
         self.users: UserMap = UserMap(
             [
@@ -344,6 +362,12 @@ class NetworkStateObject(NetworkObject):
             )
 
             self.matchmaking.request(data, client_sock)
+        elif packet.packet_type == PacketType.DEPLOY_UNIT:
+            data = json.loads(
+                packet.data.decode(), object_hook=lambda d: SimpleNamespace(**d)
+            )
+
+            self.matchmaking.deploy_unit(data, data.battle_id)
 
     def tick(self):
         self.matchmaking.tick(
@@ -580,4 +604,4 @@ class Game(Engine):
                         )
 
     def card_pressed(self, card: Card):
-        print(card)
+        self.client.deploy_unit(card, (0, 0))

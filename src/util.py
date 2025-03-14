@@ -1,7 +1,9 @@
 import logging
 import json
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any, Union
+from threading import Lock
+import threading
+from typing import Callable, Optional, List, Dict, Any, Tuple, Union
 
 from chest import ChestRarity
 
@@ -135,3 +137,48 @@ def json_to_dataclass(data: bytes, root_dataclass_name: str = "GameState") -> An
 
     root_dataclass = _create_dataclass(root_dataclass_name, json_data)
     return root_dataclass(**json_data)
+
+T = TypeVar('T')
+
+class Mutex(Generic[T]):
+    """
+    A mutex that holds data, with mutable and immutable access.
+    """
+
+    def __init__(self, data: Optional[T] = None):
+        self._lock = threading.Lock()
+        self._data = data
+
+    def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+        """Acquires the lock."""
+        return self._lock.acquire(blocking, timeout)
+
+    def release(self) -> None:
+        """Releases the lock."""
+        self._lock.release()
+
+    def get_data(self) -> Optional[T]:
+        """Gets the data immutably (read-only)."""
+        with self._lock:
+            return self._data
+
+    def get_mutable_data(self) -> Optional[Tuple[threading.Lock, Optional[T]]]:
+        """Gets the data mutably (with lock). Returns the lock and data, or None if lock fails."""
+        if self.acquire():
+            return self._lock, self._data
+        else:
+            return None
+
+    def set_data(self, new_data: T) -> None:
+        """Sets the data (requires lock)."""
+        with self._lock:
+            self._data = new_data
+
+    def __enter__(self) -> 'Mutex[T]':
+        """Context manager enter method."""
+        self.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Context manager exit method."""
+        self.release()

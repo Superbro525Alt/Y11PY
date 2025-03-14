@@ -3,7 +3,7 @@ from collections import deque
 import enum
 import json
 from logging import warn
-from random import randint
+from random import randint, random
 from socket import socket
 from threading import Lock
 from time import time
@@ -257,7 +257,7 @@ class NetworkStateObject(NetworkObject):
                     str(i),
                     str(i),
                     ServerUserData(
-                        [generate_chest(ChestRarity.GOLD)],
+                        [generate_chest(ChestRarity.GOLD) for i in range(randint(0, 4))],
                         None,
                         0,
                         [

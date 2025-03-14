@@ -1,5 +1,6 @@
 import collections
 from dataclasses import dataclass
+from enum import Enum
 from os import pardir
 from socket import socket
 import threading
@@ -12,8 +13,9 @@ from network import Packet
 from uuid import uuid4
 import random
 
-MAX_TROPHY_DIFF = 100
+from util import Mutex
 
+MAX_TROPHY_DIFF = 100
 
 @dataclass
 class MatchRequestSocket:
@@ -47,18 +49,38 @@ def network_player(p: Player) -> NetworkPlayer:
         p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir
     )
 
+class Owner(Enum):
+    SELF = 0
+    OTHER = 1
+
+@dataclass 
+class UnitData:
+    x: int 
+    y: int
+    current_target: Optional["Unit"]
+    hitpoints: int
+
+@dataclass 
+class Unit:
+    underlying: Card
+    owner: Owner
+    unit_data: UnitData
 
 @dataclass
 class Battle:
     p1: Player
     p2: Player
     uuid: str
+    units: List[Unit]
 
 
 class MatchThread:
+    MAX_ELIXIR = 10
+    ELIXIR_TICK_TIME = 1
+
     def __init__(self, initial_state: Battle) -> None:
         self.thread = threading.Thread(target=self.loop, daemon=True)
-        self.state = initial_state
+        self.state = Mutex(initial_state)
         self.thread.start()
 
     def start(self) -> None:
@@ -72,16 +94,29 @@ class MatchThread:
             start_time = time.monotonic()
             self.tick()
             elapsed_time = time.monotonic() - start_time
-            sleep_time = 1 - elapsed_time
+            sleep_time = self.ELIXIR_TICK_TIME - elapsed_time
             if sleep_time > 0:
                 time.sleep(sleep_time)
 
     def tick(self) -> None:
-        self.state.p1.elixir += 1
-        self.state.p2.elixir += 1
+        state = self.state.get_data()
+
+        if not state:
+            return
+
+        if state.p1.elixir < self.MAX_ELIXIR:
+            state.p1.elixir += 1
+
+        if state.p2.elixir < self.MAX_ELIXIR:
+            state.p2.elixir += 1
+
+        self.state.set_data(state)
 
     def get_state(self) -> Battle:
-        return self.state
+        data = self.state.get_data()
+        if not data:
+            raise ValueError("State Data is null")
+        return data
 
 
 class Matchmaking:
@@ -191,6 +226,7 @@ class Matchmaking:
                             0,
                         ),
                         id,
+                        []
                     )
                 ),
             }

@@ -1,5 +1,6 @@
 import collections
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from logging import Logger
 import logging
@@ -8,12 +9,14 @@ from socket import socket
 import threading
 import time
 from typing import Callable, Dict, List, Optional, Self, Tuple
-
-from card import Card, Deck, card_tick
+from arena import Arena
+from card import Card
+from card_tick import card_tick
 from game_packet import MatchFound, MatchRequest, PacketType
 from network import Packet
 from uuid import uuid4
 import random
+from unit import Battle, IDUnit, NetworkPlayer, Owner, Player, Unit, UnitDeployRequest, UnitData, network_player
 
 from util import Mutex
 from util import logger
@@ -26,80 +29,6 @@ class MatchRequestSocket:
     inner: MatchRequest
     sock: socket
 
-
-@dataclass
-class Player:
-    uuid: str
-    sock: socket
-    hand: List[Card]
-    next_card: Optional[Card]
-    deck: Optional[Deck]
-    remaining_in_deck: List[Card]
-    elixir: int
-
-
-@dataclass
-class NetworkPlayer:
-    uuid: str
-    hand: List[Card]
-    next_card: Optional[Card]
-    deck: Optional[Deck]
-    remaining_in_deck: List[Card]
-    elixir: int
-
-
-def network_player(p: Player) -> NetworkPlayer:
-    return NetworkPlayer(
-        p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir
-    )
-
-
-class Owner(Enum):
-    P1 = 0
-    P2 = 1
-
-
-@dataclass
-class UnitData:
-    x: int
-    y: int
-    current_target: Optional["Unit"]
-    hitpoints: int
-
-
-@dataclass
-class Unit:
-    underlying: Card
-    owner: Owner
-    unit_data: UnitData
-
-
-@dataclass
-class IDUnit:
-    inner: Unit
-    id: str
-
-    @classmethod
-    def from_unit(cls, unit: Unit) -> Self:
-        return cls(unit, str(uuid4()))
-
-
-@dataclass
-class UnitDeployRequest:
-    pos: Tuple[int, int]
-    card: Card
-    owner: str
-    battle_id: str
-
-
-@dataclass
-class Battle:
-    p1: Player
-    p2: Player
-    uuid: str
-    units: List[IDUnit]
-
-
 class MatchThread:
     MAX_ELIXIR = 10
     ELIXIR_TICK_TIME = 1
@@ -110,6 +39,7 @@ class MatchThread:
         self.state = Mutex(initial_state)
         self.thread.start()
         self.fixed_thread.start()
+        self.arena = Arena()
 
     def start(self) -> None:
         self.thread.start()
@@ -148,7 +78,7 @@ class MatchThread:
                 continue
 
             for unit in state.units:
-                card_tick(unit.inner.underlying)
+                card_tick(unit, self.arena)
                 if unit.inner.underlying.hitpoints is not None:
                     if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
                         state.units.remove(unit)
@@ -165,7 +95,9 @@ class MatchThread:
         if not state:
             return
 
-        state.units.append(IDUnit.from_unit(unit))
+        u = IDUnit.from_unit(unit)
+        state.units.append(u)
+        self.arena.add_unit(u)
 
         logger.info("Unit Deployed")
 
@@ -219,7 +151,7 @@ class Matchmaking:
 
     def get_match(
         self, uuid: str, player_uuid: str
-    ) -> Tuple[Optional[NetworkPlayer], Optional[str]]:
+    ) -> Tuple[Optional[NetworkPlayer], Optional[str], Optional[Arena]]:
         return next(
             (
                 (
@@ -229,6 +161,7 @@ class Matchmaking:
                         if p is m.get_state().p1
                         else m.get_state().p1.uuid
                     ),
+                    m.arena
                 )
                 for m in [self.matches.get(uuid)]
                 if m
@@ -236,9 +169,9 @@ class Matchmaking:
                     network_player(m.get_state().p1),
                     network_player(m.get_state().p2),
                 ]
-                if p.uuid == player_uuid
+                if p.uuid == player_uuid 
             ),
-            (None, None),
+            (None, None, None),
         )
 
     def are_compatible(self, req1: MatchRequest, req2: MatchRequest) -> bool:
@@ -312,6 +245,6 @@ class Matchmaking:
                 Unit(
                     req.card,
                     m.get_player_as_enum(req.owner),
-                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints),
+                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now()),
                 )
             )

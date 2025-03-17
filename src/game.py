@@ -13,7 +13,9 @@ from typing import Callable, Deque, Dict, List, Optional, Tuple
 
 from numpy import average
 from copy import copy
+from arena import Arena
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
+from deck import Deck
 from game_packet import MatchRequest, PacketType
 from matchmaking import Matchmaking, UnitDeployRequest
 from network import (
@@ -40,7 +42,6 @@ from card import (
     POISON_TOWER,
     ROCK_GOLEM,
     SKY_ARCHER,
-    Deck,
     Card,
 )
 from engine import (
@@ -70,6 +71,7 @@ class BattleState:
     next: Optional[Card]
     match_uuid: str
     other_uuid: str
+    arena: Arena
 
 
 @dataclass
@@ -338,17 +340,18 @@ class NetworkStateObject(NetworkObject):
                 )
 
                 if found.data.current_battle:
-                    found_match, other_uuid = self.matchmaking.get_match(
+                    found_match, other_uuid, arena = self.matchmaking.get_match(
                         found.data.current_battle, data.uuid
                     )
 
-                    if found_match and other_uuid:
+                    if found_match and other_uuid and arena:
                         state.battle_state = BattleState(
                             found_match.elixir,
                             found_match.hand,
                             found_match.next_card,
                             found.data.current_battle,
                             other_uuid,
+                            arena
                         )
 
                 client_sock.sendall(
@@ -602,6 +605,43 @@ class Game(Engine):
                         self.hand_buttons[i].callback = partial(
                             self.card_pressed, self.client.state.battle_state.hand[i]
                         )
+
+                # Draw arena grid
+                if self.client.state.battle_state.arena:
+                    arena = self.client.state.battle_state.arena
+                    cell_size = 20  # Adjust as needed
+                    offset_x = 100
+                    offset_y = 100
+
+                    tile_colors = {
+                        0: (200, 200, 200),  # EMPTY
+                        1: (0, 0, 255),  # RIVER
+                        2: (150, 150, 150),  # BRIDGE
+                        3: (255, 0, 0),  # CROWN_TOWER
+                        4: (255, 255, 0),  # KING_TOWER
+                    }
+
+                    for y in range(Arena.HEIGHT):
+                        for x in range(Arena.WIDTH):
+                            tile_type = arena.tiles[y][x]
+                            color = tile_colors.get(tile_type, (0, 0, 0))
+                            rect = (
+                                offset_x + x * cell_size,
+                                offset_y + y * cell_size,
+                                cell_size,
+                                cell_size,
+                            )
+                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], color[0], color[1], color[2])
+                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], 0, 0, 0) # Add outline
+
+                    # Draw units
+                    if arena.units:
+                        for unit in arena.units:
+                            unit_x = offset_x + unit.inner.unit_data.x * cell_size
+                            unit_y = offset_y + unit.inner.unit_data.y * cell_size
+                            unit_rect = (unit_x, unit_y, cell_size, cell_size)
+                            self.sdl.draw_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 255, 0) # Draw units in green
+                            self.sdl.draw_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 0, 0) # Add outline
 
     def card_pressed(self, card: Card):
         self.client.deploy_unit(card, (0, 0))

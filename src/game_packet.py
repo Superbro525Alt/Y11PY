@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 import enum
 
-from card import Deck
-
+from deck import Deck
 
 @dataclass
 class MatchRequest:

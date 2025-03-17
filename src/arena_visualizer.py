@@ -1,7 +1,10 @@
-from card import Arena
+from arena import Arena
 import pygame
 import heapq
 from typing import List, Tuple
+
+from card import TargetType
+from unit import Owner
 
 # Arena constants
 WIDTH, HEIGHT = 19, 30
@@ -15,9 +18,10 @@ COLORS = {
     2: (139, 69, 19),  # Bridge - Brown
     3: (255, 0, 0),  # Crown Towers - Red
     4: (255, 215, 0),  # King Tower - Gold
-    "start": (0, 255, 0),  # Green
+    "start": (255, 255, 0),  # Green
     "goal": (255, 165, 0),  # Orange
-    "path": (100, 255, 100)  # Light Green
+    "path": (150, 255, 100),  # Light Green
+    "tower_center": (255, 150, 0)
 }
 
 # Initialize Pygame
@@ -25,7 +29,7 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Clash Royale Arena Pathfinding")
 
-arena = Arena()
+arena: Arena = Arena()
 start_pos = None
 goal_pos = None
 path = []
@@ -36,13 +40,17 @@ def draw_grid():
             color = COLORS[arena.tiles[y][x]]
             pygame.draw.rect(screen, color, (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
+            if (x, y) in path:
+                pygame.draw.rect(screen, COLORS["path"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
             if start_pos == (x, y):
                 pygame.draw.rect(screen, COLORS["start"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
             if goal_pos == (x, y):
                 pygame.draw.rect(screen, COLORS["goal"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
-            if (x, y) in path:
-                pygame.draw.rect(screen, COLORS["path"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
+    for tower in arena.towers:
+        pygame.draw.rect(screen, COLORS["tower_center"], (tower.center_x * TILE_SIZE, tower.center_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
     # Grid lines
     for x in range(WIDTH):
@@ -73,6 +81,17 @@ while running:
                     start_pos = None
                     goal_pos = None
                     path = []
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a and start_pos is not None:
+                goal_pos = None
+                path = arena.get_target(start_pos, Owner.P1, [TargetType.GROUND]).path
+                start_pos = None
+            if event.key == pygame.K_b and start_pos is not None:
+                goal_pos = None
+                path = arena.get_target(start_pos, Owner.P2, [TargetType.GROUND]).path
+                start_pos = None
+
+
 
 pygame.quit()
 

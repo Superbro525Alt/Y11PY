@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from card import Deck
 from chest import Chest
 from clan import Clan
+from deck import Deck
 
 
 @dataclass

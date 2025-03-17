@@ -18,7 +18,7 @@ from uuid import uuid4
 import random
 from unit import Battle, IDUnit, NetworkPlayer, Owner, Player, Unit, UnitDeployRequest, UnitData, network_player
 
-from util import Mutex
+from util import DATE_FORMAT, Mutex
 from util import logger
 
 MAX_TROPHY_DIFF = 100
@@ -77,8 +77,10 @@ class MatchThread:
             if not state:
                 continue
 
-            for unit in state.units:
-                card_tick(unit, self.arena)
+            for i, unit in enumerate(state.units):
+                res = card_tick(unit, self.arena)
+                if res:
+                    state.units[i] = res 
                 if unit.inner.underlying.hitpoints is not None:
                     if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
                         state.units.remove(unit)
@@ -225,12 +227,12 @@ class Matchmaking:
 
         req1.sock.sendall(
             Packet.from_struct(
-                PacketType.MATCH_FOUND, MatchFound(id, req2.inner.uuid)
+                PacketType.MATCH_FOUND, MatchFound(id, req2.inner.uuid, "Player 1")
             ).serialize_with_length()
         )
         req2.sock.sendall(
             Packet.from_struct(
-                PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid)
+                PacketType.MATCH_FOUND, MatchFound(id, req1.inner.uuid, "Player 2")
             ).serialize_with_length()
         )
 
@@ -245,6 +247,6 @@ class Matchmaking:
                 Unit(
                     req.card,
                     m.get_player_as_enum(req.owner),
-                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now()),
+                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT)),
                 )
             )

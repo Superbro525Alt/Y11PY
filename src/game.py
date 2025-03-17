@@ -16,7 +16,7 @@ from copy import copy
 from arena import Arena
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
 from deck import Deck
-from game_packet import MatchRequest, PacketType
+from game_packet import MatchFound, MatchRequest, PacketType
 from matchmaking import Matchmaking, UnitDeployRequest
 from network import (
     Client,
@@ -58,9 +58,11 @@ from engine import (
     UIAnimation,
     UIButton,
     UIElement,
+    intersects,
 )
 from pipeline import Event, FramePipeline, StateData
 from engine import Engine
+from unit import Owner
 from util import json_to_dataclass
 
 
@@ -150,6 +152,7 @@ class GameNetworkClient(Client):
         self.connection_status: ConnectionStatus = ConnectionStatus(None, False)
         self.auth_state: AuthState = AuthState(False, None, False, None)
         self.name = name
+        self.side: Optional[str] = None
 
     def tick(self):
         if self.connection_status.last_connection:
@@ -232,6 +235,10 @@ class GameNetworkClient(Client):
         do_if(packet, PacketType.MATCH_FOUND, lambda: self.found_match(packet))
 
     def found_match(self, packet: Packet):
+        m: MatchFound = MatchFound(**json.loads(packet.data.decode()))
+
+        self.side = m.p
+
         print("======================= found match =======================")
 
     def start_matchmaking(self) -> bool:
@@ -387,6 +394,9 @@ class GameServer(Server):
 
 
 class Game(Engine):
+    HAND_INITIAL_COLOR = (99, 99, 99)
+    HAND_SELECTED_COLOR = (255, 79, 79)
+
     def __init__(self, name: str):
         engine_pipe = FramePipeline[EngineFrameData]("engine_pipe")
         event_pipe = FramePipeline[Event]("event_pipe")
@@ -412,6 +422,8 @@ class Game(Engine):
         # Register scenes
         self.main_menu_scene = Scene("main_menu")
         self.battle_scene = Scene("battle")
+
+        self.selected_card: Optional[Card] = None
 
     def setup_scenes(self):
         """Initializes all scenes and UI elements."""
@@ -467,15 +479,25 @@ class Game(Engine):
             color=(0, 0, 255),
         )
 
+        self.player_display = UIElement(
+            20,  # Center horizontally
+            140,  # Near the bottom
+            100,  # Wider
+            30,
+            color=(0, 0, 255),
+        )
+        
+        self.battle_scene.add_ui_element(self.player_display)
+
         self.battle_scene.add_ui_element(self.elixir_display)
 
         # Spreading Hand Cards More Evenly Across the Bottom
         self.hand_buttons = []
-        hand_card_width = 120
-        hand_card_height = 160
+        hand_card_width = self.text_renderer.get_text_width("aaaaaaaaaaaaaaaa") + 10
+        hand_card_height = self.text_renderer.get_font_height("Card") + 10 
         spacing = 20
         hand_start_x = (self.sdl.get_width() - (hand_card_width * 4 + spacing * 3)) // 2
-        hand_y = self.sdl.get_height() - 180
+        hand_y = self.sdl.get_height() - 80 
 
         for i in range(4):  # Assuming a 4-card hand
             card_x = hand_start_x + i * (hand_card_width + spacing)
@@ -486,13 +508,15 @@ class Game(Engine):
                 hand_card_width,
                 hand_card_height,
                 self.text_renderer,
-                color=(150, 150, 150),
-                on_hover=(200, 200, 200),  # Add slight transparency on hover
+                color=self.HAND_INITIAL_COLOR,
+                on_hover=(69, 69, 69),  # Add slight transparency on hover
                 callback=None,
                 text="Card",
             )
             self.battle_scene.add_ui_element(card_button)
             self.hand_buttons.append(card_button)
+
+        self.input_manager.register_mouse_down(self.mouse_down)
 
         # Register Scenes
         self.scene_manager.add_scene(self.main_menu_scene)
@@ -598,27 +622,30 @@ class Game(Engine):
             if self.client.state and self.client.state.battle_state:
                 elixir_text = f"Elixir: {self.client.state.battle_state.elixir}"
                 self.text_renderer.draw_text(elixir_text, 20, 80, (0, 255, 255))
+                self.text_renderer.draw_text(f"{self.client.side}", 20, 140, (255, 255, 255))
 
                 for i, card in enumerate(self.client.state.battle_state.hand):
                     if i < len(self.hand_buttons):
                         self.hand_buttons[i].text = card.name
+                        temp = self.hand_buttons.copy()
+                        temp.remove(self.hand_buttons[i])
                         self.hand_buttons[i].callback = partial(
-                            self.card_pressed, self.client.state.battle_state.hand[i]
+                            self.card_pressed, self.client.state.battle_state.hand[i], self.hand_buttons[i], temp 
                         )
 
                 # Draw arena grid
                 if self.client.state.battle_state.arena:
                     arena = self.client.state.battle_state.arena
                     cell_size = 20  # Adjust as needed
-                    offset_x = 100
-                    offset_y = 100
+                    offset_x = int((self.sdl.get_width() / 2)  - ((cell_size * Arena.WIDTH) / 2))
+                    offset_y = int(380 - ((cell_size * Arena.HEIGHT) / 2))
 
                     tile_colors = {
-                        0: (200, 200, 200),  # EMPTY
-                        1: (0, 0, 255),  # RIVER
-                        2: (150, 150, 150),  # BRIDGE
+                        0: (99, 99, 99),  # EMPTY
+                        1: (0, 100, 255),  # RIVER
+                        2: (139, 69, 19),  # BRIDGE
                         3: (255, 0, 0),  # CROWN_TOWER
-                        4: (255, 255, 0),  # KING_TOWER
+                        4: (255, 215, 0),  # KING_TOWER
                     }
 
                     for y in range(Arena.HEIGHT):
@@ -631,17 +658,37 @@ class Game(Engine):
                                 cell_size,
                                 cell_size,
                             )
-                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], color[0], color[1], color[2])
-                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], 0, 0, 0) # Add outline
+                            self.sdl.fill_rect(rect[0], rect[1], rect[2], rect[3], color[0], color[1], color[2])
+                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], 255, 255, 255) # Add outline
 
                     # Draw units
-                    if arena.units:
+                    if arena.units and self.client.side:
                         for unit in arena.units:
                             unit_x = offset_x + unit.inner.unit_data.x * cell_size
                             unit_y = offset_y + unit.inner.unit_data.y * cell_size
                             unit_rect = (unit_x, unit_y, cell_size, cell_size)
-                            self.sdl.draw_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 255, 0) # Draw units in green
+                            if (unit.inner.owner == Owner.P1 and self.client.side == "Player 1") or (unit.inner.owner == Owner.P2 and self.client.side == "Player 2"): # TODO: MAKE UNIT ACTUALLY STORE OWNER
+                                self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 255, 0) # Draw units in green
+                            else:
+                                self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 255, 0, 0) # Draw units in red 
                             self.sdl.draw_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 0, 0) # Add outline
 
-    def card_pressed(self, card: Card):
-        self.client.deploy_unit(card, (0, 0))
+    def card_pressed(self, card: Card, button: UIButton, other_buttons: List[UIButton]):
+        self.selected_card = card
+        button.color = self.HAND_SELECTED_COLOR
+        for b in other_buttons:
+            b.color = self.HAND_INITIAL_COLOR 
+
+    def mouse_down(self, pos: Tuple[int, int]) -> None:
+        if self.scene_manager.current_scene and self.scene_manager.current_scene.name == "battle":
+            print(pos)
+            cell_size = 20  
+            offset_x = int((self.sdl.get_width() / 2) - ((cell_size * Arena.WIDTH) / 2))
+            offset_y = int(380 - ((cell_size * Arena.HEIGHT) / 2))
+
+            grid_x = (pos[0] - offset_x) // cell_size
+            grid_y = (pos[1] - offset_y) // cell_size
+
+            print(self.selected_card)
+            if 0 <= grid_x < Arena.WIDTH and 0 <= grid_y < Arena.HEIGHT and self.selected_card:
+                self.client.deploy_unit(self.selected_card, (grid_x, grid_y))

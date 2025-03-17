@@ -34,7 +34,7 @@ import numpy as np
 from util import Pair, logger
 import uuid
 
-from bindings import SDLWrapper, SDL_EventType, SDL_Scancode, SDL_Event
+from bindings import SDL_KeyboardEvent, SDLWrapper, SDL_EventType, SDL_Scancode, SDL_Event
 
 from typing import List, Tuple
 
@@ -132,6 +132,11 @@ class InternalEngine:
         self.pipeline.send(
             EngineFrameData(EngineCode.COMPONENT_TICK, self.sdl, self.camera)
         )
+        
+        self.pre_render_update()
+
+    def pre_render_update(self) -> None:
+        pass
 
     def render(self, override: bool = False):
         if not override:
@@ -880,7 +885,7 @@ class UIButton(UIElement):
         """
         super().__init__(x, y, width, height, color, on_hover=on_hover)
         self.callback = callback
-        self.text_renderer = text_renderer  # Store reference to TextRenderer
+        self.text_renderer = text_renderer
         self.text = text
         self.text_color = text_color
         self.font_size = font_size
@@ -918,20 +923,16 @@ class UIButton(UIElement):
 
         self.text_renderer.draw_text(self.text, text_x, text_y, self.text_color)
 
-    def update(self, dt: float, sdl: SDLWrapper):
-        """Checks if the button was clicked and executes the callback."""
-        mouse_pos = sdl.getMousePosition()
-        mouse_pressed = sdl.is_mouse_button_down(bindings.SDL_BUTTON_LEFT)
-
+    def check_click(self, mouse_pos: Tuple[int, int]):
+        """Checks if the button was clicked."""
         if (
             self.rect.x <= mouse_pos[0] <= self.rect.x + self.rect.w
             and self.rect.y <= mouse_pos[1] <= self.rect.y + self.rect.h
         ):
-            if mouse_pressed and self.callback and sdl.is_window_focused():
+            if self.callback:
                 self.callback()
 
 
-# UIManager holds and updates all UI elements.
 class UIManager:
     def __init__(self):
         self.ui_elements: List[UIElement] = []
@@ -947,6 +948,11 @@ class UIManager:
         for element in self.ui_elements:
             element.render(sdl)
 
+    def handle_mouse_click(self, mouse_pos: Tuple[int, int]):
+        """Handles mouse clicks and checks if any UI button was clicked."""
+        for element in self.ui_elements:
+            if isinstance(element, UIButton):
+                element.check_click(mouse_pos)
 
 # Some common easing functions.
 def ease_in_out_quad(t: float) -> float:
@@ -983,7 +989,7 @@ class Engine(InternalEngine):
             if event.type == SDL_EventType.QUIT:
                 self.quit()
             else:
-                self.input_manager.process_event(event)
+                self.input_manager.process_event(event, self.ui_manager if self.scene_manager.current_scene is None else self.scene_manager.current_scene.ui_manager)
 
     def update(self):
         current_time = time.time()
@@ -1021,7 +1027,7 @@ class Scene:
     def __init__(self, name: str):
         self.name = name
         self.game_objects: List[GameObject] = []
-        self.ui_elements: List[UIElement] = []
+        self.ui_manager: UIManager = UIManager()
         self.ambient_light = (50, 50, 50)
 
     def add_game_object(self, game_object: GameObject):
@@ -1031,19 +1037,19 @@ class Scene:
         self.game_objects.remove(game_object)
 
     def add_ui_element(self, element: UIElement):
-        self.ui_elements.append(element)
+        self.ui_manager.add_element(element)
 
     def update(self, frame_data: EngineFrameData, sdl: SDLWrapper):
         for obj in self.game_objects:
             obj.update(frame_data)
         # Assume a fixed dt for UI elements (or pass in a dt from engine)
-        for ui in self.ui_elements:
+        for ui in self.ui_manager.ui_elements:
             ui.update(1 / 60.0, sdl)
 
     def render(self, sdl: bindings.SDLWrapper, camera: Union[Camera, Camera3D]):
         for obj in self.game_objects:
             obj.render(sdl, camera)
-        for ui in self.ui_elements:
+        for ui in self.ui_manager.ui_elements:
             ui.render(sdl)
 
 
@@ -1070,28 +1076,51 @@ class SceneManager:
         if self.current_scene:
             self.current_scene.render(sdl, camera)
 
-
-# ---- Input Manager ----
 class InputManager:
     def __init__(self):
-        self.key_down_callbacks: Dict[Any, Callable[[], None]] = {}
-        self.key_up_callbacks: Dict[Any, Callable[[], None]] = {}
+        self.key_down_callbacks: Dict[SDL_Scancode, Callable[[], None]] = {}
+        self.key_up_callbacks: Dict[SDL_Scancode, Callable[[], None]] = {}
+        self.mouse_down_callbacks: List[Tuple[int, Callable[[Tuple[int, int]], None]]] = []
+        self.mouse_up_callbacks: Dict[int, Callable[[], None]] = {}
 
-    def register_key_down(self, key, callback: Callable[[], None]):
+    def register_key_down(self, key: SDL_Scancode, callback: Callable[[], None]):
         self.key_down_callbacks[key] = callback
 
-    def register_key_up(self, key, callback: Callable[[], None]):
+    def register_key_up(self, key: SDL_Scancode, callback: Callable[[], None]):
         self.key_up_callbacks[key] = callback
 
-    def process_event(self, event: bindings.SDL_Event):
-        if event.type == bindings.SDL_EventType.KEYDOWN:
+    def register_mouse_down(self, callback: Callable[[Tuple[int, int]], None]):
+        self.mouse_down_callbacks.append((bindings.SDL_BUTTON_LEFT, callback))
+
+    def register_mouse_up(self, button: int, callback: Callable[[], None]):
+        self.mouse_up_callbacks[button] = callback
+
+    def process_event(self, event: SDL_Event, ui_manager: "UIManager"):
+        if event.type == SDL_EventType.KEYDOWN:
             key = event.key.keysym.scancode
             if key in self.key_down_callbacks:
                 self.key_down_callbacks[key]()
-        # elif event.type == bindings.SDL_EventType.KEYUP:
-        #     key = event.key.keysym.scancode
-        #     if key in self.key_up_callbacks:
-        #         self.key_up_callbacks[key]()
+
+        elif event.type == SDL_EventType.KEYUP:
+            key = event.key.keysym.scancode
+            if key in self.key_up_callbacks:
+                self.key_up_callbacks[key]()
+
+        elif event.type == SDL_EventType.MOUSEBUTTONDOWN:
+            button = event.button.button
+            mouse_pos = (event.button.x, event.button.y)
+            for btn, callback in self.mouse_down_callbacks:
+                if btn == button:
+                    callback(mouse_pos)
+
+            # Pass event to UI Manager for button clicks
+            ui_manager.handle_mouse_click(mouse_pos)
+
+        elif event.type == SDL_EventType.MOUSEBUTTONUP:
+            button = event.button.button
+            if button in self.mouse_up_callbacks:
+                self.mouse_up_callbacks[button]()
+
 
 
 class TextRenderer:

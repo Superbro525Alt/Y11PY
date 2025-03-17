@@ -2,12 +2,19 @@ from typing import ClassVar, overload
 
 A: SDL_Scancode
 ADD: BlendMode
+AUDIODEVICEADDED: SDL_EventType
+AUDIODEVICEREMOVED: SDL_EventType
 Apostrophe: SDL_Scancode
 B: SDL_Scancode
 BLEND: BlendMode
 Backslash: SDL_Scancode
 Backspace: SDL_Scancode
 C: SDL_Scancode
+CONTROLLERAXISMOTION: SDL_EventType
+CONTROLLERBUTTONDOWN: SDL_EventType
+CONTROLLERBUTTONUP: SDL_EventType
+CONTROLLERDEVICEADDED: SDL_EventType
+CONTROLLERDEVICEREMOVED: SDL_EventType
 CapsLock: SDL_Scancode
 Comma: SDL_Scancode
 D: SDL_Scancode
@@ -36,13 +43,24 @@ Grave: SDL_Scancode
 H: SDL_Scancode
 I: SDL_Scancode
 J: SDL_Scancode
+JOYAXISMOTION: SDL_EventType
+JOYBALLMOTION: SDL_EventType
+JOYBUTTONDOWN: SDL_EventType
+JOYBUTTONUP: SDL_EventType
+JOYDEVICEADDED: SDL_EventType
+JOYDEVICEREMOVED: SDL_EventType
+JOYHATMOTION: SDL_EventType
 K: SDL_Scancode
 KEYDOWN: SDL_EventType
+KEYUP: SDL_EventType
 L: SDL_Scancode
 Left: SDL_Scancode
 LeftBracket: SDL_Scancode
 M: SDL_Scancode
 MOD: BlendMode
+MOUSEBUTTONDOWN: SDL_EventType
+MOUSEBUTTONUP: SDL_EventType
+MOUSEMOTION: SDL_EventType
 Minus: SDL_Scancode
 N: SDL_Scancode
 NONE: BlendMode
@@ -63,6 +81,7 @@ SDL_BUTTON_MIDDLE: int
 SDL_BUTTON_RIGHT: int
 SDL_BUTTON_X1: int
 SDL_BUTTON_X2: int
+SENSORUPDATE: SDL_EventType
 Semicolon: SDL_Scancode
 Seven: SDL_Scancode
 Six: SDL_Scancode
@@ -77,6 +96,7 @@ Unknown: SDL_Scancode
 Up: SDL_Scancode
 V: SDL_Scancode
 W: SDL_Scancode
+WINDOWEVENT: SDL_EventType
 X: SDL_Scancode
 Y: SDL_Scancode
 Z: SDL_Scancode
@@ -113,29 +133,17 @@ class SDLWrapper:
     def create_renderer(self) -> None: ...
     def create_window(self) -> None: ...
     def delay(self, arg0: int) -> None: ...
-    def draw_circle(
-        self, centerX: int, centerY: int, radius: int, r: int, g: int, b: int
-    ) -> None: ...
-    def draw_line(
-        self, x1: int, y1: int, x2: int, y2: int, r: int, g: int, b: int
-    ) -> None: ...
+    def draw_circle(self, centerX: int, centerY: int, radius: int, r: int, g: int, b: int) -> None: ...
+    def draw_line(self, x1: int, y1: int, x2: int, y2: int, r: int, g: int, b: int) -> None: ...
     def draw_point(self, x: int, y: int, r: int, g: int, b: int) -> None: ...
-    def draw_polygon(
-        self, points: list[tuple[int, int]], r: int, g: int, b: int
-    ) -> None: ...
-    def draw_rect(
-        self, x: int, y: int, w: int, h: int, r: int, g: int, b: int
-    ) -> None: ...
+    def draw_polygon(self, points: list[tuple[int, int]], r: int, g: int, b: int) -> None: ...
+    def draw_rect(self, x: int, y: int, w: int, h: int, r: int, g: int, b: int) -> None: ...
     @overload
     def draw_text(self, text: str, x: int, y: int, color: SDL_Color) -> None: ...
     @overload
     def draw_text(self, text: str, x: int, y: int, r: int, g: int, b: int) -> None: ...
-    def fill_circle(
-        self, centerX: int, centerY: int, radius: int, r: int, g: int, b: int
-    ) -> None: ...
-    def fill_rect(
-        self, x: int, y: int, w: int, h: int, r: int, g: int, b: int
-    ) -> None: ...
+    def fill_circle(self, centerX: int, centerY: int, radius: int, r: int, g: int, b: int) -> None: ...
+    def fill_rect(self, x: int, y: int, w: int, h: int, r: int, g: int, b: int) -> None: ...
     def getMousePosition(self) -> tuple[int, int]: ...
     def get_height(self) -> int: ...
     def get_text_size(self, text: str) -> SDL_Rect: ...
@@ -149,15 +157,57 @@ class SDLWrapper:
     def poll_event(self, event: SDL_Event) -> bool: ...
     def update_screen(self) -> None: ...
 
-class SDL_Event:
-    key: SDL_KeyboardEvent
+class SDL_AudioDeviceEvent:
+    iscapture: int
+    timestamp: int
     type: int
+    which: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_ControllerDeviceEvent:
+    timestamp: int
+    type: int
+    which: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_Event:
+    adevice: SDL_AudioDeviceEvent
+    button: SDL_MouseButtonEvent
+    cdevice: SDL_ControllerDeviceEvent
+    jdevice: SDL_JoyDeviceEvent
+    key: SDL_KeyboardEvent
+    motion: SDL_MouseMotionEvent
+    quit: SDL_QuitEvent
+    sensor: SDL_SensorEvent
+    type: int
+    user: SDL_UserEvent
+    window: SDL_WindowEvent
     def __init__(self) -> None: ...
 
 class SDL_EventType:
     __members__: ClassVar[dict] = ...  # read-only
+    AUDIODEVICEADDED: ClassVar[SDL_EventType] = ...
+    AUDIODEVICEREMOVED: ClassVar[SDL_EventType] = ...
+    CONTROLLERAXISMOTION: ClassVar[SDL_EventType] = ...
+    CONTROLLERBUTTONDOWN: ClassVar[SDL_EventType] = ...
+    CONTROLLERBUTTONUP: ClassVar[SDL_EventType] = ...
+    CONTROLLERDEVICEADDED: ClassVar[SDL_EventType] = ...
+    CONTROLLERDEVICEREMOVED: ClassVar[SDL_EventType] = ...
+    JOYAXISMOTION: ClassVar[SDL_EventType] = ...
+    JOYBALLMOTION: ClassVar[SDL_EventType] = ...
+    JOYBUTTONDOWN: ClassVar[SDL_EventType] = ...
+    JOYBUTTONUP: ClassVar[SDL_EventType] = ...
+    JOYDEVICEADDED: ClassVar[SDL_EventType] = ...
+    JOYDEVICEREMOVED: ClassVar[SDL_EventType] = ...
+    JOYHATMOTION: ClassVar[SDL_EventType] = ...
     KEYDOWN: ClassVar[SDL_EventType] = ...
+    KEYUP: ClassVar[SDL_EventType] = ...
+    MOUSEBUTTONDOWN: ClassVar[SDL_EventType] = ...
+    MOUSEBUTTONUP: ClassVar[SDL_EventType] = ...
+    MOUSEMOTION: ClassVar[SDL_EventType] = ...
     QUIT: ClassVar[SDL_EventType] = ...
+    SENSORUPDATE: ClassVar[SDL_EventType] = ...
+    WINDOWEVENT: ClassVar[SDL_EventType] = ...
     __entries: ClassVar[dict] = ...
     def __init__(self, value: int) -> None: ...
     def __eq__(self, other: object) -> bool: ...
@@ -170,12 +220,54 @@ class SDL_EventType:
     @property
     def value(self) -> int: ...
 
+class SDL_JoyDeviceEvent:
+    timestamp: int
+    type: int
+    which: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
 class SDL_KeyboardEvent:
     keysym: SDL_Keysym
+    repeat: int
+    state: int
+    timestamp: int
+    type: int
+    windowID: int
     def __init__(self, *args, **kwargs) -> None: ...
 
 class SDL_Keysym:
+    mod: int
     scancode: SDL_Scancode
+    sym: int
+    unused: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_MouseButtonEvent:
+    button: int
+    state: int
+    timestamp: int
+    type: int
+    which: int
+    windowID: int
+    x: int
+    y: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_MouseMotionEvent:
+    state: int
+    timestamp: int
+    type: int
+    which: int
+    windowID: int
+    x: int
+    xrel: int
+    y: int
+    yrel: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_QuitEvent:
+    timestamp: int
+    type: int
     def __init__(self, *args, **kwargs) -> None: ...
 
 class SDL_Rect:
@@ -268,3 +360,27 @@ class SDL_Scancode:
     def name(self) -> str: ...
     @property
     def value(self) -> int: ...
+
+class SDL_SensorEvent:
+    timestamp: int
+    type: int
+    which: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_UserEvent:
+    code: int
+    data1: capsule
+    data2: capsule
+    timestamp: int
+    type: int
+    windowID: int
+    def __init__(self, *args, **kwargs) -> None: ...
+
+class SDL_WindowEvent:
+    data1: int
+    data2: int
+    event: int
+    timestamp: int
+    type: int
+    windowID: int
+    def __init__(self, *args, **kwargs) -> None: ...

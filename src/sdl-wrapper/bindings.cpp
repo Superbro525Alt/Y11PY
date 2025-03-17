@@ -173,25 +173,122 @@ py::enum_<SDL_Scancode>(m, "SDL_Scancode")
         .value("Up", SDL_SCANCODE_UP)     // Added Up Arrow
         .export_values();
 
-    // Bind SDL_Event (Carefully!  Bind only what you need)
-    py::class_<SDL_Event>(m, "SDL_Event")
-        .def(py::init<>()) // Important: provide a default constructor
-        .def_readwrite("type", &SDL_Event::type) // Example: Bind the 'type' member
-        // Bind other event members as needed (e.g., key, button, motion)
-        // Example for keydown event:
-        .def_readwrite("key", &SDL_Event::key);
-
-  py::enum_<SDL_EventType>(m, "SDL_EventType") // Bind SDL_EventType for event types
-        .value("QUIT", SDL_QUIT)
-        .value("KEYDOWN", SDL_KEYDOWN)
-        // ... other event types as needed
-        .export_values();
+      py::class_<SDL_Event>(m, "SDL_Event")
+        .def(py::init<>())
+        .def_readwrite("type", &SDL_Event::type)
+        .def_readwrite("key", &SDL_Event::key)
+        .def_readwrite("motion", &SDL_Event::motion)
+        .def_readwrite("button", &SDL_Event::button)
+        .def_readwrite("window", &SDL_Event::window)
+        .def_readwrite("quit", &SDL_Event::quit)
+        .def_readwrite("user", &SDL_Event::user)
+        .def_readwrite("jdevice", &SDL_Event::jdevice)
+        .def_readwrite("cdevice", &SDL_Event::cdevice)
+        .def_readwrite("sensor", &SDL_Event::sensor)
+        .def_readwrite("adevice", &SDL_Event::adevice);
 
     py::class_<SDL_KeyboardEvent>(m, "SDL_KeyboardEvent")
+        .def_readwrite("type", &SDL_KeyboardEvent::type)
+        .def_readwrite("timestamp", &SDL_KeyboardEvent::timestamp)
+        .def_readwrite("windowID", &SDL_KeyboardEvent::windowID)
+        .def_readwrite("state", &SDL_KeyboardEvent::state)
+        .def_readwrite("repeat", &SDL_KeyboardEvent::repeat)
         .def_readwrite("keysym", &SDL_KeyboardEvent::keysym);
 
+    py::class_<SDL_MouseMotionEvent>(m, "SDL_MouseMotionEvent")
+        .def_readwrite("type", &SDL_MouseMotionEvent::type)
+        .def_readwrite("timestamp", &SDL_MouseMotionEvent::timestamp)
+        .def_readwrite("windowID", &SDL_MouseMotionEvent::windowID)
+        .def_readwrite("which", &SDL_MouseMotionEvent::which)
+        .def_readwrite("state", &SDL_MouseMotionEvent::state)
+        .def_readwrite("x", &SDL_MouseMotionEvent::x)
+        .def_readwrite("y", &SDL_MouseMotionEvent::y)
+        .def_readwrite("xrel", &SDL_MouseMotionEvent::xrel)
+        .def_readwrite("yrel", &SDL_MouseMotionEvent::yrel);
+
+    py::class_<SDL_MouseButtonEvent>(m, "SDL_MouseButtonEvent")
+        .def_readwrite("type", &SDL_MouseButtonEvent::type)
+        .def_readwrite("timestamp", &SDL_MouseButtonEvent::timestamp)
+        .def_readwrite("windowID", &SDL_MouseButtonEvent::windowID)
+        .def_readwrite("which", &SDL_MouseButtonEvent::which)
+        .def_readwrite("button", &SDL_MouseButtonEvent::button)
+        .def_readwrite("state", &SDL_MouseButtonEvent::state)
+        .def_readwrite("x", &SDL_MouseButtonEvent::x)
+        .def_readwrite("y", &SDL_MouseButtonEvent::y);
+
+    py::class_<SDL_WindowEvent>(m, "SDL_WindowEvent")
+        .def_readwrite("type", &SDL_WindowEvent::type)
+        .def_readwrite("timestamp", &SDL_WindowEvent::timestamp)
+        .def_readwrite("windowID", &SDL_WindowEvent::windowID)
+        .def_readwrite("event", &SDL_WindowEvent::event)
+        .def_readwrite("data1", &SDL_WindowEvent::data1)
+        .def_readwrite("data2", &SDL_WindowEvent::data2);
+
+    py::class_<SDL_QuitEvent>(m, "SDL_QuitEvent")
+        .def_readwrite("type", &SDL_QuitEvent::type)
+        .def_readwrite("timestamp", &SDL_QuitEvent::timestamp);
+
+    py::class_<SDL_UserEvent>(m, "SDL_UserEvent")
+        .def_readwrite("type", &SDL_UserEvent::type)
+        .def_readwrite("timestamp", &SDL_UserEvent::timestamp)
+        .def_readwrite("windowID", &SDL_UserEvent::windowID)
+        .def_readwrite("code", &SDL_UserEvent::code)
+        .def_readwrite("data1", &SDL_UserEvent::data1)
+        .def_readwrite("data2", &SDL_UserEvent::data2);
+
+    py::class_<SDL_JoyDeviceEvent>(m, "SDL_JoyDeviceEvent")
+        .def_readwrite("type", &SDL_JoyDeviceEvent::type)
+        .def_readwrite("timestamp", &SDL_JoyDeviceEvent::timestamp)
+        .def_readwrite("which", &SDL_JoyDeviceEvent::which);
+
+    py::class_<SDL_ControllerDeviceEvent>(m, "SDL_ControllerDeviceEvent")
+        .def_readwrite("type", &SDL_ControllerDeviceEvent::type)
+        .def_readwrite("timestamp", &SDL_ControllerDeviceEvent::timestamp)
+        .def_readwrite("which", &SDL_ControllerDeviceEvent::which);
+
+    py::class_<SDL_SensorEvent>(m, "SDL_SensorEvent")
+        .def_readwrite("type", &SDL_SensorEvent::type)
+        .def_readwrite("timestamp", &SDL_SensorEvent::timestamp)
+        .def_readwrite("which", &SDL_SensorEvent::which);
+
+    py::class_<SDL_AudioDeviceEvent>(m, "SDL_AudioDeviceEvent")
+        .def_readwrite("type", &SDL_AudioDeviceEvent::type)
+        .def_readwrite("timestamp", &SDL_AudioDeviceEvent::timestamp)
+        .def_readwrite("which", &SDL_AudioDeviceEvent::which)
+        .def_readwrite("iscapture", &SDL_AudioDeviceEvent::iscapture);
+
     py::class_<SDL_Keysym>(m, "SDL_Keysym")
-        .def_readwrite("scancode", &SDL_Keysym::scancode);
+        .def_readwrite("scancode", &SDL_Keysym::scancode)
+        .def_readwrite("sym", &SDL_Keysym::sym)
+        .def_readwrite("mod", &SDL_Keysym::mod)
+        .def_readwrite("unused", &SDL_Keysym::unused);
+
+      py::enum_<SDL_EventType>(m, "SDL_EventType")
+        .value("QUIT", SDL_QUIT)
+        .value("KEYDOWN", SDL_KEYDOWN)
+        .value("KEYUP", SDL_KEYUP)
+        .value("MOUSEMOTION", SDL_MOUSEMOTION)
+        .value("MOUSEBUTTONDOWN", SDL_MOUSEBUTTONDOWN)
+        .value("MOUSEBUTTONUP", SDL_MOUSEBUTTONUP)
+        .value("WINDOWEVENT", SDL_WINDOWEVENT)
+        .value("JOYDEVICEADDED", SDL_JOYDEVICEADDED)
+        .value("JOYDEVICEREMOVED", SDL_JOYDEVICEREMOVED)
+        .value("JOYAXISMOTION", SDL_JOYAXISMOTION)
+        .value("JOYBALLMOTION", SDL_JOYBALLMOTION)
+        .value("JOYHATMOTION", SDL_JOYHATMOTION)
+        .value("JOYBUTTONDOWN", SDL_JOYBUTTONDOWN)
+        .value("JOYBUTTONUP", SDL_JOYBUTTONUP)
+        .value("CONTROLLERDEVICEADDED", SDL_CONTROLLERDEVICEADDED)
+        .value("CONTROLLERDEVICEREMOVED", SDL_CONTROLLERDEVICEREMOVED)
+        .value("CONTROLLERAXISMOTION", SDL_CONTROLLERAXISMOTION)
+        .value("CONTROLLERBUTTONDOWN", SDL_CONTROLLERBUTTONDOWN)
+        .value("CONTROLLERBUTTONUP", SDL_CONTROLLERBUTTONUP)
+        .value("SENSORUPDATE", SDL_SENSORUPDATE)
+        .value("AUDIODEVICEADDED", SDL_AUDIODEVICEADDED)
+        .value("AUDIODEVICEREMOVED", SDL_AUDIODEVICEREMOVED)
+        // Add all required SDL_EventType values.
+        .export_values();
+
   m.attr("SDL_BUTTON_LEFT") = SDL_BUTTON_LEFT;
 m.attr("SDL_BUTTON_MIDDLE") = SDL_BUTTON_MIDDLE;
 m.attr("SDL_BUTTON_RIGHT") = SDL_BUTTON_RIGHT;

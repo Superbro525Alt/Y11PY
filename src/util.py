@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 from typing import Generic, TypeVar
 import math
 
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 T = TypeVar("T")
 U = TypeVar("U")
 

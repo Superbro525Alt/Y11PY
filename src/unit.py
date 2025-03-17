@@ -57,8 +57,7 @@ class UnitData:
     y: int
     current_target: Optional[UnitTarget]
     hitpoints: int
-    last_move: datetime
-
+    last_move: str
 
 @dataclass
 class Unit:

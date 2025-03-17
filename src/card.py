@@ -26,15 +26,14 @@ class MovementSpeed(Enum):
 
     @classmethod
     def to_num(cls, speed: Self) -> float:
-        print(speed)
         if speed == cls.SLOW.value:
-            return 2
+            return 4
         elif speed == cls.MEDIUM.value:
-            return 1 
+            return 3 
         elif speed == cls.FAST.value:
-            return 0.5
+            return 2
         elif speed == cls.VERY_FAST.value:
-            return 0.25
+            return 1
         else:
             return 9999
 

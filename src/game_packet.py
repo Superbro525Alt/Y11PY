@@ -14,6 +14,7 @@ class MatchRequest:
 class MatchFound:
     match_uuid: str
     other_uuid: str
+    p: str
 
 
 class PacketType(enum.Enum):

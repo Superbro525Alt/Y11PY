@@ -194,7 +194,8 @@ def recv_all(
             return None
 
         if not chunk:
-            raise ConnectionError(f"[{id}] Socket closed during recv_all")
+            # raise ConnectionError(f"[{id}] Socket closed during recv_all")
+            return b""
 
         data += chunk
         remaining -= len(chunk)

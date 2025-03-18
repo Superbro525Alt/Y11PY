@@ -13,9 +13,20 @@
 \usepackage{titlesec}
 \usepackage{pgfgantt}
 
+% Float management
+\usepackage{float}        % Allows [H] specifier
+\usepackage{placeins}     % For \FloatBarrier
+\usepackage{tabularx}     % Auto-wrap columns
+\usepackage{adjustbox}    % For scaling large content (flowcharts, etc.)
+
+% --- TikZ and PGF for flowcharts ---
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+
 \geometry{a4paper, margin=1in}
 
 \setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4} 
 
 \titleformat{\paragraph}
 {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
@@ -27,26 +38,33 @@
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
+% Custom lst style
 \lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},   
+    backgroundcolor=\color{backcolour},
     commentstyle=\color{codegreen},
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
     basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,         
-    breaklines=true,                 
-    captionpos=b,                    
-    keepspaces=true,                 
-    numbers=left,                    
-    numbersep=5pt,                  
-    showspaces=false,                
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
     showstringspaces=false,
-    showtabs=false,                  
+    showtabs=false,
     tabsize=2
 }
-
 \lstset{style=mystyle}
+
+% TikZ flowchart styles
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm, text centered, draw=black, fill=gray!20]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=2.8cm, minimum height=0.8cm, text centered, draw=black, fill=blue!20]
+\tikzstyle{process} = [rectangle, minimum width=2.8cm, minimum height=0.8cm, text centered, draw=black, fill=orange!20]
+\tikzstyle{decision} = [diamond, aspect=2, text centered, draw=black, fill=green!20]
+\tikzstyle{arrow} = [thick,->,>=stealth]
 
 \title{Clash Royale Online Implementation}
 \author{Paul Hodges}
@@ -73,23 +91,57 @@
 \section{Development Schedule}
 
 \begin{ganttchart}[
-   vgrid={*{4}{gray, dotted}, *1{black, dashed}},
-   bar label node/.append style={align=left}
-   ]{1}{28}
+    hgrid,
+    vgrid={*{4}{gray, dotted}, *1{black, dashed}},
+    bar label node/.append style={align=left},
+    bar/.append style={fill=blue!40},
+    group/.append style={fill=blue!20},
+    milestone/.append style={fill=red, inner sep=2pt},
+    title label font=\bfseries\footnotesize,
+    bar label font=\footnotesize,
+    y unit chart=0.5cm,
+    x unit=11pt,
+    canvas/.style={draw=none, fill=none},
+    today=7,
+    today rule/.style={
+      draw=red,
+      dash pattern=on 3.5pt off 4.5pt,
+      line width=1.5pt
+    },
+    today label={Today},
+    today label font=\small\bfseries,
+    today label node/.append style={below=7pt},
+    progress label node/.append style={below right=10pt},
+    link/.style={->, thick, rounded corners=2pt},
+    title/.style={draw=none, fill=white},
+    title label node/.append style={below=0pt},
+    title height=0.75,
+    bar height=0.6,
+    milestone height=0.6,
+    group top shift=0.5,
+    group height=0.2
+]{1}{28}
+% Title row with weeks
 \gantttitle{Week 1}{7} \gantttitle{Week 2}{7} \gantttitle{Week 3}{7} \gantttitle{Week 4}{7} \\
-\ganttbar{Core Engine + Network}{1}{7} \\
-    \ganttbar{Engine Setup}{1}{3} \\
-    \ganttbar{Network Setup}{4}{7} \\
-\ganttbar{Gameplay Mechanics}{8}{14} \\
-    \ganttbar{ECS + Cards}{8}{10} \\
-    \ganttbar{Gameplay Logic}{11}{14} \\
-\ganttbar{Progression + Rewards}{15}{21} \\
-    \ganttbar{Progression}{15}{18} \\
-    \ganttbar{Database + Security}{19}{21} \\
-\ganttbar{Testing + Refinement}{22}{28} \\
-    \ganttbar{Core Testing}{22}{23} \\
-    \ganttbar{Gameplay Testing}{24}{26} \\
-    \ganttbar{Final Testing}{27}{28}
+% Main project phases with grouping - with no connections
+\ganttgroup[group/.append style={fill=blue!20}]{1. Core Engine \& Network}{1}{7} \\
+    \ganttbar[bar/.append style={fill=blue!50}]{Engine Setup}{1}{3} \\
+    \ganttbar[bar/.append style={fill=blue!50}]{Network Setup}{4}{7} \\
+    \ganttmilestone[milestone/.append style={fill=red}]{Core Platform Complete}{7} \\
+\ganttgroup[group/.append style={fill=green!20}]{2. Gameplay Mechanics}{8}{14} \\
+    \ganttbar[bar/.append style={fill=green!50}]{ECS + Cards Implementation}{8}{10} \\
+    \ganttbar[bar/.append style={fill=green!50}]{Gameplay Logic}{11}{14} \\
+    \ganttmilestone[milestone/.append style={fill=red}]{Gameplay Prototype Ready}{14} \\
+\ganttgroup[group/.append style={fill=orange!20}]{3. Progression \& Rewards}{15}{21} \\
+    \ganttbar[bar/.append style={fill=orange!50}]{Progression System}{15}{18} \\
+    \ganttbar[bar/.append style={fill=orange!50}]{Database + Security}{19}{21} \\
+    \ganttmilestone[milestone/.append style={fill=red}]{Systems Integration Complete}{21} \\
+\ganttgroup[group/.append style={fill=purple!20}]{4. Testing \& Refinement}{22}{28} \\
+    \ganttbar[bar/.append style={fill=purple!50}]{Core Testing}{22}{23} \\
+    \ganttbar[bar/.append style={fill=purple!50}]{Gameplay Testing}{24}{26} \\
+    \ganttbar[bar/.append style={fill=purple!50}]{Final Testing \& Bugfixes}{27}{28} \\
+    \ganttmilestone[milestone/.append style={fill=red}]{Release Candidate Ready}{28} \\
+
 \end{ganttchart}
 
 \section{Problem Outline}
@@ -302,7 +354,7 @@ The game will be built using a custom Entity Component System (ECS) engine and a
 
 The engine is written in Python, based on the design off of one of my previous Rust engines, "Oxidized." Key features include:
 
-\paragraph{ECS Architecture} 
+\paragraph{ECS Architecture}
 
 The Entity Component System (ECS) architecture separates data (components) from logic (systems). Entities are simple IDs, and components are data containers (e.g., Position, Velocity, Sprite). Systems operate on entities that have the required components. This design promotes data-oriented programming, improving cache efficiency and making the code more modular and maintainable. In this Python implementation, we'll leverage dictionaries and lists to store and manage entities, components, and systems. For example, a "MovementSystem" would iterate through entities with "Position" and "Velocity" components, updating their positions based on their velocities. This decoupling of data and logic allows for flexible entity composition and avoids the complexities of traditional inheritance-based object-oriented programming.
 
@@ -349,16 +401,18 @@ To further enhance the 3D illusion, we'll implement perspective scaling. Objects
 
 \subsection{Algorithm Design}
 
-Below are the core algorithms for the main game systems. These algorithms use proper control structures and follow logical flow to handle the key game mechanics.
+Below are the core algorithms for the main game systems.
 
-\subsubsection{Server-Side Game Management}
-
+%---------------------------------------------
+% MAIN SERVER LOOP
+%---------------------------------------------
+\subsubsection{Main Server Loop}
 \begin{lstlisting}[language=Python, caption=Main Server Loop]
 FUNCTION RunServer():
     INITIALIZE server
     INITIALIZE player_pool = []
     INITIALIZE active_games = []
-    
+
     WHILE server_running:
         FOR each incoming_connection:
             IF is_new_connection THEN
@@ -373,7 +427,7 @@ FUNCTION RunServer():
                 ProcessGameAction(game, connection, action)
             END IF
         END FOR
-        
+
         # Matchmaking
         WHILE MatchmakingQueue.COUNT >= 2:
             player1 = MatchmakingQueue.GET_NEXT()
@@ -387,7 +441,7 @@ FUNCTION RunServer():
                 BREAK
             END IF
         END WHILE
-        
+
         # Update all active games
         FOR each game IN active_games:
             UpdateGame(game)
@@ -400,8 +454,12 @@ FUNCTION RunServer():
 END FUNCTION
 \end{lstlisting}
 
-\subsubsection{Card Deployment Process}
+\FloatBarrier
 
+%---------------------------------------------
+% CARD DEPLOYMENT
+%---------------------------------------------
+\subsubsection{Card Deployment Process}
 \begin{lstlisting}[language=Python, caption=Card Deployment]
 FUNCTION ProcessCardDeployment(game, player, card_id, position_x, position_y):
     # Validate the deployment
@@ -409,25 +467,25 @@ FUNCTION ProcessCardDeployment(game, player, card_id, position_x, position_y):
         SEND_ERROR(player, "Invalid deployment position")
         RETURN False
     END IF
-    
+
     # Get the card from player's hand
     card = player.GetCardFromHand(card_id)
     IF card == NULL THEN
         SEND_ERROR(player, "Card not in hand")
         RETURN False
     END IF
-    
+
     # Check elixir cost
     IF player.current_elixir < card.elixir_cost THEN
         SEND_ERROR(player, "Insufficient elixir")
         RETURN False
     END IF
-    
+
     # Deploy the card
     player.current_elixir = player.current_elixir - card.elixir_cost
     player.RemoveCardFromHand(card_id)
     player.AddNextCardToHand()
-    
+
     # Create the unit/spell/building on the field
     IF card.type == "TROOP" THEN
         unit = CreateTroop(card, position_x, position_y, player.side)
@@ -438,21 +496,25 @@ FUNCTION ProcessCardDeployment(game, player, card_id, position_x, position_y):
         building = CreateBuilding(card, position_x, position_y, player.side)
         game.AddBuilding(building)
     END IF
-    
+
     # Notify both players
     BROADCAST_DEPLOYMENT(game, player.id, card_id, position_x, position_y)
-    
+
     RETURN True
 END FUNCTION
 \end{lstlisting}
 
-\subsubsection{Battle Update Logic}
+\FloatBarrier
 
+%---------------------------------------------
+% BATTLE UPDATE LOGIC
+%---------------------------------------------
+\subsubsection{Battle Update Logic}
 \begin{lstlisting}[language=Python, caption=Battle Update Logic]
 FUNCTION UpdateGame(game):
     # Update game time
     game.current_time = game.current_time + TICK_RATE
-    
+
     # Check for game end conditions
     IF game.current_time >= game.max_time AND NOT game.in_overtime THEN
         IF game.player1.crowns == game.player2.crowns THEN
@@ -464,30 +526,29 @@ FUNCTION UpdateGame(game):
             RETURN
         END IF
     END IF
-    
+
     IF game.in_overtime AND game.current_time >= game.overtime_end THEN
         game.is_finished = True
         RETURN
     END IF
-    
-    # Regenerate elixir for both players
+
+    # Regenerate elixir
     regeneration_amount = CALCULATE_ELIXIR_REGEN(game)
     game.player1.current_elixir = MIN(game.player1.current_elixir + regeneration_amount, MAX_ELIXIR)
     game.player2.current_elixir = MIN(game.player2.current_elixir + regeneration_amount, MAX_ELIXIR)
-    
-    # Update all units on the field
+
+    # Update all units
     FOR each unit IN game.units:
         IF unit.health <= 0 THEN
             game.RemoveUnit(unit)
             CONTINUE
-        END IF
-        
-        # Find target for the unit
+
+        # Find target
         IF unit.current_target == NULL OR unit.current_target.health <= 0 THEN
             unit.current_target = FindTarget(game, unit)
         END IF
-        
-        # Update unit position and attack
+
+        # Move/attack
         IF unit.current_target != NULL THEN
             IF IsInRange(unit, unit.current_target) THEN
                 PerformAttack(unit, unit.current_target)
@@ -496,48 +557,46 @@ FUNCTION UpdateGame(game):
             END IF
         END IF
     END FOR
-    
-    # Update all buildings
+
+    # Update buildings
     FOR each building IN game.buildings:
         IF building.health <= 0 OR building.lifetime <= 0 THEN
             game.RemoveBuilding(building)
             CONTINUE
-        END IF
-        
+
         building.lifetime = building.lifetime - TICK_RATE
-        
-        # Find target for the building
+
         IF building.can_attack THEN
             IF building.current_target == NULL OR building.current_target.health <= 0 THEN
                 building.current_target = FindTarget(game, building)
             END IF
-            
-            # Attack if target in range
             IF building.current_target != NULL AND IsInRange(building, building.current_target) THEN
                 PerformAttack(building, building.current_target)
             END IF
         END IF
     END FOR
-    
-    # Check tower status
+
+    # Check towers
     CheckTowerStatus(game)
-    
-    # Send updated game state to both players
+
+    # Broadcast state
     BROADCAST_GAME_STATE(game)
 END FUNCTION
 \end{lstlisting}
 
-\subsubsection{Target Selection Algorithm}
+\FloatBarrier
 
+%---------------------------------------------
+% TARGET SELECTION ALGORITHM
+%---------------------------------------------
+\subsubsection{Target Selection Algorithm}
 \begin{lstlisting}[language=Python, caption=Target Finding]
 FUNCTION FindTarget(game, attacker):
     closest_target = NULL
     min_distance = INFINITY
-    
-    # Define potential targets based on attacker type
+
+    # Determine potential targets
     potential_targets = []
-    
-    # Filter targets based on attacker's capabilities
     IF attacker.attacks_ground AND attacker.attacks_air THEN
         potential_targets = game.GetAllUnitsAndBuildings(GetOpponentSide(attacker.side))
     ELSE IF attacker.attacks_ground THEN
@@ -545,87 +604,551 @@ FUNCTION FindTarget(game, attacker):
     ELSE IF attacker.attacks_air THEN
         potential_targets = game.GetAirUnits(GetOpponentSide(attacker.side))
     END IF
-    
-    # Add towers to potential targets
+
+    # Add towers
     towers = game.GetTowers(GetOpponentSide(attacker.side))
     potential_targets.EXTEND(towers)
-    
-    # Apply targeting preference
-    IF attacker.targeting_preference == "BUILDINGS" THEN
-        buildings = [target FOR target IN potential_targets IF target.type == "BUILDING" OR target.type == "TOWER"]
-        IF buildings.LENGTH > 0 THEN
+
+    # Targeting preference
+    IF attacker.targeting_preference == "BUILDINGS":
+        buildings = [t FOR t IN potential_targets IF t.type == "BUILDING" OR t.type == "TOWER"]
+        IF buildings.LENGTH > 0:
             potential_targets = buildings
-        END IF
-    END IF
-    
-    # Find closest target
+
+    # Find closest
     FOR each target IN potential_targets:
         distance = CalculateDistance(attacker.position, target.position)
-        IF distance < min_distance THEN
+        IF distance < min_distance:
             min_distance = distance
             closest_target = target
-        END IF
-    END FOR
-    
+
     RETURN closest_target
 END FUNCTION
 \end{lstlisting}
 
-\subsubsection{Chest Reward System}
+\FloatBarrier
 
+%---------------------------------------------
+% CHEST REWARD SYSTEM
+%---------------------------------------------
+\subsubsection{Chest Reward System}
 \begin{lstlisting}[language=Python, caption=Chest Generation]
 FUNCTION GenerateChestForPlayer(player, chest_type):
-    # Create a new chest with appropriate type
+    # Create a new chest
     chest = CreateChest(chest_type)
-    
-    # Set unlock time based on chest type
-    IF chest_type == "SILVER" THEN
+
+    # Set unlock time
+    IF chest_type == "SILVER":
         chest.unlock_time = 3 * HOURS
-    ELSE IF chest_type == "GOLD" THEN
+    ELSE IF chest_type == "GOLD":
         chest.unlock_time = 8 * HOURS
-    ELSE IF chest_type == "MAGICAL" THEN
+    ELSE IF chest_type == "MAGICAL":
         chest.unlock_time = 12 * HOURS
-    ELSE IF chest_type == "GIANT" THEN
+    ELSE IF chest_type == "GIANT":
         chest.unlock_time = 16 * HOURS
-    END IF
-    
-    # Determine gold amount based on arena and chest type
+
+    # Gold reward
     chest.gold = CALCULATE_GOLD_REWARD(player.arena, chest_type)
-    
-    # Determine card counts based on arena and chest type
+
+    # Card counts
     common_count, rare_count, epic_count, legendary_count = CALCULATE_CARD_COUNTS(player.arena, chest_type)
-    
-    # Generate specific cards
+
+    # Generate cards
     available_cards = GetAvailableCardsForArena(player.arena)
-    
+
     FOR i = 1 TO common_count:
         card = SelectRandomCard(available_cards, "COMMON")
         chest.AddCard(card)
-    END FOR
-    
+
     FOR i = 1 TO rare_count:
         card = SelectRandomCard(available_cards, "RARE")
         chest.AddCard(card)
-    END FOR
-    
+
     FOR i = 1 TO epic_count:
         card = SelectRandomCard(available_cards, "EPIC")
         chest.AddCard(card)
-    END FOR
-    
+
     FOR i = 1 TO legendary_count:
         card = SelectRandomCard(available_cards, "LEGENDARY")
         chest.AddCard(card)
-    END FOR
-    
-    # Add chest to player's inventory
+
+    # Add to player's inventory
     player.AddChest(chest)
-    
-    # Notify player
+
+    # Notify
     SEND_CHEST_RECEIVED(player, chest)
-    
     RETURN chest
 END FUNCTION
 \end{lstlisting}
+
+\FloatBarrier
+
+%---------------------------------------------
+% FLOWCHARTS
+%---------------------------------------------
+\subsection{Algorithm Flowcharts}
+
+\subsubsection{Main Server Loop Flowchart}
+\begin{figure}[H]
+\centering
+% Scale to 80% of page height to ensure it fits
+\adjustbox{max height=0.8\textheight}{%
+\begin{tikzpicture}[node distance=2.2cm]
+\node (start) [startstop] {Start Server};
+\node (conn) [process, below of=start, yshift=-0.5cm] {Check Incoming Connections};
+\node (decNew) [decision, below of=conn, yshift=-0.8cm] {New Conn?};
+\node (createP) [process, right of=decNew, xshift=3.5cm, align=center] {Create Player \\ Send Welcome};
+\node (decMatch) [decision, below of=decNew, yshift=-1.4cm] {Matchmaking Request?};
+\node (addMatch) [process, left of=decMatch, xshift=-3.5cm, align=center] {Add Player to \\ Matchmaking Queue};
+\node (decGameA) [decision, below of=decMatch, yshift=-1.4cm] {Game Action?};
+\node (procGameA) [process, right of=decGameA, xshift=3.5cm] {Process Game Action};
+\node (matchmake) [process, below of=decGameA, yshift=-2.0cm] {Matchmaking Loop};
+\node (updateGames) [process, below of=matchmake, yshift=-1.2cm] {Update All Active Games};
+\node (end) [startstop, below of=updateGames, yshift=-0.5cm] {Server Running?};
+
+\draw [arrow] (start) -- (conn);
+\draw [arrow] (conn) -- (decNew);
+\draw [arrow] (decNew) -- node[anchor=north] {Yes} (createP);
+\draw [arrow] (decNew) -- node[anchor=west] {No} (decMatch);
+\draw [arrow] (createP) |- (decMatch);
+\draw [arrow] (decMatch) -- node[anchor=north] {Yes} (addMatch);
+\draw [arrow] (decMatch) -- node[anchor=west] {No} (decGameA);
+\draw [arrow] (addMatch) |- (decGameA);
+\draw [arrow] (decGameA) -- node[anchor=north] {Yes} (procGameA);
+\draw [arrow] (decGameA) -- node[anchor=west] {No} (matchmake);
+\draw [arrow] (procGameA) |- (matchmake);
+\draw [arrow] (matchmake) -- (updateGames);
+\draw [arrow] (updateGames) -- (end);
+% \draw [arrow] (end) -- ++(0,-1.0) node[anchor=north] {Yes} -| (conn);
+\end{tikzpicture}%
+} % end adjustbox
+\caption{Main Server Loop Flowchart}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Card Deployment Process Flowchart}
+\begin{figure}[H]
+\centering
+\adjustbox{max height=0.8\textheight}{%
+\begin{tikzpicture}[node distance=2cm]
+\node (start) [startstop] {Start Deployment};
+\node (checkPos) [decision, below of=start, yshift=-0.8cm] {Valid Position?};
+\node (errorPos) [process, right of=checkPos, xshift=3.5cm, align=center] {Send Error: \\
+"Invalid Deployment"};
+\node (getCard) [process, below of=checkPos] {Get Card from Hand};
+\node (cardNull) [decision, below of=getCard, yshift=-0.8cm] {Card Exists?};
+\node (errorCard) [process, right of=cardNull, xshift=3.5cm, align=center] {Send Error: \\
+"Card not in Hand"};
+\node (checkElixir) [decision, below of=cardNull, yshift=-0.8cm] {Enough Elixir?};
+\node (errorElixir) [process, right of=checkElixir, xshift=3.5cm, align=center] {Send Error: \\
+"Insufficient Elixir"};
+\node (deploy) [process, below of=checkElixir, yshift=-1.2cm,align=center] {Update Elixir \\
+Remove \& Replace Card};
+\node (typeCheck) [decision, below of=deploy, yshift=-1.0cm] {Card Type?};
+\node (troop) [process, left of=typeCheck, xshift=-3.8cm] {Create Troop};
+\node (spell) [process, below of=typeCheck, yshift=-2.0cm] {Apply Spell Effect};
+\node (building) [process, right of=typeCheck, xshift=3.8cm] {Create Building};
+\node (broadcast) [process, below of=spell, yshift=-1.8cm] {Broadcast Deployment};
+\node (end) [startstop, below of=broadcast] {End Deployment};
+
+\draw [arrow] (start) -- (checkPos);
+\draw [arrow] (checkPos) -- node[anchor=east] {Yes} (getCard);
+\draw [arrow] (checkPos) -- node[anchor=south] {No} (errorPos);
+\draw [arrow] (getCard) -- (cardNull);
+\draw [arrow] (cardNull) -- node[anchor=east] {Yes} (checkElixir);
+\draw [arrow] (cardNull) -- node[anchor=south] {No} (errorCard);
+\draw [arrow] (checkElixir) -- node[anchor=east] {Yes} (deploy);
+\draw [arrow] (checkElixir) -- node[anchor=south] {No} (errorElixir);
+\draw [arrow] (deploy) -- (typeCheck);
+\draw [arrow] (typeCheck) -- node[anchor=south] {TROOP} (troop);
+\draw [arrow] (typeCheck) -- node[anchor=east] {SPELL} (spell);
+\draw [arrow] (typeCheck) -- node[anchor=south] {BUILDING} (building);
+\draw [arrow] (troop) |- (broadcast);
+\draw [arrow] (spell) -- (broadcast);
+\draw [arrow] (building) |- (broadcast);
+\draw [arrow] (broadcast) -- (end);
+\end{tikzpicture}%
+}
+\caption{Card Deployment Flowchart}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Battle Update Logic Flowchart}
+\begin{figure}[H]
+\centering
+\adjustbox{max height=0.8\textheight}{%
+\begin{tikzpicture}[node distance=2.2cm]
+\node (start) [startstop] {Start Update};
+\node (timeCheck) [process, below of=start] {Increment Current Time};
+\node (decOvertime) [decision, below of=timeCheck, yshift=-0.5cm,align=center] {Time $\ge$ max? \\ \& Not in Overtime?};
+\node (decCrowns) [decision, right of=decOvertime, xshift=4cm] {Crowns Equal?};
+\node (setOvertime) [process, below of=decCrowns] {Enable Overtime};
+\node (finishGame) [process, above of=decCrowns, yshift=0.0cm] {Finish Game};
+\node (otCheck) [decision, below of=setOvertime, yshift=-0.8cm] {Time $\ge$ OT End?};
+\node (finishGame2) [process, right of=otCheck, xshift=2.8cm] {Finish Game};
+\node (regen) [process, below of=otCheck, yshift=-1.2cm] {Regenerate Elixir};
+\node (units) [process, below of=regen, yshift=-0.7cm] {Update Units};
+\node (buildings) [process, below of=units, yshift=-0.7cm] {Update Buildings};
+\node (checkTowers) [process, below of=buildings, yshift=-0.7cm] {Check Towers};
+\node (broadcast) [process, below of=checkTowers, yshift=-0.7cm] {Broadcast State};
+\node (end) [startstop, below of=broadcast] {End Update};
+
+\draw [arrow] (start) -- (timeCheck);
+\draw [arrow] (timeCheck) -- (decOvertime);
+\draw [arrow] (decOvertime) -- node[anchor=south] {Yes} (decCrowns);
+\draw [arrow] (decOvertime) -- node[anchor=west] {No} (otCheck);
+\draw [arrow] (decCrowns) -- node[anchor=south] {Yes} (setOvertime);
+\draw [arrow] (decCrowns) -- node[anchor=north] {No} (finishGame);
+\draw [arrow] (setOvertime) -- (otCheck);
+\draw [arrow] (otCheck) -- node[anchor=south] {Yes} (finishGame2);
+\draw [arrow] (otCheck) -- node[anchor=west] {No} (regen);
+\draw [arrow] (regen) -- (units);
+\draw [arrow] (units) -- (buildings);
+\draw [arrow] (buildings) -- (checkTowers);
+\draw [arrow] (checkTowers) -- (broadcast);
+\draw [arrow] (broadcast) -- (end);
+\end{tikzpicture}%
+}
+\caption{Battle Update Logic Flowchart}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Target Selection Algorithm Flowchart}
+\begin{figure}[H]
+\centering
+\adjustbox{max height=0.8\textheight}{%
+\begin{tikzpicture}[node distance=2.4cm]
+\node (start) [startstop] {Start Targeting};
+\node (initVar) [process, below of=start, yshift=-0.5cm,align=center] {closest\_target = NULL \\ min\_distance = INF};
+\node (attType) [decision, below of=initVar, yshift=-0.5cm] {Attacks Ground? Air?};
+\node (getAll) [process, right of=attType, xshift=6.5cm] {Get All Opponent Units/Buildings};
+\node (getGround) [process, below of=attType, yshift=-1.5cm] {Get Opp. Ground Units/Buildings};
+\node (getAir) [process, left of=attType, xshift=-3.5cm] {Get Opp. Air Units};
+\node (addTowers) [process, below of=getGround, yshift=-0.8cm] {Add Opponent Towers to Targets};
+\node (pref) [decision, below of=addTowers, yshift=-0.8cm] {Pref = Buildings?};
+\node (filterBld) [process, right of=pref, xshift=3.5cm,align=center] {Filter for \\ Buildings/Towers};
+\node (loopTargets) [process, below of=pref, yshift=-1.5cm] {Find Closest Target};
+\node (end) [startstop, below of=loopTargets] {Return Target};
+
+\draw [arrow] (start) -- (initVar);
+\draw [arrow] (initVar) -- (attType);
+\draw [arrow] (attType) -- node[anchor=south] {Ground \& Air} (getAll);
+\draw [arrow] (attType) -- node[anchor=west] {Ground Only} (getGround);
+\draw [arrow] (attType) -- node[anchor=south] {Air Only} (getAir);
+\draw [arrow] (getAir) |- (addTowers);
+\draw [arrow] (getGround) -- (addTowers);
+\draw [arrow] (getAll) |- (addTowers);
+\draw [arrow] (addTowers) -- (pref);
+\draw [arrow] (pref) -- node[anchor=south] {Yes} (filterBld);
+\draw [arrow] (filterBld) |- (loopTargets);
+\draw [arrow] (pref) -- node[anchor=west] {No} (loopTargets);
+\draw [arrow] (loopTargets) -- (end);
+\end{tikzpicture}%
+}
+\caption{Target Selection Flowchart}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Chest Reward System Flowchart}
+\begin{figure}[H]
+\centering
+\adjustbox{max height=0.8\textheight}{%
+\begin{tikzpicture}[node distance=2.3cm]
+\node (start) [startstop] {Start Chest Generation};
+\node (createC) [process, below of=start] {Create Chest by Type};
+\node (setTime) [process, below of=createC] {Set Unlock Time by Type};
+\node (gold) [process, below of=setTime] {Calc Gold Reward};
+\node (cards) [process, below of=gold] {Calc Card Counts};
+\node (generate) [process, below of=cards, align=center] {Generate Cards \\ (common/rare/epic/legendary)};
+\node (addChest) [process, below of=generate] {Add Chest to Inventory};
+\node (notify) [process, below of=addChest] {Notify Player};
+\node (end) [startstop, below of=notify] {End Chest Generation};
+
+\draw [arrow] (start) -- (createC);
+\draw [arrow] (createC) -- (setTime);
+\draw [arrow] (setTime) -- (gold);
+\draw [arrow] (gold) -- (cards);
+\draw [arrow] (cards) -- (generate);
+\draw [arrow] (generate) -- (addChest);
+\draw [arrow] (addChest) -- (notify);
+\draw [arrow] (notify) -- (end);
+\end{tikzpicture}%
+}
+\caption{Chest Reward System Flowchart}
+\end{figure}
+
+\FloatBarrier
+
+%----------------------------------------------------------------------------------
+% TRACE TABLES
+%----------------------------------------------------------------------------------
+\section{Trace Tables}
+
+%===============================
+% MAIN SERVER LOOP TRACE TABLES
+%===============================
+\subsection{Main Server Loop Trace Tables}
+
+\subsubsection{Scenario 1: Simple Two-Player Match}
+\begin{table}[H]
+\centering
+\footnotesize
+% Adjust columns to avoid overflow
+\begin{tabularx}{\textwidth}{|c|p{3.5cm}|X|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{player\_pool} & \textbf{active\_games}\\
+\hline
+1 & new\_connection=PlayerA & Create PlayerA & [PlayerA] & []\\
+\hline
+2 & matchmaking(PlayerA) & Add PlayerA to queue & [PlayerA] & []\\
+\hline
+3 & new\_connection=PlayerB & Create PlayerB & [PlayerA, PlayerB] & []\\
+\hline
+4 & matchmaking(PlayerB) & Add PlayerB to queue & [PlayerA, PlayerB] & []\\
+\hline
+5 & queue.count=2 & Create Game1 & [PlayerA, PlayerB] & [Game1]\\
+\hline
+6 & updateGames & UpdateGame(Game1) & [PlayerA, PlayerB] & [Game1]\\
+\hline
+\end{tabularx}
+\caption{Main Server Loop Trace Table - Scenario 1}
+\end{table}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{3.5cm}|X|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{player\_pool} & \textbf{active\_games}\\
+\hline
+1 & new\_connection=PlayerC & Create PlayerC & [PlayerC] & []\\
+\hline
+2 & new\_connection=PlayerD & Create PlayerD & [PlayerC, PlayerD] & []\\
+\hline
+3 & no\_matchmaking & - & [PlayerC, PlayerD] & []\\
+\hline
+4 & PlayerC match request & Add to queue & [PlayerC, PlayerD] & []\\
+\hline
+5 & PlayerD match request & Add to queue & [PlayerC, PlayerD] & []\\
+\hline
+6 & queue.count=2 & Create Game2 & [PlayerC, PlayerD] & [Game2]\\
+\hline
+7 & updateGames & UpdateGame(Game2) & [PlayerC, PlayerD] & [Game2]\\
+\hline
+\end{tabularx}
+\caption{Main Server Loop Trace Table - Scenario 2 (More Steps)}
+\end{table}
+
+\FloatBarrier
+
+%===============================
+% CARD DEPLOYMENT TRACE TABLES
+%===============================
+\subsection{Card Deployment Trace Tables}
+
+\subsubsection{Scenario 1: Enough Elixir}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{2.2cm}|p{2.2cm}|X|X|}
+\hline
+\textbf{Step} & \textbf{Input} & \textbf{Check/Action} & \textbf{Outcome} & \textbf{New State}\\
+\hline
+1 & card\_id=101, pos=(3,4) & Check Valid Pos & Valid position & - \\
+\hline
+2 & Check card in hand & card 101? = True & OK & - \\
+\hline
+3 & Elixir=6, cost=4 & Enough elixir & Deploy possible & newElixir=2 \\
+\hline
+4 & Remove card from hand & Next card in deck & Cards in hand updated & hand=[102,103] \\
+\hline
+5 & Create Troop & type=TROOP & Troop placed & unitList += 1 \\
+\hline
+6 & Broadcast & - & Both see new troop & - \\
+\hline
+\end{tabularx}
+\caption{Card Deployment - Scenario 1}
+\end{table}
+
+\subsubsection{Scenario 2: Insufficient Elixir}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{2.2cm}|p{2.2cm}|X|X|}
+\hline
+\textbf{Step} & \textbf{Input} & \textbf{Check/Action} & \textbf{Outcome} & \textbf{New State}\\
+\hline
+1 & card\_id=202, pos=(5,2) & Check Valid Pos & Valid position & - \\
+\hline
+2 & Card 202 in hand? & True & OK & - \\
+\hline
+3 & Elixir=2, cost=5 & Not enough & Return error & Elixir=2 (unchanged) \\
+\hline
+4 & Broadcast error & "Insufficient elixir" & - & - \\
+\hline
+\end{tabularx}
+\caption{Card Deployment - Scenario 2}
+\end{table}
+
+\FloatBarrier
+
+%===============================
+% BATTLE UPDATE LOGIC TRACE TABLES
+%===============================
+\subsection{Battle Update Logic Trace Tables}
+
+\subsubsection{Scenario 1: Regular Tick}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{2cm}|X|p{3cm}|X|}
+\hline
+\textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{Result} & \textbf{Notes}\\
+\hline
+1 & time=50s $<$ max\_time=180 & Not in overtime & - & - \\
+\hline
+2 & Elixir regen=1 & p1Elixir=5$\rightarrow$6, p2Elixir=4$\rightarrow$5 & - & - \\
+\hline
+3 & UnitA health=20 $>$ 0 & Finds target & Moves or attacks & UnitB in range? \\
+\hline
+4 & Building1 health=100 & lifetime=10s & Attacks or pass & building1.lifetime=9.8 \\
+\hline
+5 & Tower check & HP $>$ 0 & No removal & - \\
+\hline
+6 & Broadcast state & - & Game states updated & - \\
+\hline
+\end{tabularx}
+\caption{Battle Update Logic - Scenario 1}
+\end{table}
+
+\subsubsection{Scenario 2: Overtime Trigger}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{2cm}|X|p{3cm}|X|}
+\hline
+\textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{Result} & \textbf{Notes}\\
+\hline
+1 & time=179.5s & next tick $\Rightarrow$ 180 & Check crowns & p1=1, p2=1 $\Rightarrow$ tie \\
+\hline
+2 & Overtime=flag & Overtime start & new end=240s & \\
+\hline
+3 & time=181s, OT active & Elixir regen $\times$2 & p1Elixir=7$\rightarrow$9 & - \\
+\hline
+4 & Attack tower & Tower HP=0 $\Rightarrow$ p1\_crowns=2 & - & p2 tower destroyed \\
+\hline
+5 & p1\_crowns $>$ p2\_crowns & game finished & broadcast result & p1=winner \\
+\hline
+\end{tabularx}
+\caption{Battle Update Logic - Scenario 2}
+\end{table}
+
+\FloatBarrier
+
+%===============================
+% TARGET SELECTION TRACE TABLES
+%===============================
+\subsection{Target Selection Algorithm Trace Tables}
+
+\subsubsection{Scenario 1: Melee Troop Prefers Buildings}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{3cm}|X|p{3cm}|c|}
+\hline
+\textbf{Step} & \textbf{Attacker Info} & \textbf{Action} & \textbf{Targets} & \textbf{Chosen}\\
+\hline
+1 & groundOnly=true, preference="BUILDINGS" & gather ground units & [UnitA(air), Bldg1, Tower1] & - \\
+\hline
+  2 & - & filter for buildings & [Bldg1, Tower1] & - \\
+\hline
+  3 & - & dist(Bldg1)=4, dist(Tower1)=10, closest = Bldg1 & [Bldg1] & Bldg1 \\
+\hline
+\end{tabularx}
+\caption{Target Selection - Scenario 1}
+\end{table}
+
+\subsubsection{Scenario 2: Ranged Unit Attacks Ground \& Air}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{3cm}|X|p{3cm}|c|}
+\hline
+\textbf{Step} & \textbf{Attacker Info} & \textbf{Action} & \textbf{Potential Targets} & \textbf{closest\_target}\\
+\hline
+1 & groundAir=true & gather all Opp units & [UnitA, UnitB(air), Tower] & - \\
+\hline
+2 & preference="ANY" & no filter & [UnitA, UnitB, Tower] & - \\
+\hline
+  3 & distances=(UnitA=5, UnitB=4, Twr=8) & min=4 $\Rightarrow$ UnitB & [UnitB] & UnitB \\
+\hline
+\end{tabularx}
+\caption{Target Selection - Scenario 2}
+\end{table}
+
+\FloatBarrier
+
+%===============================
+% CHEST REWARD TRACE TABLES
+%===============================
+\subsection{Chest Reward System Trace Tables}
+
+\subsubsection{Scenario 1: Gold Chest}
+\begin{table}[H]
+\centering
+\footnotesize
+  \begin{tabularx}{\textwidth}{|c|p{5.0cm}|p{4cm}|p{2.5cm}|X|}
+\hline
+\textbf{Step} & \textbf{Input} & \textbf{Action} & \textbf{Value} & \textbf{Result}\\
+\hline
+1 & chest\_type="GOLD" & Create chest & - & chest \\
+\hline
+2 & set unlock time & 8 hours & chest.unlock=8h & - \\
+\hline
+3 & gold=calcReward(arena=3) & 120 & chest.gold=120 & - \\
+\hline
+4 & card counts & (common=12, rare=3) & - & total=15 cards \\
+\hline
+5 & generate cards & random from arena 3 pool & chest.cards=15 & - \\
+\hline
+6 & add chest to player & - & - & inventory +1 \\
+\hline
+7 & notify & SEND\_CHEST\_RECEIVED & - & - \\
+\hline
+\end{tabularx}
+\caption{Chest Reward - Scenario 1}
+\end{table}
+
+\subsubsection{Scenario 2: Magical Chest}
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{|c|p{5.0cm}|X|p{2.5cm}|X|}
+\hline
+\textbf{Step} & \textbf{Input} & \textbf{Action} & \textbf{Value} & \textbf{Result}\\
+\hline
+1 & chest\_type="MAGICAL" & Create chest & - & chest \\
+\hline
+2 & unlock time=12h & chest.unlock=12h & - & - \\
+\hline
+3 & gold=calcReward(arena=5) & 400 & chest.gold=400 & - \\
+\hline
+4 & card counts & common=20, rare=8, epic=2 & - & total=30 \\
+\hline
+5 & generate cards & random from arena 5 pool & chest.cards=30 & includes epics \\
+\hline
+6 & add chest & player inventory & - & +1 chest \\
+\hline
+7 & notify & chest info $\Rightarrow$ user & - & - \\
+\hline
+\end{tabularx}
+\caption{Chest Reward - Scenario 2}
+\end{table}
+
+\FloatBarrier
 
 \end{document}

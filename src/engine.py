@@ -989,7 +989,8 @@ class Engine(InternalEngine):
             if event.type == SDL_EventType.QUIT:
                 self.quit()
             else:
-                self.input_manager.process_event(event, self.ui_manager if self.scene_manager.current_scene is None else self.scene_manager.current_scene.ui_manager)
+                if self.sdl.is_window_focused():
+                    self.input_manager.process_event(event, self.ui_manager if self.scene_manager.current_scene is None else self.scene_manager.current_scene.ui_manager)
 
     def update(self):
         current_time = time.time()

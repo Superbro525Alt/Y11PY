@@ -34,7 +34,7 @@ class Arena:
             self.tiles[self.HEIGHT // 2][x] = TileType.RIVER.value
 
         for dy in range(2):
-            self.tiles[self.HEIGHT // 2 - 1 + dy][4] = TileType.BRIDGE.value
+            self.tiles[self.HEIGHT // 2 - 1 + dy][3] = TileType.BRIDGE.value
             self.tiles[self.HEIGHT // 2 - 1 + dy][15] = TileType.BRIDGE.value
 
         king_x = self.WIDTH // 2
@@ -164,6 +164,15 @@ class Arena:
         path = self.find_path(current_pos, best_adjacent_tile)
 
         return UnitTarget("0", closest_target[0], path)
+
+    @classmethod
+    def get_tile_owner(cls, tile: Tuple[int, int]) -> Optional[Owner]:
+        if tile[1] <= 13:
+            return Owner.P1
+        elif tile[1] == 14 or tile[1] == 15:
+            return None 
+        elif tile[1] >= 16:
+            return Owner.P2
 
 def test_pathfinding_basic():
     """Test pathfinding in an open area with no obstacles."""

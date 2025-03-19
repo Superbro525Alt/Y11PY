@@ -101,14 +101,20 @@ class MatchThread:
         state.units.append(u)
         self.arena.add_unit(u)
 
+        if unit.owner == Owner.P1.value:
+            state.p1.elixir -= unit.underlying.elixir_cost
+        elif unit.owner == Owner.P2.value:
+            state.p2.elixir -= unit.underlying.elixir_cost
+
         logger.info("Unit Deployed")
 
-    def get_player_as_enum(self, uuid: str) -> Owner:
+    def get_player_as_enum(self, uuid: str) -> Optional[Owner]:
         d = self.state.get_data()
         if d and d.p1.uuid == uuid:
             return Owner.P1
-        else:
+        elif d and d.p2.uuid == uuid:
             return Owner.P2
+        return None
 
 
 class Matchmaking:
@@ -242,11 +248,24 @@ class Matchmaking:
 
     def deploy_unit(self, req: UnitDeployRequest, match_id: str) -> None:
         m = self.matches.get(match_id)
-        if m is not None and req.card.hitpoints is not None:
-            self.matches[match_id].add_unit(
-                Unit(
-                    req.card,
-                    m.get_player_as_enum(req.owner),
-                    UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT)),
+        if m is not None:
+            e = m.get_player_as_enum(req.owner)
+            if req.card.hitpoints is not None and e:
+                self.matches[match_id].add_unit(
+                    Unit(
+                        req.card,
+                        e,
+                        UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT)),
+                    )
                 )
-            )
+            # elif req.card.hitpoints:
+            #     print("===================================== ERR")
+            #     e = Owner.P1
+            #     self.matches[match_id].add_unit(
+            #         Unit(
+            #             req.card,
+            #             e,
+            #             UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT)),
+            #         )
+            #     )
+            #

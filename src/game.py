@@ -128,7 +128,7 @@ class BattleClient:
             self.battle_state = state.battle_state
 
     def place_unit(self, card: Card, location: Tuple[int, int], id: str) -> None:
-        if self.battle_state:
+        if self.battle_state and self.battle_state.elixir >= card.elixir_cost:
             self.send(
                 Packet.from_struct(
                     PacketType.DEPLOY_UNIT,
@@ -634,7 +634,7 @@ class Game(Engine):
                         )
 
                 # Draw arena grid
-                if self.client.state.battle_state.arena:
+                if self.client.state.battle_state.arena: # PLAYER 2 IS FURTHEST
                     arena = self.client.state.battle_state.arena
                     cell_size = 20  # Adjust as needed
                     offset_x = int((self.sdl.get_width() / 2)  - ((cell_size * Arena.WIDTH) / 2))
@@ -643,7 +643,7 @@ class Game(Engine):
                     tile_colors = {
                         0: (99, 99, 99),  # EMPTY
                         1: (0, 100, 255),  # RIVER
-                        2: (139, 69, 19),  # BRIDGE
+                        2: (139, 69, 20),  # BRIDGE
                         3: (255, 0, 0),  # CROWN_TOWER
                         4: (255, 215, 0),  # KING_TOWER
                     }
@@ -651,13 +651,21 @@ class Game(Engine):
                     for y in range(Arena.HEIGHT):
                         for x in range(Arena.WIDTH):
                             tile_type = arena.tiles[y][x]
-                            color = tile_colors.get(tile_type, (0, 0, 0))
+                            color: Tuple[int, int, int] = tile_colors.get(tile_type, (0, 0, 0))
                             rect = (
                                 offset_x + x * cell_size,
                                 offset_y + y * cell_size,
                                 cell_size,
                                 cell_size,
                             )
+                            if (Arena.get_tile_owner((x, y)) == Owner.P1 and self.client.side != "Player 1") or (Arena.get_tile_owner((x, y)) == Owner.P2 and self.client.side != "Player 2") or Arena.get_tile_owner((x, y)) == None:
+                                color = (color[0] - 20, color[1] - 20, color[2] - 20)
+                                if color[2] < 0:
+                                    color = (color[0], color[1], 0)
+                                if color[1] < 0:
+                                    color = (color[0], 0, color[2])
+                                if color[0] < 0:
+                                    color = (0, color[1], color[2])
                             self.sdl.fill_rect(rect[0], rect[1], rect[2], rect[3], color[0], color[1], color[2])
                             self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], 255, 255, 255) # Add outline
 
@@ -667,7 +675,7 @@ class Game(Engine):
                             unit_x = offset_x + unit.inner.unit_data.x * cell_size
                             unit_y = offset_y + unit.inner.unit_data.y * cell_size
                             unit_rect = (unit_x, unit_y, cell_size, cell_size)
-                            if (unit.inner.owner == Owner.P1 and self.client.side == "Player 1") or (unit.inner.owner == Owner.P2 and self.client.side == "Player 2"): # TODO: MAKE UNIT ACTUALLY STORE OWNER
+                            if (unit.inner.owner == Owner.P1.value and self.client.side == "Player 1") or (unit.inner.owner == Owner.P2.value and self.client.side == "Player 2"): 
                                 self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 255, 0) # Draw units in green
                             else:
                                 self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 255, 0, 0) # Draw units in red 

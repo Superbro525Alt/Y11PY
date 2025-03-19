@@ -174,6 +174,11 @@ class Arena:
         elif tile[1] >= 16:
             return Owner.P2
 
+    def tick(self, units: List[IDUnit]) -> List[IDUnit]:
+        u = units.copy()
+            
+        return units
+
 def test_pathfinding_basic():
     """Test pathfinding in an open area with no obstacles."""
     arena = Arena()

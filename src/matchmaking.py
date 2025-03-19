@@ -18,7 +18,7 @@ from uuid import uuid4
 import random
 from unit import Battle, IDUnit, NetworkPlayer, Owner, Player, Unit, UnitDeployRequest, UnitData, network_player
 
-from util import DATE_FORMAT, Mutex
+from util import DATE_FORMAT, Mutex, Pair
 from util import logger
 
 MAX_TROPHY_DIFF = 100
@@ -77,6 +77,8 @@ class MatchThread:
             if not state:
                 continue
 
+            state.units = self.arena.tick(state.units)
+
             for i, unit in enumerate(state.units):
                 res = card_tick(unit, self.arena)
                 if res:
@@ -106,6 +108,8 @@ class MatchThread:
         elif unit.owner == Owner.P2.value:
             state.p2.elixir -= unit.underlying.elixir_cost
 
+        self.get_next_hand(unit.owner, unit.underlying)
+
         logger.info("Unit Deployed")
 
     def get_player_as_enum(self, uuid: str) -> Optional[Owner]:
@@ -115,6 +119,44 @@ class MatchThread:
         elif d and d.p2.uuid == uuid:
             return Owner.P2
         return None
+    
+    def get_next_hand(self, player: Owner, played: Card) -> None:
+        state = self.state.get_data()
+        if not state or not state.p1.next_card or not state.p1.deck or not state.p2.next_card or not state.p2.deck:
+            return
+        if player == Owner.P1.value:
+            hand = state.p1.hand.copy()
+            hand.remove(played)
+            hand.append(state.p1.next_card)
+
+            remaining = state.p1.remaining_in_deck.copy()
+            if len(remaining) == 0:
+                d = state.p1.deck.cards.copy()
+                random.shuffle(d)
+                state.p1.remaining_in_deck = d 
+            
+            state.p1.remaining_in_deck = remaining
+
+            state.p1.next_card = state.p1.remaining_in_deck.pop()
+
+            self.state.set_data(state)
+        else:
+            hand = state.p2.hand.copy()
+            hand.remove(played)
+            hand.append(state.p2.next_card)
+
+            remaining = state.p2.remaining_in_deck.copy()
+            if len(remaining) == 0:
+                d = state.p2.deck.cards.copy()
+                random.shuffle(d)
+                state.p2.remaining_in_deck = d 
+            
+            state.p2.remaining_in_deck = remaining
+
+            state.p2.next_card = state.p2.remaining_in_deck.pop()
+
+            self.state.set_data(state)
+
 
 
 class Matchmaking:

@@ -697,6 +697,8 @@ class Game(Engine):
             grid_x = (pos[0] - offset_x) // cell_size
             grid_y = (pos[1] - offset_y) // cell_size
 
-            print(self.selected_card)
             if 0 <= grid_x < Arena.WIDTH and 0 <= grid_y < Arena.HEIGHT and self.selected_card:
                 self.client.deploy_unit(self.selected_card, (grid_x, grid_y))
+                self.selected_card = None
+                for b in self.hand_buttons:
+                    b.color = self.HAND_INITIAL_COLOR

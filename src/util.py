@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import json
 from dataclasses import dataclass, field
@@ -8,7 +9,7 @@ from typing import Callable, Optional, List, Dict, Any, Tuple, Union
 from chest import ChestRarity
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -186,3 +187,22 @@ class Mutex(Generic[T]):
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Context manager exit method."""
         self.release()
+
+def is_time_elapsed(past_datetime_str: str, seconds: float) -> bool:
+    """
+    Checks if a specified number of seconds has elapsed since a given datetime string.
+
+    Args:
+        past_datetime_str: The datetime string representing the past time.
+        seconds: The number of seconds to check for elapsed time.
+
+    Returns:
+        True if the specified number of seconds has elapsed, False otherwise.
+    """
+    try:
+        past_datetime = datetime.strptime(past_datetime_str, DATE_FORMAT)
+        elapsed_time = datetime.now() - past_datetime
+        return elapsed_time.total_seconds() > seconds
+    except ValueError:
+        print(f"Error: Invalid datetime string or format. String: {past_datetime_str}, Format: {DATE_FORMAT}")
+        return False

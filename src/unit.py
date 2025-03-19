@@ -58,6 +58,7 @@ class UnitData:
     current_target: Optional[UnitTarget]
     hitpoints: int
     last_move: str
+    last_attack: str
 
 @dataclass
 class Unit:

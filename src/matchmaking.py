@@ -10,7 +10,7 @@ import threading
 import time
 from typing import Callable, Dict, List, Optional, Self, Tuple
 from arena import Arena
-from card import Card
+from card import Card, CardType, from_namespace
 from card_tick import card_tick
 from game_packet import MatchFound, MatchRequest, PacketType
 from network import Packet
@@ -37,9 +37,9 @@ class MatchThread:
         self.thread = threading.Thread(target=self.loop, daemon=True)
         self.fixed_thread = threading.Thread(target=self.fixed_tick, daemon=True)
         self.state = Mutex(initial_state)
+        self.arena = Arena()
         self.thread.start()
         self.fixed_thread.start()
-        self.arena = Arena()
 
     def start(self) -> None:
         self.thread.start()
@@ -79,6 +79,8 @@ class MatchThread:
 
             state.units = self.arena.tick(state.units)
 
+            self.arena.units = state.units
+
             for i, unit in enumerate(state.units):
                 res = card_tick(unit, self.arena)
                 if res:
@@ -86,6 +88,8 @@ class MatchThread:
                 if unit.inner.underlying.hitpoints is not None:
                     if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
                         state.units.remove(unit)
+                        print("================== DEAD ==================")
+            self.state.set_data(state)
 
     def get_state(self) -> Battle:
         data = self.state.get_data()
@@ -96,7 +100,7 @@ class MatchThread:
     def add_unit(self, unit: Unit) -> None:
         state = self.state.get_data()
 
-        if not state:
+        if not state or unit.underlying.card_type == CardType.SPELL.value:
             return
 
         u = IDUnit.from_unit(unit)
@@ -122,18 +126,23 @@ class MatchThread:
     
     def get_next_hand(self, player: Owner, played: Card) -> None:
         state = self.state.get_data()
+
         if not state or not state.p1.next_card or not state.p1.deck or not state.p2.next_card or not state.p2.deck:
+            print("no state")
             return
-        if player == Owner.P1.value:
+
+        if player == Owner.P1:
             hand = state.p1.hand.copy()
             hand.remove(played)
             hand.append(state.p1.next_card)
+
+            state.p1.hand = hand.copy()
 
             remaining = state.p1.remaining_in_deck.copy()
             if len(remaining) == 0:
                 d = state.p1.deck.cards.copy()
                 random.shuffle(d)
-                state.p1.remaining_in_deck = d 
+                state.p1.remaining_in_deck = d.copy() 
             
             state.p1.remaining_in_deck = remaining
 
@@ -144,6 +153,8 @@ class MatchThread:
             hand = state.p2.hand.copy()
             hand.remove(played)
             hand.append(state.p2.next_card)
+
+            state.p2.hand = hand.copy()
 
             remaining = state.p2.remaining_in_deck.copy()
             if len(remaining) == 0:
@@ -297,7 +308,7 @@ class Matchmaking:
                     Unit(
                         req.card,
                         e,
-                        UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT)),
+                        UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT), datetime.now().strftime(DATE_FORMAT)),
                     )
                 )
             # elif req.card.hitpoints:

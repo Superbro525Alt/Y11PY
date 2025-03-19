@@ -1,10 +1,13 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 import heapq
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Self, Tuple
 
 from card import CardType, TargetType 
 from unit import IDUnit, Owner, UnitTarget, UnitTargetType
+from util import DATE_FORMAT, is_time_elapsed
+from util import logger as logging
 
 class TileType(Enum):
     EMPTY = 0        # Walkable tile
@@ -165,6 +168,22 @@ class Arena:
 
         return UnitTarget("0", closest_target[0], path)
 
+    def tick(self, units: List[IDUnit]) -> List[IDUnit]:
+        """Processes unit actions in the arena."""
+        u = units.copy()
+
+        for unit in u:
+            if unit.inner.unit_data.current_target and unit.inner.underlying.range:
+                if len(unit.inner.unit_data.current_target.path) - 1 < unit.inner.underlying.range:
+                    if unit.inner.unit_data.current_target.unit_type == UnitTargetType.TROOP:
+                        for _unit in u:
+                            if _unit.id == unit.inner.unit_data.current_target.uuid and unit.inner.underlying.damage and unit.inner.underlying.attack_speed:
+                                print(is_time_elapsed(unit.inner.unit_data.last_attack, unit.inner.underlying.attack_speed))
+                                if is_time_elapsed(unit.inner.unit_data.last_attack, unit.inner.underlying.attack_speed):
+                                    unit.inner.unit_data.last_attack = datetime.now().strftime(DATE_FORMAT)
+                                    _unit.inner.unit_data.hitpoints = _unit.inner.unit_data.hitpoints - unit.inner.underlying.damage
+        return units
+
     @classmethod
     def get_tile_owner(cls, tile: Tuple[int, int]) -> Optional[Owner]:
         if tile[1] <= 13:
@@ -174,10 +193,13 @@ class Arena:
         elif tile[1] >= 16:
             return Owner.P2
 
-    def tick(self, units: List[IDUnit]) -> List[IDUnit]:
-        u = units.copy()
-            
-        return units
+    @classmethod 
+    def dist(cls, origin: Tuple[int, int], goal: Tuple[int, int]) -> int:
+        path = cls().find_path(origin, goal)
+        if not path:
+            raise ValueError("Invalid Path")
+        return len(path) - 1
+
 
 def test_pathfinding_basic():
     """Test pathfinding in an open area with no obstacles."""
@@ -246,5 +268,3 @@ def test_no_valid_path():
 
     path = arena.find_path(start, goal)
     assert not path, "Path should be empty when no valid path exists"
-
-

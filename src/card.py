@@ -80,6 +80,43 @@ class Card:
         None  # Damage dealt when deploying (e.g., Electro Wizard)
     )
 
+def from_namespace(namespace):
+    """Converts a namespace object to a Card dataclass instance."""
+
+    card_type = CardType(namespace.card_type)
+    rarity = Rarity(namespace.rarity)
+    layer = TargetType(namespace.layer)
+    movement_speed = MovementSpeed(namespace.movement_speed)
+
+    targets = [TargetType(target) for target in namespace.targets]
+
+    damage_type = DamageType(namespace.damage_type) if namespace.damage_type else None
+
+    card = Card(
+        name=namespace.name,
+        elixir_cost=namespace.elixir_cost,
+        card_type=card_type,
+        rarity=rarity,
+        layer=layer,
+        hitpoints=namespace.hitpoints,
+        damage=namespace.damage,
+        attack_speed=namespace.attack_speed,
+        range=namespace.range,
+        deploy_time=namespace.deploy_time,
+        special_ability=namespace.special_ability,
+        targets=targets,
+        movement_speed=movement_speed,
+        duration=namespace.duration,
+        damage_type=damage_type,
+        spawn_units=namespace.spawn_units,
+        building_lifetime=namespace.building_lifetime,
+        effect_radius=namespace.effect_radius,
+        projectile_speed=namespace.projectile_speed,
+        spawn_damage=namespace.spawn_damage,
+    )
+
+    return card
+
 GOBLIN_SHAMAN = Card(
     name="Goblin Shaman",
     elixir_cost=3,
@@ -152,7 +189,7 @@ SKY_ARCHER = Card(
     attack_speed=1.5,
     range=7.0,
     movement_speed=MovementSpeed.FAST,
-    targets=[TargetType.AIR],
+    targets=[TargetType.AIR, TargetType.GROUND],
     damage_type=DamageType.SINGLE_TARGET,
     special_ability="Ignores ground units, can only be targeted by air units and spells.",
 )

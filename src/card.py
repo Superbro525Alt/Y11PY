@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Self, Tuple
 import heapq
 
+
 class CardType(Enum):
     TROOP = "Troop"
     BUILDING = "Building"
@@ -29,7 +30,7 @@ class MovementSpeed(Enum):
         if speed == cls.SLOW.value:
             return 4
         elif speed == cls.MEDIUM.value:
-            return 3 
+            return 3
         elif speed == cls.FAST.value:
             return 2
         elif speed == cls.VERY_FAST.value:
@@ -37,12 +38,13 @@ class MovementSpeed(Enum):
         else:
             return 9999
 
+
 class TargetType(Enum):
     GROUND = "Ground"
     AIR = "Air"
     BOTH = "Both"
     BUILDINGS = "Buildings"
-    NONE = "None" # Spell
+    NONE = "None"  # Spell
 
 
 class DamageType(Enum):
@@ -50,7 +52,6 @@ class DamageType(Enum):
     SPLASH = "Splash"
     AREA_DAMAGE = "Area Damage"
     SPELL = "Spell"
-
 
 
 @dataclass
@@ -79,6 +80,7 @@ class Card:
     spawn_damage: Optional[int] = (
         None  # Damage dealt when deploying (e.g., Electro Wizard)
     )
+
 
 def from_namespace(namespace):
     """Converts a namespace object to a Card dataclass instance."""
@@ -116,6 +118,7 @@ def from_namespace(namespace):
     )
 
     return card
+
 
 GOBLIN_SHAMAN = Card(
     name="Goblin Shaman",
@@ -186,7 +189,7 @@ SKY_ARCHER = Card(
     layer=TargetType.AIR,
     hitpoints=400,
     damage=150,
-    attack_speed=1.5,
+    attack_speed=1.8,
     range=7.0,
     movement_speed=MovementSpeed.FAST,
     targets=[TargetType.AIR, TargetType.GROUND],
@@ -339,5 +342,3 @@ ELIXIR_GOLEM = Card(
     damage_type=DamageType.SINGLE_TARGET,
     special_ability="Upon death, splits into two Elixir Blobs which give the opponent 1 elixir each when killed.",
 )
-
-

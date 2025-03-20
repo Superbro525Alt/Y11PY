@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 from typing import Generic, TypeVar
 import math
 
-DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -188,6 +188,7 @@ class Mutex(Generic[T]):
         """Context manager exit method."""
         self.release()
 
+
 def is_time_elapsed(past_datetime_str: str, seconds: float) -> bool:
     """
     Checks if a specified number of seconds has elapsed since a given datetime string.
@@ -204,5 +205,7 @@ def is_time_elapsed(past_datetime_str: str, seconds: float) -> bool:
         elapsed_time = datetime.now() - past_datetime
         return elapsed_time.total_seconds() > seconds
     except ValueError:
-        print(f"Error: Invalid datetime string or format. String: {past_datetime_str}, Format: {DATE_FORMAT}")
+        print(
+            f"Error: Invalid datetime string or format. String: {past_datetime_str}, Format: {DATE_FORMAT}"
+        )
         return False

@@ -16,7 +16,17 @@ from game_packet import MatchFound, MatchRequest, PacketType
 from network import Packet
 from uuid import uuid4
 import random
-from unit import Battle, IDUnit, NetworkPlayer, Owner, Player, Unit, UnitDeployRequest, UnitData, network_player
+from unit import (
+    Battle,
+    IDUnit,
+    NetworkPlayer,
+    Owner,
+    Player,
+    Unit,
+    UnitDeployRequest,
+    UnitData,
+    network_player,
+)
 
 from util import DATE_FORMAT, Mutex, Pair
 from util import logger
@@ -28,6 +38,7 @@ MAX_TROPHY_DIFF = 100
 class MatchRequestSocket:
     inner: MatchRequest
     sock: socket
+
 
 class MatchThread:
     MAX_ELIXIR = 10
@@ -84,7 +95,7 @@ class MatchThread:
             for i, unit in enumerate(state.units):
                 res = card_tick(unit, self.arena)
                 if res:
-                    state.units[i] = res 
+                    state.units[i] = res
                 if unit.inner.underlying.hitpoints is not None:
                     if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
                         state.units.remove(unit)
@@ -123,11 +134,17 @@ class MatchThread:
         elif d and d.p2.uuid == uuid:
             return Owner.P2
         return None
-    
+
     def get_next_hand(self, player: Owner, played: Card) -> None:
         state = self.state.get_data()
 
-        if not state or not state.p1.next_card or not state.p1.deck or not state.p2.next_card or not state.p2.deck:
+        if (
+            not state
+            or not state.p1.next_card
+            or not state.p1.deck
+            or not state.p2.next_card
+            or not state.p2.deck
+        ):
             print("no state")
             return
 
@@ -142,8 +159,8 @@ class MatchThread:
             if len(remaining) == 0:
                 d = state.p1.deck.cards.copy()
                 random.shuffle(d)
-                state.p1.remaining_in_deck = d.copy() 
-            
+                state.p1.remaining_in_deck = d.copy()
+
             state.p1.remaining_in_deck = remaining
 
             state.p1.next_card = state.p1.remaining_in_deck.pop()
@@ -160,14 +177,13 @@ class MatchThread:
             if len(remaining) == 0:
                 d = state.p2.deck.cards.copy()
                 random.shuffle(d)
-                state.p2.remaining_in_deck = d 
-            
+                state.p2.remaining_in_deck = d
+
             state.p2.remaining_in_deck = remaining
 
             state.p2.next_card = state.p2.remaining_in_deck.pop()
 
             self.state.set_data(state)
-
 
 
 class Matchmaking:
@@ -222,7 +238,7 @@ class Matchmaking:
                         if p is m.get_state().p1
                         else m.get_state().p1.uuid
                     ),
-                    m.arena
+                    m.arena,
                 )
                 for m in [self.matches.get(uuid)]
                 if m
@@ -230,7 +246,7 @@ class Matchmaking:
                     network_player(m.get_state().p1),
                     network_player(m.get_state().p2),
                 ]
-                if p.uuid == player_uuid 
+                if p.uuid == player_uuid
             ),
             (None, None, None),
         )
@@ -308,7 +324,14 @@ class Matchmaking:
                     Unit(
                         req.card,
                         e,
-                        UnitData(req.pos[0], req.pos[1], None, req.card.hitpoints, datetime.now().strftime(DATE_FORMAT), datetime.now().strftime(DATE_FORMAT)),
+                        UnitData(
+                            req.pos[0],
+                            req.pos[1],
+                            None,
+                            req.card.hitpoints,
+                            datetime.now().strftime(DATE_FORMAT),
+                            datetime.now().strftime(DATE_FORMAT),
+                        ),
                     )
                 )
             # elif req.card.hitpoints:

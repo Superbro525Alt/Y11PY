@@ -34,7 +34,13 @@ import numpy as np
 from util import Pair, logger
 import uuid
 
-from bindings import SDL_KeyboardEvent, SDLWrapper, SDL_EventType, SDL_Scancode, SDL_Event
+from bindings import (
+    SDL_KeyboardEvent,
+    SDLWrapper,
+    SDL_EventType,
+    SDL_Scancode,
+    SDL_Event,
+)
 
 from typing import List, Tuple
 
@@ -106,14 +112,18 @@ class InternalEngine:
         threading.Thread(
             target=lambda: self.run_with_delay(0, secondary), daemon=True
         ).start()
+        threading.Thread(
+            target=lambda: self.run_with_delay(0, lambda: self.handle_events()),
+            daemon=True,
+        ).start()
         while self.running:
-            self.handle_events()
             self.update()
             self.render()
             self.sdl.delay(16)  # ~60 FPS
 
     def quit(self):
         self.running = False
+        exit(0)
 
     def setup(self):
         # Override for initialization logic.
@@ -132,7 +142,7 @@ class InternalEngine:
         self.pipeline.send(
             EngineFrameData(EngineCode.COMPONENT_TICK, self.sdl, self.camera)
         )
-        
+
         self.pre_render_update()
 
     def pre_render_update(self) -> None:
@@ -954,6 +964,7 @@ class UIManager:
             if isinstance(element, UIButton):
                 element.check_click(mouse_pos)
 
+
 # Some common easing functions.
 def ease_in_out_quad(t: float) -> float:
     if t < 0.5:
@@ -990,7 +1001,14 @@ class Engine(InternalEngine):
                 self.quit()
             else:
                 if self.sdl.is_window_focused():
-                    self.input_manager.process_event(event, self.ui_manager if self.scene_manager.current_scene is None else self.scene_manager.current_scene.ui_manager)
+                    self.input_manager.process_event(
+                        event,
+                        (
+                            self.ui_manager
+                            if self.scene_manager.current_scene is None
+                            else self.scene_manager.current_scene.ui_manager
+                        ),
+                    )
 
     def update(self):
         current_time = time.time()
@@ -1077,11 +1095,14 @@ class SceneManager:
         if self.current_scene:
             self.current_scene.render(sdl, camera)
 
+
 class InputManager:
     def __init__(self):
         self.key_down_callbacks: Dict[SDL_Scancode, Callable[[], None]] = {}
         self.key_up_callbacks: Dict[SDL_Scancode, Callable[[], None]] = {}
-        self.mouse_down_callbacks: List[Tuple[int, Callable[[Tuple[int, int]], None]]] = []
+        self.mouse_down_callbacks: List[
+            Tuple[int, Callable[[Tuple[int, int]], None]]
+        ] = []
         self.mouse_up_callbacks: Dict[int, Callable[[], None]] = {}
 
     def register_key_down(self, key: SDL_Scancode, callback: Callable[[], None]):
@@ -1121,7 +1142,6 @@ class InputManager:
             button = event.button.button
             if button in self.mouse_up_callbacks:
                 self.mouse_up_callbacks[button]()
-
 
 
 class TextRenderer:

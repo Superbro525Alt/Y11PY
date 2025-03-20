@@ -1,6 +1,6 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024/Arch Linux) (preloaded format=pdflatex 2025.2.4)  18 MAR 2025 14:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024/Arch Linux) (preloaded format=pdflatex 2025.2.4)  20 MAR 2025 09:27
 entering extended mode
- restricted \write18 enabled.
+ \write18 enabled.
  %&-line parsing enabled.
 **docs.tex
 (./docs.tex
@@ -759,45 +759,168 @@ Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
 \@vwid@loff=\dimen300
 \@vwid@roff=\dimen301
 ))
+(/usr/share/texmf-dist/tex/latex/minted/minted.sty
+Package: minted 2023/12/18 v2.9 Yet another Pygments shim for LaTeX
+
+(/usr/share/texmf-dist/tex/latex/fvextra/fvextra.sty
+Package: fvextra 2023/11/28 v1.6.1 fvextra - extensions and patches for fancyvr
+b
+
+(/usr/share/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
+Package: fancyvrb 2024/01/20 4.5c verbatim text (tvz,hv)
+\FV@CodeLineNo=\count352
+\FV@InFile=\read3
+\FV@TabBox=\box76
+\c@FancyVerbLine=\count353
+\FV@StepNumber=\count354
+\FV@OutFile=\write4
+)
+(/usr/share/texmf-dist/tex/latex/upquote/upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+)
+(/usr/share/texmf-dist/tex/latex/lineno/lineno.sty
+Package: lineno 2023/05/20 line numbers on paragraphs v5.3
+\linenopenalty=\count355
+\output=\toks47
+\linenoprevgraf=\count356
+\linenumbersep=\dimen302
+\linenumberwidth=\dimen303
+\c@linenumber=\count357
+\c@pagewiselinenumber=\count358
+\c@LN@truepage=\count359
+\c@internallinenumber=\count360
+\c@internallinenumbers=\count361
+\quotelinenumbersep=\dimen304
+\bframerule=\dimen305
+\bframesep=\dimen306
+\bframebox=\box77
+\linenoamsmath@ams@eqpen=\count362
+LaTeX Info: Redefining \\ on input line 3180.
+)
+\c@FancyVerbWriteLine=\count363
+\c@FancyVerbBufferIndex=\count364
+\c@FancyVerbBufferLength=\count365
+\c@FancyVerbBufferLine=\count366
+\c@FV@oldbufferlength=\count367
+\c@FV@TrueTabGroupLevel=\count368
+\c@FV@TrueTabCounter=\count369
+\FV@TabBox@Group=\box78
+\FV@TmpLength=\skip62
+\c@FV@HighlightLinesStart=\count370
+\c@FV@HighlightLinesStop=\count371
+\FV@LoopCount=\count372
+\FV@NCharsBox=\box79
+\FV@BreakIndent=\dimen307
+\FV@BreakIndentNChars=\count373
+\FV@BreakSymbolSepLeft=\dimen308
+\FV@BreakSymbolSepLeftNChars=\count374
+\FV@BreakSymbolSepRight=\dimen309
+\FV@BreakSymbolSepRightNChars=\count375
+\FV@BreakSymbolIndentLeft=\dimen310
+\FV@BreakSymbolIndentLeftNChars=\count376
+\FV@BreakSymbolIndentRight=\dimen311
+\FV@BreakSymbolIndentRightNChars=\count377
+\c@FancyVerbLineBreakLast=\count378
+\FV@LineBox=\box80
+\FV@LineIndentBox=\box81
+\c@FV@BreakBufferDepth=\count379
+\FV@LineWidth=\dimen312
+)
+(/usr/share/texmf-dist/tex/latex/base/ifthen.sty
+Package: ifthen 2022/04/13 v1.1d Standard LaTeX ifthen package (DPC)
+)
+(/usr/share/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
+Package shellesc Info: Unrestricted shell escape enabled on input line 75.
+)
+(/usr/share/texmf-dist/tex/latex/ifplatform/ifplatform.sty
+Package: ifplatform 2017/10/13 v0.4a Testing for the operating system
+
+(/usr/share/texmf-dist/tex/generic/catchfile/catchfile.sty
+Package: catchfile 2019/12/09 v1.8 Catch the contents of a file (HO)
+
+(/usr/share/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+))
+(/usr/share/texmf-dist/tex/generic/iftex/ifluatex.sty
+Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
+)
+runsystem(uname -s > "docs.w18")...executed.
+
+ (./docs.w18)
+runsystem(rm -- "docs.w18")...executed.
+
+)
+(/usr/share/texmf-dist/tex/generic/xstring/xstring.sty
+(/usr/share/texmf-dist/tex/generic/xstring/xstring.tex
+\xs_counta=\count380
+\xs_countb=\count381
+)
+Package: xstring 2023/08/22 v1.86 String manipulations (CT)
+)
+(/usr/share/texmf-dist/tex/latex/framed/framed.sty
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip63
+\fb@frw=\dimen313
+\fb@frh=\dimen314
+\FrameRule=\dimen315
+\FrameSep=\dimen316
+)
+\minted@appexistsfile=\read4
+\minted@bgbox=\box82
+\minted@code=\write5
+\c@minted@FancyVerbLineTemp=\count382
+\c@minted@pygmentizecounter=\count383
+\@float@every@listing=\toks48
+\c@listing=\count384
+)
+runsystem(mkdir -p _minted-docs)...executed.
+
+runsystem(command -v pygmentize && touch docs.aex)...executed.
+
+runsystem(rm docs.aex)...executed.
+
+
 (/usr/share/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count352
-\l__pdf_internal_box=\box76
+\l__color_backend_stack_int=\count385
+\l__pdf_internal_box=\box83
 ) (./docs.aux)
 \openout1 = `docs.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 74.
+LaTeX Font Info:    ... okay on input line 74.
 
 (/usr/share/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count353
-\scratchdimen=\dimen302
-\scratchbox=\box77
-\nofMPsegments=\count354
-\nofMParguments=\count355
-\everyMPshowfont=\toks47
-\MPscratchCnt=\count356
-\MPscratchDim=\dimen303
-\MPnumerator=\count357
-\makeMPintoPDFobject=\count358
-\everyMPtoPDFconversion=\toks48
+\scratchcounter=\count386
+\scratchdimen=\dimen317
+\scratchbox=\box84
+\nofMPsegments=\count387
+\nofMParguments=\count388
+\everyMPshowfont=\toks49
+\MPscratchCnt=\count389
+\MPscratchDim=\dimen318
+\MPnumerator=\count390
+\makeMPintoPDFobject=\count391
+\everyMPtoPDFconversion=\toks50
 ) (/usr/share/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -807,13 +930,16 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring OFF on input line 73.
+Package hyperref Info: Link coloring OFF on input line 74.
  (./docs.out)
 (./docs.out)
-\@outlinefile=\write4
-\openout4 = `docs.out'.
+\@outlinefile=\write6
+\openout6 = `docs.out'.
 
-\c@lstlisting=\count359
+ (/usr/share/texmf-dist/tex/latex/base/textcomp.sty
+Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
+)
+\c@lstlisting=\count392
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -852,12 +978,12 @@ Package hyperref Info: Link coloring OFF on input line 73.
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./docs.toc
-LaTeX Font Info:    Trying to load font information for U+msa on input line 4.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 4.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -866,250 +992,279 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.53 ...refers Buildings}{20}{subsubsection.6.4.1}
+l.53 ... 1: Regular Tick}{21}{subsubsection.6.3.1}
                                                   % [1])
-\tf@toc=\write5
-\openout5 = `docs.toc'.
+\tf@toc=\write7
+\openout7 = `docs.toc'.
 
  [2]
 Missing character: There is no , in font nullfont!
-[3] [4] [5] [6] [7] [8] (/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
+
+Overfull \hbox (20.1817pt too wide) in paragraph at lines 141--142
+[] 
+ []
+
+Missing character: There is no , in font nullfont!
+
+Overfull \hbox (33.00809pt too wide) in paragraph at lines 192--193
+[] 
+ []
+
+[3] [4] [5] [6] [7]
+\openout4 = `docs.pyg'.
+
+ (./_minted-docs/default.pygstyle)
+(./_minted-docs/1EE7E505EFBB78AE516545591EBDD94734532CC314BD063E62EF1D9C40FED6B
+B.pygtex
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 3.
+ [8]) [9] (/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2024/02/21 1.10 listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 410.
-[9] [10] [11] [12] [13] [14
+nput line 485.
+
+[10]
+LaTeX Font Info:    Trying to load font information for TS1+cmtt on input line 
+546.
+ (/usr/share/texmf-dist/tex/latex/base/ts1cmtt.fd
+File: ts1cmtt.fd 2023/04/13 v2.5m Standard LaTeX font definitions
+) [11] [12] [13] [14]
+[15
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.775 
-      ] [15
+l.850 
+      ] [16
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.816 
+l.891 
       ]
-Overfull \hbox (11.73502pt too wide) in paragraph at lines 850--851
+Overfull \hbox (11.73502pt too wide) in paragraph at lines 925--926
  [][] 
  []
 
-[16
+[17
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.853 
-      ] [17
+l.928 
+      ] [18
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.883 
-      ] [18
+l.958 
+      ] [19
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.920 
+l.995 
       ]
-Underfull \hbox (badness 10000) in paragraph at lines 973--973
+Underfull \hbox (badness 10000) in paragraph at lines 1048--1048
 []|\OT1/cmr/m/n/8 card[]id=101,
  []
 
 
-Underfull \hbox (badness 6032) in paragraph at lines 973--973
+Underfull \hbox (badness 6032) in paragraph at lines 1048--1048
 []|\OT1/cmr/m/n/8 Check card in
  []
 
 
-Underfull \hbox (badness 2486) in paragraph at lines 973--973
+Underfull \hbox (badness 2486) in paragraph at lines 1048--1048
 []|\OT1/cmr/m/n/8 card 101? =
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 973--973
+Underfull \hbox (badness 10000) in paragraph at lines 1048--1048
 []|\OT1/cmr/m/n/8 Remove card
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 973--973
+Underfull \hbox (badness 10000) in paragraph at lines 1048--1048
 []|\OT1/cmr/m/n/8 Next card in
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 993--993
+Underfull \hbox (badness 10000) in paragraph at lines 1068--1068
 []|\OT1/cmr/m/n/8 card[]id=202,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 993--993
+Underfull \hbox (badness 10000) in paragraph at lines 1068--1068
 []|\OT1/cmr/m/n/8 Card 202 in
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 993--993
+Underfull \hbox (badness 10000) in paragraph at lines 1068--1068
 []|\OT1/cmr/m/n/8 "Insufficient
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1024
+Underfull \hbox (badness 10000) in paragraph at lines 1099--1099
 []|\OT1/cmr/m/n/8 time=50s $\OML/cmm/m/it/8 <$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1024
+Underfull \hbox (badness 10000) in paragraph at lines 1099--1099
 []|\OT1/cmr/m/n/8 UnitA
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1024
+Underfull \hbox (badness 10000) in paragraph at lines 1099--1099
 \OT1/cmr/m/n/8 health=20
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1024
+Underfull \hbox (badness 10000) in paragraph at lines 1099--1099
 []|\OT1/cmr/m/n/8 Building1
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1024
+Underfull \hbox (badness 10000) in paragraph at lines 1099--1099
 []|\OT1/cmr/m/n/8 Broadcast
  []
 
-[19
+[20
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1027 
+l.1102 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1027 
+l.1102 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1027 
+l.1102 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1027 
+l.1102 
        ]
-Underfull \hbox (badness 10000) in paragraph at lines 1046--1046
+Underfull \hbox (badness 10000) in paragraph at lines 1121--1121
 []|\OT1/cmr/m/n/8 p1[]crowns $\OML/cmm/m/it/8 >$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1071--1071
+Underfull \hbox (badness 10000) in paragraph at lines 1146--1146
 []|\OT1/cmr/m/n/8 groundOnly=true,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1071--1071
+Underfull \hbox (badness 10000) in paragraph at lines 1146--1146
 \OT1/cmr/m/n/8 pref-er-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1071--1071
+Underfull \hbox (badness 10000) in paragraph at lines 1146--1146
 []|\OT1/cmr/m/n/8 [UnitA(air), Bldg1,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1089--1089
+Underfull \hbox (badness 10000) in paragraph at lines 1164--1164
 []|\OT1/cmr/m/n/8 [UnitA, UnitB(air),
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1089--1089
+Underfull \hbox (badness 10000) in paragraph at lines 1164--1164
 []|\OT1/cmr/m/n/8 distances=(UnitA=5,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1122--1122
+Underfull \hbox (badness 10000) in paragraph at lines 1197--1197
 []|\OT1/cmr/m/n/8 total=15
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1122--1122
+Underfull \hbox (badness 10000) in paragraph at lines 1197--1197
 []|\OT1/cmr/m/n/8 inventory
  []
 
-[20
+[21
 pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1125 
+l.1200 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.6}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1125 
+l.1200 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.7}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1125 
+l.1200 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.8}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1125 
-       ] [21
+l.1200 
+       ] [22
 pdfTeX warning (ext4): destination with the same identifier (name{table.9}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1154 \end{document}
+l.1229 \end{document}
                      
 pdfTeX warning (ext4): destination with the same identifier (name{table.10}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1154 \end{document}
+l.1229 \end{document}
                      ] (./docs.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `docs.out' has not changed.
-(rerunfilecheck)             Checksum: 3B2B91DED306A826335678E25769F0E9;10326.
+(rerunfilecheck)             Checksum: 53CF68FDC424F08119D0338DBB538F22;10853.
+runsystem(rm docs.pyg)...executed.
+
  ) 
 Here is how much of TeX's memory you used:
- 27730 strings out of 476033
- 511312 string characters out of 5792715
+ 30873 strings out of 476033
+ 580172 string characters out of 5792715
  2348187 words of memory out of 5000000
- 49044 multiletter control sequences out of 15000+600000
- 566925 words of font info for 70 fonts, out of 8000000 for 9000
+ 52115 multiletter control sequences out of 15000+600000
+ 566615 words of font info for 69 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 99i,11n,101p,852b,2215s stack positions out of 10000i,1000n,20000p,200000b,200000s
- </home/paulh/.texlive/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk><
-/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmbx8.pfb></usr/share/texmf-dist/fonts/type1/public/am
-sfonts/cm/cmbx9.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8
-.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/shar
-e/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texmf-dist/fonts/type1/public
-/amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cms
-y10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/s
-hare/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texmf-dis
-t/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on docs.pdf (22 pages, 252934 bytes).
+ 99i,11n,101p,833b,2244s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ </home/paulh/.texlive/texmf-var/fonts/pk/ljfour/jknappen/ec/tctt0800.600pk> 
+</home/paulh/.texlive/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk></us
+r/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmbx8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmmi8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pf
+b></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/share/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmr8.pfb></usr/share/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8
+.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/sha
+re/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmtt8.pfb>
+Output written on docs.pdf (23 pages, 265375 bytes).
 PDF statistics:
- 812 PDF objects out of 1000 (max. 8388607)
- 753 compressed objects within 8 object streams
- 354 named destinations out of 1000 (max. 500000)
- 469 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 838 PDF objects out of 1000 (max. 8388607)
+ 777 compressed objects within 8 object streams
+ 358 named destinations out of 1000 (max. 500000)
+ 493 words of extra memory for PDF output out of 10000 (max. 10000000)
 

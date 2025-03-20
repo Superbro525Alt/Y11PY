@@ -358,7 +358,7 @@ class NetworkStateObject(NetworkObject):
                             found_match.next_card,
                             found.data.current_battle,
                             other_uuid,
-                            arena
+                            arena,
                         )
 
                 client_sock.sendall(
@@ -486,7 +486,7 @@ class Game(Engine):
             30,
             color=(0, 0, 255),
         )
-        
+
         self.battle_scene.add_ui_element(self.player_display)
 
         self.battle_scene.add_ui_element(self.elixir_display)
@@ -494,10 +494,10 @@ class Game(Engine):
         # Spreading Hand Cards More Evenly Across the Bottom
         self.hand_buttons = []
         hand_card_width = self.text_renderer.get_text_width("aaaaaaaaaaaaaaaa") + 10
-        hand_card_height = self.text_renderer.get_font_height("Card") + 10 
+        hand_card_height = self.text_renderer.get_font_height("Card") + 10
         spacing = 20
         hand_start_x = (self.sdl.get_width() - (hand_card_width * 4 + spacing * 3)) // 2
-        hand_y = self.sdl.get_height() - 80 
+        hand_y = self.sdl.get_height() - 80
 
         for i in range(4):  # Assuming a 4-card hand
             card_x = hand_start_x + i * (hand_card_width + spacing)
@@ -622,7 +622,9 @@ class Game(Engine):
             if self.client.state and self.client.state.battle_state:
                 elixir_text = f"Elixir: {self.client.state.battle_state.elixir}"
                 self.text_renderer.draw_text(elixir_text, 20, 80, (0, 255, 255))
-                self.text_renderer.draw_text(f"{self.client.side}", 20, 140, (255, 255, 255))
+                self.text_renderer.draw_text(
+                    f"{self.client.side}", 20, 140, (255, 255, 255)
+                )
 
                 for i, card in enumerate(self.client.state.battle_state.hand):
                     if i < len(self.hand_buttons):
@@ -630,14 +632,19 @@ class Game(Engine):
                         temp = self.hand_buttons.copy()
                         temp.remove(self.hand_buttons[i])
                         self.hand_buttons[i].callback = partial(
-                            self.card_pressed, self.client.state.battle_state.hand[i], self.hand_buttons[i], temp 
+                            self.card_pressed,
+                            self.client.state.battle_state.hand[i],
+                            self.hand_buttons[i],
+                            temp,
                         )
 
                 # Draw arena grid
-                if self.client.state.battle_state.arena: # PLAYER 2 IS FURTHEST
+                if self.client.state.battle_state.arena:  # PLAYER 2 IS FURTHEST
                     arena = self.client.state.battle_state.arena
                     cell_size = 20  # Adjust as needed
-                    offset_x = int((self.sdl.get_width() / 2)  - ((cell_size * Arena.WIDTH) / 2))
+                    offset_x = int(
+                        (self.sdl.get_width() / 2) - ((cell_size * Arena.WIDTH) / 2)
+                    )
                     offset_y = int(380 - ((cell_size * Arena.HEIGHT) / 2))
 
                     tile_colors = {
@@ -651,14 +658,26 @@ class Game(Engine):
                     for y in range(Arena.HEIGHT):
                         for x in range(Arena.WIDTH):
                             tile_type = arena.tiles[y][x]
-                            color: Tuple[int, int, int] = tile_colors.get(tile_type, (0, 0, 0))
+                            color: Tuple[int, int, int] = tile_colors.get(
+                                tile_type, (0, 0, 0)
+                            )
                             rect = (
                                 offset_x + x * cell_size,
                                 offset_y + y * cell_size,
                                 cell_size,
                                 cell_size,
                             )
-                            if (Arena.get_tile_owner((x, y)) == Owner.P1 and self.client.side != "Player 1") or (Arena.get_tile_owner((x, y)) == Owner.P2 and self.client.side != "Player 2") or Arena.get_tile_owner((x, y)) == None:
+                            if (
+                                (
+                                    Arena.get_tile_owner((x, y)) == Owner.P1
+                                    and self.client.side != "Player 1"
+                                )
+                                or (
+                                    Arena.get_tile_owner((x, y)) == Owner.P2
+                                    and self.client.side != "Player 2"
+                                )
+                                or Arena.get_tile_owner((x, y)) == None
+                            ):
                                 color = (color[0] - 20, color[1] - 20, color[2] - 20)
                                 if color[2] < 0:
                                     color = (color[0], color[1], 0)
@@ -666,8 +685,18 @@ class Game(Engine):
                                     color = (color[0], 0, color[2])
                                 if color[0] < 0:
                                     color = (0, color[1], color[2])
-                            self.sdl.fill_rect(rect[0], rect[1], rect[2], rect[3], color[0], color[1], color[2])
-                            self.sdl.draw_rect(rect[0], rect[1], rect[2], rect[3], 255, 255, 255) # Add outline
+                            self.sdl.fill_rect(
+                                rect[0],
+                                rect[1],
+                                rect[2],
+                                rect[3],
+                                color[0],
+                                color[1],
+                                color[2],
+                            )
+                            self.sdl.draw_rect(
+                                rect[0], rect[1], rect[2], rect[3], 255, 255, 255
+                            )  # Add outline
 
                     # Draw units
                     if arena.units and self.client.side:
@@ -675,29 +704,97 @@ class Game(Engine):
                             unit_x = offset_x + unit.inner.unit_data.x * cell_size
                             unit_y = offset_y + unit.inner.unit_data.y * cell_size
                             unit_rect = (unit_x, unit_y, cell_size, cell_size)
-                            if (unit.inner.owner == Owner.P1.value and self.client.side == "Player 1") or (unit.inner.owner == Owner.P2.value and self.client.side == "Player 2"): 
-                                self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 255, 0) # Draw units in green
+                            if (
+                                unit.inner.owner == Owner.P1.value
+                                and self.client.side == "Player 1"
+                            ) or (
+                                unit.inner.owner == Owner.P2.value
+                                and self.client.side == "Player 2"
+                            ):
+                                self.sdl.fill_rect(
+                                    unit_rect[0],
+                                    unit_rect[1],
+                                    unit_rect[2],
+                                    unit_rect[3],
+                                    0,
+                                    100,
+                                    0,
+                                )  # Draw units in green
                             else:
-                                self.sdl.fill_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 255, 0, 0) # Draw units in red 
-                            self.sdl.draw_rect(unit_rect[0], unit_rect[1], unit_rect[2], unit_rect[3], 0, 0, 0) # Add outline
+                                self.sdl.fill_rect(
+                                    unit_rect[0],
+                                    unit_rect[1],
+                                    unit_rect[2],
+                                    unit_rect[3],
+                                    100,
+                                    0,
+                                    0,
+                                )  # Draw units in red
+                            self.sdl.draw_rect(
+                                unit_rect[0],
+                                unit_rect[1],
+                                unit_rect[2],
+                                unit_rect[3],
+                                0,
+                                0,
+                                0,
+                            )  # Add outline
+
+                            if (
+                                unit.inner.unit_data.hitpoints
+                                and unit.inner.underlying.hitpoints
+                            ):
+                                self.sdl.fill_rect(
+                                    int(unit_x + (cell_size / 5)),
+                                    int(unit_y + (cell_size / 5)),
+                                    int(
+                                        # cell_size
+                                        # - ((cell_size / 5) * 2)
+                                        (
+                                            (
+                                                unit.inner.unit_data.hitpoints
+                                                / unit.inner.underlying.hitpoints
+                                            ) * ((cell_size / 5) * 3)
+                                        )
+                                    ),
+                                    int(cell_size - ((cell_size / 5) * 2)),
+                                    0,
+                                    255,
+                                    0,
+                                )
+                                self.sdl.draw_rect(
+                                    int(unit_x + (cell_size / 5)),
+                                    int(unit_y + (cell_size / 5)),
+                                    int(cell_size - ((cell_size / 5) * 2)),
+                                    int(cell_size - ((cell_size / 5) * 2)),
+                                    0,
+                                    0,
+                                    0,
+                                )
 
     def card_pressed(self, card: Card, button: UIButton, other_buttons: List[UIButton]):
         self.selected_card = card
         button.color = self.HAND_SELECTED_COLOR
         for b in other_buttons:
-            b.color = self.HAND_INITIAL_COLOR 
+            b.color = self.HAND_INITIAL_COLOR
 
     def mouse_down(self, pos: Tuple[int, int]) -> None:
-        if self.scene_manager.current_scene and self.scene_manager.current_scene.name == "battle":
-            print(pos)
-            cell_size = 20  
+        if (
+            self.scene_manager.current_scene
+            and self.scene_manager.current_scene.name == "battle"
+        ):
+            cell_size = 20
             offset_x = int((self.sdl.get_width() / 2) - ((cell_size * Arena.WIDTH) / 2))
             offset_y = int(380 - ((cell_size * Arena.HEIGHT) / 2))
 
             grid_x = (pos[0] - offset_x) // cell_size
             grid_y = (pos[1] - offset_y) // cell_size
 
-            if 0 <= grid_x < Arena.WIDTH and 0 <= grid_y < Arena.HEIGHT and self.selected_card:
+            if (
+                0 <= grid_x < Arena.WIDTH
+                and 0 <= grid_y < Arena.HEIGHT
+                and self.selected_card
+            ):
                 self.client.deploy_unit(self.selected_card, (grid_x, grid_y))
                 self.selected_card = None
                 for b in self.hand_buttons:

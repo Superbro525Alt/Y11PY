@@ -5,9 +5,10 @@ from typing import List, Optional, Self, Tuple
 from uuid import uuid4
 
 from card import Card
-from deck import Deck 
+from deck import Deck
 
 from datetime import datetime
+
 
 @dataclass
 class Player:
@@ -35,21 +36,25 @@ def network_player(p: Player) -> NetworkPlayer:
         p.uuid, p.hand, p.next_card, p.deck, p.remaining_in_deck, p.elixir
     )
 
+
 class Owner(Enum):
     P1 = 0
     P2 = 1
 
+
 class UnitTargetType(Enum):
-    KING_TOWER = 0 
+    KING_TOWER = 0
     PRINCESS_TOWER = 1
     TROOP = 2
     BUILDING = 3
 
-@dataclass 
+
+@dataclass
 class UnitTarget:
     uuid: str
     unit_type: UnitTargetType
     path: List[Tuple[int, int]]
+
 
 @dataclass
 class UnitData:
@@ -59,6 +64,7 @@ class UnitData:
     hitpoints: int
     last_move: str
     last_attack: str
+
 
 @dataclass
 class Unit:
@@ -91,4 +97,3 @@ class Battle:
     p2: Player
     uuid: str
     units: List[IDUnit]
-

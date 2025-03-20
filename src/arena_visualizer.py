@@ -21,7 +21,7 @@ COLORS = {
     "start": (255, 255, 0),  # Green
     "goal": (255, 165, 0),  # Orange
     "path": (150, 255, 100),  # Light Green
-    "tower_center": (255, 150, 0)
+    "tower_center": (255, 150, 0),
 }
 
 # Initialize Pygame
@@ -34,29 +34,57 @@ start_pos = None
 goal_pos = None
 path = []
 
+
 def draw_grid():
     for y in range(HEIGHT):
         for x in range(WIDTH):
             color = COLORS[arena.tiles[y][x]]
-            pygame.draw.rect(screen, color, (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+            pygame.draw.rect(
+                screen, color, (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            )
 
             if (x, y) in path:
-                pygame.draw.rect(screen, COLORS["path"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                pygame.draw.rect(
+                    screen,
+                    COLORS["path"],
+                    (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                )
 
             if start_pos == (x, y):
-                pygame.draw.rect(screen, COLORS["start"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                pygame.draw.rect(
+                    screen,
+                    COLORS["start"],
+                    (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                )
             if goal_pos == (x, y):
-                pygame.draw.rect(screen, COLORS["goal"], (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-
+                pygame.draw.rect(
+                    screen,
+                    COLORS["goal"],
+                    (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+                )
 
     for tower in arena.towers:
-        pygame.draw.rect(screen, COLORS["tower_center"], (tower.center_x * TILE_SIZE, tower.center_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+        pygame.draw.rect(
+            screen,
+            COLORS["tower_center"],
+            (
+                tower.center_x * TILE_SIZE,
+                tower.center_y * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            ),
+        )
 
     # Grid lines
     for x in range(WIDTH):
-        pygame.draw.line(screen, (50, 50, 50), (x * TILE_SIZE, 0), (x * TILE_SIZE, SCREEN_HEIGHT))
+        pygame.draw.line(
+            screen, (50, 50, 50), (x * TILE_SIZE, 0), (x * TILE_SIZE, SCREEN_HEIGHT)
+        )
     for y in range(HEIGHT):
-        pygame.draw.line(screen, (50, 50, 50), (0, y * TILE_SIZE), (SCREEN_WIDTH, y * TILE_SIZE))
+        pygame.draw.line(
+            screen, (50, 50, 50), (0, y * TILE_SIZE), (SCREEN_WIDTH, y * TILE_SIZE)
+        )
+
 
 running = True
 while running:
@@ -92,6 +120,4 @@ while running:
                 start_pos = None
 
 
-
 pygame.quit()
-

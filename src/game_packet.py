@@ -3,6 +3,7 @@ import enum
 
 from deck import Deck
 
+
 @dataclass
 class MatchRequest:
     trophies: int

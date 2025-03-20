@@ -1,0 +1,21 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nd}{@total\PYGZus{}ordering}
+\PYG{n+nd}{@dataclass}\PYG{p}{(}\PYG{n}{order}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Frame}\PYG{p}{(}\PYG{n}{Generic}\PYG{p}{[}\PYG{n}{T}\PYG{p}{]):}
+    \PYG{n}{data}\PYG{p}{:} \PYG{n}{T} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+
+    \PYG{n}{available\PYGZus{}at}\PYG{p}{:} \PYG{n+nb}{float} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default\PYGZus{}factory}\PYG{o}{=}\PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{)}
+    \PYG{n}{priority}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{l+m+mi}{0}
+    \PYG{n+nb}{id}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{l+m+mi}{0}
+
+    \PYG{n}{metadata}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n}{Dict}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{Any}\PYG{p}{]]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{annotations}\PYG{p}{:} \PYG{n}{Dict}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{,} \PYG{n}{Any}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default\PYGZus{}factory}\PYG{o}{=}\PYG{n+nb}{dict}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{timestamp}\PYG{p}{:} \PYG{n+nb}{float} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default\PYGZus{}factory}\PYG{o}{=}\PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{sender\PYGZus{}id}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{expire\PYGZus{}at}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n+nb}{float}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{retry\PYGZus{}count}\PYG{p}{:} \PYG{n+nb}{int} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{delivered\PYGZus{}to}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default\PYGZus{}factory}\PYG{o}{=}\PYG{n+nb}{list}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{correlation\PYGZus{}id}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{topic}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n+nb}{str}\PYG{p}{]} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{is\PYGZus{}response}\PYG{p}{:} \PYG{n+nb}{bool} \PYG{o}{=} \PYG{n}{field}\PYG{p}{(}\PYG{n}{default}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{,} \PYG{n}{compare}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+\end{Verbatim}

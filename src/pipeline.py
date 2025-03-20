@@ -49,12 +49,10 @@ T = TypeVar("T")
 class Frame(Generic[T]):
     data: T = field(compare=False)
 
-    # The three fields used for ordering.
-    available_at: float = field(default_factory=time.time)  # Defaults to current time.
-    priority: int = 0  # Default priority.
-    id: int = 0  # Default ID (can be overridden by your pipeline logic).
+    available_at: float = field(default_factory=time.time)  
+    priority: int = 0  
+    id: int = 0  
 
-    # Other fields (not used for ordering).
     metadata: Optional[Dict[str, Any]] = field(default=None, compare=False)
     annotations: Dict[str, Any] = field(default_factory=dict, compare=False)
     timestamp: float = field(default_factory=time.time, compare=False)

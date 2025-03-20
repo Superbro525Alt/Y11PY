@@ -4,24 +4,27 @@ from enum import Enum
 import heapq
 from typing import Dict, List, Optional, Self, Tuple
 
-from card import CardType, TargetType 
+from card import CardType, TargetType
 from unit import IDUnit, Owner, UnitTarget, UnitTargetType
 from util import DATE_FORMAT, is_time_elapsed
 from util import logger as logging
 
-class TileType(Enum):
-    EMPTY = 0        # Walkable tile
-    RIVER = 1        # Water (unwalkable)
-    BRIDGE = 2       # Bridge over river
-    CROWN_TOWER = 3  # Crown Tower (3x3 structure)
-    KING_TOWER = 4   # King Tower (3x3 structure)
 
-@dataclass 
+class TileType(Enum):
+    EMPTY = 0  # Walkable tile
+    RIVER = 1  # Water (unwalkable)
+    BRIDGE = 2  # Bridge over river
+    CROWN_TOWER = 3  # Crown Tower (3x3 structure)
+    KING_TOWER = 4  # King Tower (3x3 structure)
+
+
+@dataclass
 class Tower:
     tower_type: UnitTargetType
     center_x: int
     center_y: int
     owner: Owner
+
 
 class Arena:
     WIDTH: int = 19
@@ -29,7 +32,8 @@ class Arena:
 
     def __init__(self) -> None:
         self.tiles = [
-            [TileType.EMPTY.value for _ in range(self.WIDTH)] for _ in range(self.HEIGHT)
+            [TileType.EMPTY.value for _ in range(self.WIDTH)]
+            for _ in range(self.HEIGHT)
         ]
 
         for x in range(self.WIDTH):
@@ -43,30 +47,48 @@ class Arena:
         king_x = self.WIDTH // 2
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                self.tiles[2 + dy][king_x + dx] = TileType.KING_TOWER.value  # Move forward
-                self.tiles[self.HEIGHT - 3 + dy][king_x + dx] = TileType.KING_TOWER.value
+                self.tiles[2 + dy][
+                    king_x + dx
+                ] = TileType.KING_TOWER.value  # Move forward
+                self.tiles[self.HEIGHT - 3 + dy][
+                    king_x + dx
+                ] = TileType.KING_TOWER.value
 
-        crown_positions = [(3, 3), (3, self.WIDTH - 4), (self.HEIGHT - 4, 3), (self.HEIGHT - 4, self.WIDTH - 4)]
+        crown_positions = [
+            (3, 3),
+            (3, self.WIDTH - 4),
+            (self.HEIGHT - 4, 3),
+            (self.HEIGHT - 4, self.WIDTH - 4),
+        ]
         for y, x in crown_positions:
             for dx in range(-1, 2):
                 for dy in range(-1, 2):
-                    self.tiles[y + dy][x + dx] = TileType.CROWN_TOWER.value  # Move forward
+                    self.tiles[y + dy][
+                        x + dx
+                    ] = TileType.CROWN_TOWER.value  # Move forward
 
         self.units: List[IDUnit] = []
 
         self.towers: List[Tower] = [
             Tower(UnitTargetType.KING_TOWER, self.WIDTH // 2, 2, Owner.P1),
-            Tower(UnitTargetType.KING_TOWER, self.WIDTH // 2, self.HEIGHT - 3, Owner.P2),
+            Tower(
+                UnitTargetType.KING_TOWER, self.WIDTH // 2, self.HEIGHT - 3, Owner.P2
+            ),
             Tower(UnitTargetType.PRINCESS_TOWER, 3, 3, Owner.P1),
             Tower(UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, 3, Owner.P1),
             Tower(UnitTargetType.PRINCESS_TOWER, 3, self.HEIGHT - 4, Owner.P2),
-            Tower(UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, self.HEIGHT - 4, Owner.P2),
+            Tower(
+                UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, self.HEIGHT - 4, Owner.P2
+            ),
         ]
 
-
-    def find_path(self, start: Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+    def find_path(
+        self, start: Tuple[int, int], goal: Tuple[int, int]
+    ) -> List[Tuple[int, int]]:
         """Finds the shortest path from start to goal using A* algorithm."""
-        if self.tiles[start[1]][start[0]] in {1, 3, 4} or self.tiles[goal[1]][goal[0]] in {1, 3, 4}:
+        if self.tiles[start[1]][start[0]] in {1, 3, 4} or self.tiles[goal[1]][
+            goal[0]
+        ] in {1, 3, 4}:
             return []  # No valid path if start/goal is in an obstacle.
 
         def heuristic(a: Tuple[int, int], b: Tuple[int, int]) -> int:
@@ -110,7 +132,9 @@ class Arena:
                     if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                         came_from[neighbor] = current
                         g_score[neighbor] = tentative_g_score
-                        f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+                        f_score[neighbor] = tentative_g_score + heuristic(
+                            neighbor, goal
+                        )
                         heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
         return []  # No path found
@@ -118,19 +142,39 @@ class Arena:
     def __str__(self) -> str:
         border = "╔" + "═" * self.WIDTH + "╗"
         tile_symbols = {0: " ", 1: "≈", 2: "═", 3: "▲", 4: "♔"}
-        rows = ["║" + "".join(tile_symbols[cell] for cell in row) + "║" for row in self.tiles]
+        rows = [
+            "║" + "".join(tile_symbols[cell] for cell in row) + "║"
+            for row in self.tiles
+        ]
         bottom_border = "╚" + "═" * self.WIDTH + "╝"
         return "\n".join([border] + rows + [bottom_border])
 
     def add_unit(self, unit: IDUnit):
         self.units.append(unit)
 
-    def get_target(self, current_pos: Tuple[int, int], target_owner: Owner, target_types: List[TargetType]) -> Optional[UnitTarget]:
+    def get_target(
+        self,
+        current_pos: Tuple[int, int],
+        target_owner: Owner,
+        target_types: List[TargetType],
+    ) -> Optional[UnitTarget]:
         """Determines the closest valid target based on owner and target types, prioritizing enemy units."""
-        enemy_units: List[IDUnit] = [unit for unit in self.units if unit.inner.owner != target_owner and unit.inner.underlying.layer in target_types]
+        enemy_units: List[IDUnit] = [
+            unit
+            for unit in self.units
+            if unit.inner.owner != target_owner
+            and unit.inner.underlying.layer in target_types
+        ]
         if enemy_units:
-            closest_enemy = min(enemy_units, key=lambda unit: abs(current_pos[0] - unit.inner.unit_data.x) + abs(current_pos[1] - unit.inner.unit_data.y))
-            path = self.find_path(current_pos, (closest_enemy.inner.unit_data.x, closest_enemy.inner.unit_data.y))
+            closest_enemy = min(
+                enemy_units,
+                key=lambda unit: abs(current_pos[0] - unit.inner.unit_data.x)
+                + abs(current_pos[1] - unit.inner.unit_data.y),
+            )
+            path = self.find_path(
+                current_pos,
+                (closest_enemy.inner.unit_data.x, closest_enemy.inner.unit_data.y),
+            )
             if path:
                 return UnitTarget(closest_enemy.id, UnitTargetType.TROOP, path)
 
@@ -150,19 +194,30 @@ class Arena:
                 if target[0] == UnitTargetType.KING_TOWER:
                     valid_targets.remove(target)
 
-        closest_target = min(valid_targets, key=lambda target: abs(current_pos[0] - target[1]) + abs(current_pos[1] - target[2]))
+        closest_target = min(
+            valid_targets,
+            key=lambda target: abs(current_pos[0] - target[1])
+            + abs(current_pos[1] - target[2]),
+        )
         target_x, target_y = closest_target[1], closest_target[2]
 
         adjacent_tiles = []
         for dx, dy in [(0, -2) if target_owner == Owner.P2 else (0, 2)]:
             nx, ny = target_x + dx, target_y + dy
-            if 0 <= nx < self.WIDTH and 0 <= ny < self.HEIGHT and self.tiles[ny][nx] == 0:
+            if (
+                0 <= nx < self.WIDTH
+                and 0 <= ny < self.HEIGHT
+                and self.tiles[ny][nx] == 0
+            ):
                 adjacent_tiles.append((nx, ny))
 
         if not adjacent_tiles:
             return None
 
-        best_adjacent_tile = min(adjacent_tiles, key=lambda adj: abs(current_pos[0] - adj[0]) + abs(current_pos[1] - adj[1]))
+        best_adjacent_tile = min(
+            adjacent_tiles,
+            key=lambda adj: abs(current_pos[0] - adj[0]) + abs(current_pos[1] - adj[1]),
+        )
 
         path = self.find_path(current_pos, best_adjacent_tile)
 
@@ -174,14 +229,31 @@ class Arena:
 
         for unit in u:
             if unit.inner.unit_data.current_target and unit.inner.underlying.range:
-                if len(unit.inner.unit_data.current_target.path) - 1 < unit.inner.underlying.range:
-                    if unit.inner.unit_data.current_target.unit_type == UnitTargetType.TROOP:
+                if (
+                    len(unit.inner.unit_data.current_target.path) - 1
+                    < unit.inner.underlying.range
+                ):
+                    if (
+                        unit.inner.unit_data.current_target.unit_type
+                        == UnitTargetType.TROOP
+                    ):
                         for _unit in u:
-                            if _unit.id == unit.inner.unit_data.current_target.uuid and unit.inner.underlying.damage and unit.inner.underlying.attack_speed:
-                                print(is_time_elapsed(unit.inner.unit_data.last_attack, unit.inner.underlying.attack_speed))
-                                if is_time_elapsed(unit.inner.unit_data.last_attack, unit.inner.underlying.attack_speed):
-                                    unit.inner.unit_data.last_attack = datetime.now().strftime(DATE_FORMAT)
-                                    _unit.inner.unit_data.hitpoints = _unit.inner.unit_data.hitpoints - unit.inner.underlying.damage
+                            if (
+                                _unit.id == unit.inner.unit_data.current_target.uuid
+                                and unit.inner.underlying.damage
+                                and unit.inner.underlying.attack_speed
+                            ):
+                                if is_time_elapsed(
+                                    unit.inner.unit_data.last_attack,
+                                    unit.inner.underlying.attack_speed,
+                                ):
+                                    unit.inner.unit_data.last_attack = (
+                                        datetime.now().strftime(DATE_FORMAT)
+                                    )
+                                    _unit.inner.unit_data.hitpoints = (
+                                        _unit.inner.unit_data.hitpoints
+                                        - unit.inner.underlying.damage
+                                    )
         return units
 
     @classmethod
@@ -189,11 +261,11 @@ class Arena:
         if tile[1] <= 13:
             return Owner.P1
         elif tile[1] == 14 or tile[1] == 15:
-            return None 
+            return None
         elif tile[1] >= 16:
             return Owner.P2
 
-    @classmethod 
+    @classmethod
     def dist(cls, origin: Tuple[int, int], goal: Tuple[int, int]) -> int:
         path = cls().find_path(origin, goal)
         if not path:
@@ -212,6 +284,7 @@ def test_pathfinding_basic():
     assert path[0] == start, "Path should start at the given start position"
     assert path[-1] == goal, "Path should end at the goal position"
 
+
 def test_pathfinding_avoids_obstacles():
     """Ensure pathfinding avoids obstacles like rivers and towers."""
     arena = Arena()
@@ -219,10 +292,11 @@ def test_pathfinding_avoids_obstacles():
     goal = (5, arena.HEIGHT - 5)
 
     path = arena.find_path(start, goal)
-    
+
     # Ensure path doesn't enter tower or river tiles
     for x, y in path:
         assert arena.tiles[y][x] not in {1, 3, 4}, "Path should not enter obstacles"
+
 
 def test_pathfinding_uses_bridges():
     """Test that the pathfinder correctly crosses the bridge over the river."""
@@ -236,6 +310,7 @@ def test_pathfinding_uses_bridges():
     bridge_found = any(arena.tiles[y][x] == 2 for x, y in path)
     assert bridge_found, "Path should cross a bridge over the river"
 
+
 def test_no_path_if_start_in_obstacle():
     """Ensure pathfinding returns an empty path if starting inside an obstacle."""
     arena = Arena()
@@ -244,6 +319,7 @@ def test_no_path_if_start_in_obstacle():
 
     path = arena.find_path(start, goal)
     assert not path, "Path should be empty when starting inside an obstacle"
+
 
 def test_no_path_if_goal_in_obstacle():
     """Ensure pathfinding returns an empty path if the goal is inside an obstacle."""
@@ -254,10 +330,11 @@ def test_no_path_if_goal_in_obstacle():
     path = arena.find_path(start, goal)
     assert not path, "Path should be empty when goal is inside an obstacle"
 
+
 def test_no_valid_path():
     """Test when no path is available (e.g., completely blocked area)."""
     arena = Arena()
-    
+
     # Manually block a location
     for y in range(5, 10):
         for x in range(5, 10):

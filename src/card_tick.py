@@ -28,7 +28,12 @@ def card_tick(_card: IDUnit, arena: Arena) -> Optional[IDUnit]:
         ).timestamp()
         > 0
     ):
-        card.inner.unit_data.x, card.inner.unit_data.y = path[1]
-        card.inner.unit_data.last_move = datetime.now().strftime(DATE_FORMAT)
+        if (
+            card.inner.underlying.range and
+            not len(card.inner.unit_data.current_target.path) - 1
+                    < card.inner.underlying.range
+            ):
+            card.inner.unit_data.x, card.inner.unit_data.y = path[1]
+            card.inner.unit_data.last_move = datetime.now().strftime(DATE_FORMAT)
 
     return card if card.inner.unit_data.current_target else None

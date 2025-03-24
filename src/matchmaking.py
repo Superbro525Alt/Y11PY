@@ -97,7 +97,7 @@ class MatchThread:
                 if res:
                     state.units[i] = res
                 if unit.inner.underlying.hitpoints is not None:
-                    if unit.inner.unit_data.hitpoints < unit.inner.underlying.hitpoints:
+                    if unit.inner.unit_data.hitpoints <= 0:
                         state.units.remove(unit)
                         print("================== DEAD ==================")
             self.state.set_data(state)
@@ -118,10 +118,12 @@ class MatchThread:
         state.units.append(u)
         self.arena.add_unit(u)
 
-        if unit.owner == Owner.P1.value:
-            state.p1.elixir -= unit.underlying.elixir_cost
-        elif unit.owner == Owner.P2.value:
-            state.p2.elixir -= unit.underlying.elixir_cost
+        if unit.owner == Owner.P1:
+            state.p1.elixir = state.p1.elixir - unit.underlying.elixir_cost
+        elif unit.owner == Owner.P2:
+            state.p2.elixir = state.p2.elixir - unit.underlying.elixir_cost
+
+        self.state.set_data(state)
 
         self.get_next_hand(unit.owner, unit.underlying)
 

@@ -685,18 +685,109 @@ class Game(Engine):
                                     color = (color[0], 0, color[2])
                                 if color[0] < 0:
                                     color = (0, color[1], color[2])
-                            self.sdl.fill_rect(
-                                rect[0],
-                                rect[1],
-                                rect[2],
-                                rect[3],
-                                color[0],
-                                color[1],
-                                color[2],
-                            )
+
+                            if tile_type not in (3, 4):
+                                self.sdl.fill_rect(
+                                    rect[0],
+                                    rect[1],
+                                    rect[2],
+                                    rect[3],
+                                    color[0],
+                                    color[1],
+                                    color[2],
+                                )
+                            else:
+                                if not Arena.is_tower_dead(arena, x, y):
+                                    self.sdl.fill_rect(
+                                        rect[0],
+                                        rect[1],
+                                        rect[2],
+                                        rect[3],
+                                        color[0],
+                                        color[1],
+                                        color[2],
+                                    )
+                                else:
+                                    color = tile_colors[0]
+                                    if (
+                                        (
+                                            Arena.get_tile_owner((x, y)) == Owner.P1
+                                            and self.client.side != "Player 1"
+                                        )
+                                        or (
+                                            Arena.get_tile_owner((x, y)) == Owner.P2
+                                            and self.client.side != "Player 2"
+                                        )
+                                        or Arena.get_tile_owner((x, y)) == None
+                                    ):
+                                        color = (color[0] - 20, color[1] - 20, color[2] - 20)
+                                        if color[2] < 0:
+                                            color = (color[0], color[1], 0)
+                                        if color[1] < 0:
+                                            color = (color[0], 0, color[2])
+                                        if color[0] < 0:
+                                            color = (0, color[1], color[2])
+
+                                    self.sdl.fill_rect(
+                                        rect[0],
+                                        rect[1],
+                                        rect[2],
+                                        rect[3],
+                                        color[0],
+                                        color[1],
+                                        color[2]
+                                    )
+
                             self.sdl.draw_rect(
                                 rect[0], rect[1], rect[2], rect[3], 255, 255, 255
                             )  # Add outline
+
+                            if tile_type in (3, 4) and not Arena.is_tower_dead(arena, x, y):  # Crown or King Tower
+                                for tower in arena.towers:
+                                    if (
+                                        tower.center_x == x
+                                            and tower.center_y == y
+                                    ):
+                                        hp_bar_width = cell_size * 0.8
+                                        hp_bar_height = cell_size / 5
+                                        hp_bar_x = rect[0] + (cell_size - hp_bar_width) / 2
+                                        hp_bar_y = rect[1] + hp_bar_height - 2
+
+                                    # Calculate HP percentage
+                                        hp_percentage = (
+                                            tower.current_hp / tower.max_hp
+                                            if tower.max_hp > 0
+                                            else 0
+                                        )
+                                        filled_width = int(hp_bar_width * hp_percentage)
+
+                                        self.sdl.fill_rect(
+                                            int(hp_bar_x),
+                                            int(hp_bar_y),
+                                            int(hp_bar_width),
+                                            int(hp_bar_height),
+                                            0,
+                                            0,
+                                            0,
+                                        )
+
+                                        hp_color = (
+                                            (0, 255, 0)
+                                            if hp_percentage > 0.5
+                                            else (255, 255, 0)
+                                            if hp_percentage > 0.2
+                                            else (255, 0, 0)
+                                        )
+
+                                        self.sdl.fill_rect(
+                                            int(hp_bar_x),
+                                            int(hp_bar_y),
+                                            filled_width,
+                                            int(hp_bar_height),
+                                            hp_color[0],
+                                            hp_color[1],
+                                            hp_color[2],
+                                        )
 
                     # Draw units
                     if arena.units and self.client.side:

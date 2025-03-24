@@ -1,3 +1,4 @@
+from copy import copy
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -9,6 +10,8 @@ from unit import IDUnit, Owner, UnitTarget, UnitTargetType
 from util import DATE_FORMAT, is_time_elapsed
 from util import logger as logging
 
+KING_MAX_HP = 1000
+PRINCESS_MAX_HP = 500
 
 class TileType(Enum):
     EMPTY = 0  # Walkable tile
@@ -24,7 +27,18 @@ class Tower:
     center_x: int
     center_y: int
     owner: Owner
+    tower_id: "TowerId"
+    max_hp: int 
+    current_hp: int 
 
+class TowerId(Enum):
+    PRINCESS_LEFT_P1 = "PRINCESS_LEFT_P1" 
+    PRINCESS_RIGHT_P1 = "PRINCESS_RIGHT_P1"
+    KING_P1 = "KING_P1"
+
+    PRINCESS_LEFT_P2 = "PRINCESS_LEFT_P2" 
+    PRINCESS_RIGHT_P2 = "PRINCESS_RIGHT_P2"
+    KING_P2 = "KING_P2"
 
 class Arena:
     WIDTH: int = 19
@@ -70,17 +84,38 @@ class Arena:
         self.units: List[IDUnit] = []
 
         self.towers: List[Tower] = [
-            Tower(UnitTargetType.KING_TOWER, self.WIDTH // 2, 2, Owner.P1),
+            Tower(UnitTargetType.KING_TOWER, self.WIDTH // 2, 2, Owner.P1,TowerId.KING_P1, KING_MAX_HP, KING_MAX_HP),
             Tower(
-                UnitTargetType.KING_TOWER, self.WIDTH // 2, self.HEIGHT - 3, Owner.P2
+                UnitTargetType.KING_TOWER, self.WIDTH // 2, self.HEIGHT - 3, Owner.P2, TowerId.KING_P2, KING_MAX_HP, KING_MAX_HP
             ),
-            Tower(UnitTargetType.PRINCESS_TOWER, 3, 3, Owner.P1),
-            Tower(UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, 3, Owner.P1),
-            Tower(UnitTargetType.PRINCESS_TOWER, 3, self.HEIGHT - 4, Owner.P2),
+            Tower(UnitTargetType.PRINCESS_TOWER, 3, 3, Owner.P1, TowerId.PRINCESS_LEFT_P1, PRINCESS_MAX_HP, PRINCESS_MAX_HP),
+            Tower(UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, 3, Owner.P1, TowerId.PRINCESS_RIGHT_P1, PRINCESS_MAX_HP, PRINCESS_MAX_HP),
+            Tower(UnitTargetType.PRINCESS_TOWER, 3, self.HEIGHT - 4, Owner.P2, TowerId.PRINCESS_LEFT_P2, PRINCESS_MAX_HP, PRINCESS_MAX_HP),
             Tower(
-                UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, self.HEIGHT - 4, Owner.P2
+                UnitTargetType.PRINCESS_TOWER, self.WIDTH - 4, self.HEIGHT - 4, Owner.P2, TowerId.PRINCESS_RIGHT_P2, PRINCESS_MAX_HP, PRINCESS_MAX_HP
             ),
         ]
+
+        self._set_tower_tiles()
+
+    def _set_tower_tiles(self) -> None:
+        t = copy(self.tiles.copy())
+
+        for y in range(self.HEIGHT):
+            for x in range(self.WIDTH):
+                if self.tiles[y][x] in {3,4}:
+                    t[y][x] = 0
+        for tower in self.towers:
+            if tower.tower_type == UnitTargetType.KING_TOWER:
+                for dx in range(-1,2):
+                    for dy in range(-1,2):
+                        t[tower.center_y + dy][tower.center_x + dx] = TileType.KING_TOWER.value
+            elif tower.tower_type == UnitTargetType.PRINCESS_TOWER:
+                for dx in range(-1,2):
+                    for dy in range(-1,2):
+                        t[tower.center_y + dy][tower.center_x + dx] = TileType.CROWN_TOWER.value
+
+        # self.tiles = t.copy()
 
     def find_path(
         self, start: Tuple[int, int], goal: Tuple[int, int]
@@ -164,6 +199,7 @@ class Arena:
             for unit in self.units
             if unit.inner.owner != target_owner
             and unit.inner.underlying.layer in target_types
+            and unit.inner.unit_data.hitpoints > 0
         ]
         if enemy_units:
             closest_enemy = min(
@@ -171,25 +207,45 @@ class Arena:
                 key=lambda unit: abs(current_pos[0] - unit.inner.unit_data.x)
                 + abs(current_pos[1] - unit.inner.unit_data.y),
             )
-            path = self.find_path(
-                current_pos,
-                (closest_enemy.inner.unit_data.x, closest_enemy.inner.unit_data.y),
-            )
-            if path:
-                return UnitTarget(closest_enemy.id, UnitTargetType.TROOP, path)
+            # path = self.find_path(
+            #     current_pos,
+            #     (closest_enemy.inner.unit_data.x, closest_enemy.inner.unit_data.y),
+            # )
+            adjacent_tiles = []
+            for dx, dy in [(0, -1), (0, 1), (1, 0), (-1, 0)]:
+                nx, ny = closest_enemy.inner.unit_data.x + dx, closest_enemy.inner.unit_data.y + dy
+                if (
+                    0 <= nx < self.WIDTH
+                    and 0 <= ny < self.HEIGHT
+                    and self.tiles[ny][nx] == 0
+                ):
+                    adjacent_tiles.append((nx, ny))
 
-        valid_targets: List[Tuple[UnitTargetType, int, int]] = []
+            if not adjacent_tiles:
+                return None
+
+            best_adjacent_tile: Tuple[int, int] = min(
+                adjacent_tiles,
+                key=lambda adj: abs(current_pos[0] - adj[0]) + abs(current_pos[1] - adj[1]),
+            )
+
+            return UnitTarget(closest_enemy.id, UnitTargetType.TROOP, self.find_path(current_pos, best_adjacent_tile))
+
+        valid_targets: List[Tuple[UnitTargetType, int, int, TowerId]] = []
         is_princess_tower: bool = False
+        is_one_princess_tower: bool = True
         for tower in self.towers:
-            if tower.owner == target_owner:
+            if tower.owner == target_owner and tower.current_hp > 0:
                 if tower.tower_type == UnitTargetType.PRINCESS_TOWER:
+                    if is_princess_tower:
+                        is_one_princess_tower = False
                     is_princess_tower = True
-                valid_targets.append((tower.tower_type, tower.center_x, tower.center_y))
+                valid_targets.append((tower.tower_type, tower.center_x, tower.center_y, tower.tower_id))
 
         if not valid_targets:
             return None
 
-        if is_princess_tower:
+        if is_princess_tower and not is_one_princess_tower:
             for target in valid_targets:
                 if target[0] == UnitTargetType.KING_TOWER:
                     valid_targets.remove(target)
@@ -199,6 +255,7 @@ class Arena:
             key=lambda target: abs(current_pos[0] - target[1])
             + abs(current_pos[1] - target[2]),
         )
+
         target_x, target_y = closest_target[1], closest_target[2]
 
         adjacent_tiles = []
@@ -221,7 +278,44 @@ class Arena:
 
         path = self.find_path(current_pos, best_adjacent_tile)
 
-        return UnitTarget("0", closest_target[0], path)
+        return UnitTarget(closest_target[3].value, closest_target[0], path)
+
+    def tower_id_to_target_str(self, id: str) -> int: # returns idx of tower in self.towers
+        for i, tower in enumerate(self.towers):
+            if tower.tower_id == id:
+                return i
+        raise ValueError("Invalid Tower ID") 
+
+    def tower_id_to_target(self, id: str) -> int: # returns idx of tower in self.towers
+        for i, tower in enumerate(self.towers):
+            if tower.tower_id.value == id:
+                return i
+        raise ValueError("Invalid Tower ID") 
+
+    @classmethod
+    def is_tower_dead(cls, arena: Self, x: int, y: int) -> bool:
+        """Optimized function to check if a tower at (x, y) is dead."""
+        tower_id = cls.get_tower_id(arena, (x, y))
+
+        if tower_id is None:
+            print("ok")
+            return False  
+
+        tower_index = cls.tower_id_to_target_str(arena, str(tower_id))
+        return arena.towers[tower_index].current_hp <= 0
+
+    @classmethod
+    def get_tower_id(cls, arena: Self, pos: Tuple[int, int]) -> Optional[TowerId]:
+        """
+        Given a position, returns the TowerId if the position is within a tower, otherwise returns None.
+        """
+        for tower in arena.towers:
+            if (
+                tower.center_x - 1 <= pos[0] <= tower.center_x + 1
+                and tower.center_y - 1 <= pos[1] <= tower.center_y + 1
+            ):
+                return tower.tower_id
+        return None
 
     def tick(self, units: List[IDUnit]) -> List[IDUnit]:
         """Processes unit actions in the arena."""
@@ -242,6 +336,7 @@ class Arena:
                                 _unit.id == unit.inner.unit_data.current_target.uuid
                                 and unit.inner.underlying.damage
                                 and unit.inner.underlying.attack_speed
+                                and _unit.inner.unit_data.hitpoints > 0
                             ):
                                 if is_time_elapsed(
                                     unit.inner.unit_data.last_attack,
@@ -254,6 +349,28 @@ class Arena:
                                         _unit.inner.unit_data.hitpoints
                                         - unit.inner.underlying.damage
                                     )
+                    elif unit.inner.unit_data.current_target.unit_type == UnitTargetType.BUILDING:
+                        pass
+                    else:
+                        target_tower = self.tower_id_to_target(unit.inner.unit_data.current_target.uuid)
+
+                        if (self.towers[target_tower].current_hp > 0 and 
+                            unit.inner.underlying.damage
+                            and unit.inner.underlying.attack_speed):
+                                if is_time_elapsed(
+                                    unit.inner.unit_data.last_attack,
+                                    unit.inner.underlying.attack_speed,
+                                ):
+                                    unit.inner.unit_data.last_attack = (
+                                        datetime.now().strftime(DATE_FORMAT)
+                                    )
+                                    self.towers[target_tower].current_hp = (
+                                        self.towers[target_tower].current_hp - unit.inner.underlying.damage
+                                    )
+
+        # self.towers = [tower for tower in self.towers if tower.current_hp > 0]
+        # self._set_tower_tiles()
+
         return units
 
     @classmethod

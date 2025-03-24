@@ -777,7 +777,7 @@ class Game(Engine):
         """Initial setup for the game."""
         self.text_renderer = TextRenderer(self.sdl)
         self.text_renderer.load_font(
-            "/usr/share/fonts/adobe-source-sans/SourceSansPro-Regular.otf", 24
+            "./src/SourceSansPro-Regular.otf", 24
         )
 
         self.setup_scenes()

@@ -1,16 +1,44 @@
 from dataclasses import dataclass
 import enum
-from typing import List
+from typing import Generic, List, Optional, Self, Type, TypeVar
 
 from card import Card
 
+T = TypeVar("T", bound="EnumFromValue")
 
-class ChestRarity(enum.Enum):
-    WOOD = (0,)
-    SILVER = (1,)
-    GOLD = (2,)
-    GIANT = (3,)
+
+class EnumFromValue(enum.Enum):
+    @classmethod
+    def from_val(cls: Type["EnumFromValue"], value) -> Optional["EnumFromValue"]:
+        for member in cls:
+            if member.value == value:
+                return member
+        return None
+
+
+class ChestRarity(EnumFromValue):
+    WOOD = 0
+    SILVER = 1
+    GOLD = 2
+    GIANT = 3
     DEV = 4
+
+    @classmethod
+    def from_val(cls, value) -> Optional["EnumFromValue"]:
+        return super().from_val(value)
+
+    def __str__(self) -> str:
+        match self.value:
+            case self.WOOD.value:
+                return "Wood"
+            case self.SILVER.value:
+                return "Silver"
+            case self.GOLD.value:
+                return "Gold"
+            case self.GIANT.value:
+                return "Giant"
+            case self.DEV.value:
+                return "Dev"
 
 
 @dataclass

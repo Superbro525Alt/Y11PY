@@ -294,7 +294,9 @@ class Server:
 
         self.handlers: List[NetworkObject] = handlers
 
-        logger.info(f"Server listening on 0.0.0.0:{port}")
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        logger.info(f"Server listening on {ip_address}:{port}")
 
         threading.Thread(target=self._broadcast_loop, daemon=True).start()
 

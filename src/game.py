@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 from collections import deque
 import enum
 from functools import partial
@@ -138,8 +137,8 @@ class BattleClient:
 
 
 class GameNetworkClient(Client):
-    def __init__(self, name: str):
-        super().__init__("127.0.0.1", 12345)
+    def __init__(self, name: str, ip: Optional[str]):
+        super().__init__(ip if ip else "127.0.0.1", 12345)
 
         self.battle_client = BattleClient(self.send)
 
@@ -397,7 +396,7 @@ class Game(Engine):
     HAND_INITIAL_COLOR = (99, 99, 99)
     HAND_SELECTED_COLOR = (255, 79, 79)
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, ip: Optional[str] = None):
         engine_pipe = FramePipeline[EngineFrameData]("engine_pipe")
         event_pipe = FramePipeline[Event]("event_pipe")
         state_pipe = FramePipeline[StateData]("state_pipe")
@@ -413,7 +412,7 @@ class Game(Engine):
 
         self.camera = Camera((0, 0), zoom=0.75, screen_width=1200, screen_height=800)
         self.name = name
-        self.client = GameNetworkClient(self.name)
+        self.client = GameNetworkClient(self.name, ip)
         self.matchmaking_started = False  # To track matchmaking state
 
         self.latency: Deque[int] = deque([0], maxlen=10)  # Track server latency
@@ -425,6 +424,8 @@ class Game(Engine):
 
         self.selected_card: Optional[Card] = None
 
+        self.chest_buttons: List[UIButton] = []
+
     def setup_scenes(self):
         """Initializes all scenes and UI elements."""
 
@@ -433,7 +434,16 @@ class Game(Engine):
         self.main_menu_scene.add_ui_element(self.latency_display)
         self.battle_scene.add_ui_element(self.latency_display)
 
-        # Main Menu UI
+        self.main_menu_bg = UIElement(
+            0,
+            0,
+            self.sdl.get_width(),
+            self.sdl.get_height(),
+            color=(32, 67, 118),  # Clash Royale Blue
+        )
+        self.main_menu_scene.add_ui_element(self.main_menu_bg)
+
+        # Title Banner (Gold Clash Royale Aesthetic)
         title_banner = UIElement(
             int(self.sdl.get_width() / 6),
             50,
@@ -443,27 +453,79 @@ class Game(Engine):
         )
         self.main_menu_scene.add_ui_element(title_banner)
 
-        # Show player trophies
-        self.trophy_display = UIElement(50, 180, 200, 50, color=(100, 100, 100))
+        # Player Trophy Display (Styled Like Clash Royale)
+        self.trophy_display = UIElement(50, 180, 200, 50, color=(200, 170, 0))
         self.main_menu_scene.add_ui_element(self.trophy_display)
 
-        # Chest info
-        self.chest_display = UIElement(50, 250, 400, 50, color=(150, 150, 150))
-        self.main_menu_scene.add_ui_element(self.chest_display)
+        # Chest Info (4 chests at the bottom, like Clash Royale)
+        # if self.client.state and self.client.state.menu_state:
+        chest_positions = [
+            (
+                self.sdl.get_width() // 2 - ((4 * 170) // 2) + i * 170,
+                self.sdl.get_height() - 150,
+            )
+            for i in range(4)
+        ]
+        self.chest_buttons = []
+        for i, pos in enumerate(chest_positions):
+            chest_button = UIButton(
+                pos[0],
+                pos[1],
+                150,
+                100,
+                self.text_renderer,
+                text=f"Chest {i+1}",
+                color=(100, 75, 50),
+                on_hover=(150, 120, 90),
+            )
+            self.chest_buttons.append(chest_button)
+            self.main_menu_scene.add_ui_element(chest_button)
 
-        # Matchmaking button
+        # **🏆 Matchmaking Button (Styled)**
         start_button = UIButton(
             (self.sdl.get_width() - 200) // 2,
             350,
             200,
-            80,
+            90,
             self.text_renderer,
             color=(0, 200, 0),
             on_hover=(0, 255, 0),
             callback=self.start_matchmaking,
-            text="Start",
+            text="Battle",
         )
         self.main_menu_scene.add_ui_element(start_button)
+
+        # **🛒 Shop Button (Styled)**
+        shop_button = UIButton(
+            (self.sdl.get_width() - 200) // 2 - 250,
+            350,
+            200,
+            80,
+            self.text_renderer,
+            color=(50, 50, 255),
+            on_hover=(80, 80, 255),
+            callback=self.open_shop,
+            text="Shop",
+        )
+        self.main_menu_scene.add_ui_element(shop_button)
+
+        # **📜 Deck Management Button (Styled)**
+        deck_button = UIButton(
+            (self.sdl.get_width() - 200) // 2 + 250,
+            350,
+            200,
+            80,
+            self.text_renderer,
+            color=(255, 50, 50),
+            on_hover=(255, 80, 80),
+            callback=self.open_deck_management,
+            text="Decks",
+        )
+        self.main_menu_scene.add_ui_element(deck_button)
+
+        # Register Scenes
+        self.setup_shop_scene()
+        self.setup_deck_management_scene()
 
         # Battle Scene UI
         self.battle_bg = UIElement(
@@ -542,6 +604,132 @@ class Game(Engine):
         ):
             self.go_to_main_menu()
 
+    def setup_shop_scene(self):
+        """Creates the improved Clash Royale styled shop UI scene."""
+        self.shop_scene = Scene("shop")
+
+        # Background
+        self.shop_bg = UIElement(
+            0, 0, self.sdl.get_width(), self.sdl.get_height(), color=(32, 67, 118)
+        )
+        self.shop_scene.add_ui_element(self.shop_bg)
+
+        # Shop Title Banner
+        shop_title = UIElement(
+            (self.sdl.get_width() - 400) // 2, 50, 400, 80, color=(255, 215, 0)
+        )
+        self.shop_scene.add_ui_element(shop_title)
+
+        # Display available cards for purchase
+        self.shop_items = {"Goblin": 100, "Knight": 200, "Archer": 150, "Wizard": 300}
+        card_width, card_height = 180, 220
+        spacing = 20
+        total_width = (
+            len(self.shop_items) * card_width + (len(self.shop_items) - 1) * spacing
+        )
+        start_x = (self.sdl.get_width() - total_width) // 2
+        y_offset = 180
+
+        for i, (card, price) in enumerate(self.shop_items.items()):
+            card_x = start_x + i * (card_width + spacing)
+            buy_card_button = UIButton(
+                card_x,
+                y_offset,
+                card_width,
+                card_height,
+                self.text_renderer,
+                text=f"{card} - {price} Coins",
+                color=(0, 200, 200),
+                on_hover=(0, 255, 255),
+                callback=lambda c=card: self.buy_card(c),
+            )
+            self.shop_scene.add_ui_element(buy_card_button)
+
+        # Back button
+        back_button = UIButton(
+            50,
+            self.sdl.get_height() - 100,
+            150,
+            70,
+            self.text_renderer,
+            text="Back",
+            color=(200, 0, 0),
+            on_hover=(255, 50, 50),
+            callback=self.go_to_main_menu,
+        )
+        self.shop_scene.add_ui_element(back_button)
+
+        self.scene_manager.add_scene(self.shop_scene)
+
+    def setup_deck_management_scene(self):
+        """Creates the Clash Royale styled deck management UI scene."""
+        self.deck_management_scene = Scene("deck_management")
+
+        # Background
+        self.deck_bg = UIElement(
+            0, 0, self.sdl.get_width(), self.sdl.get_height(), color=(32, 67, 118)
+        )
+        self.deck_management_scene.add_ui_element(self.deck_bg)
+
+        # Deck selection (5 deck buttons at the top)
+        self.selected_deck = 0
+        deck_count = 5
+        deck_width = 120
+        deck_height = 70
+        deck_spacing = 30
+        total_width = deck_count * deck_width + (deck_count - 1) * deck_spacing
+        start_x = (self.sdl.get_width() - total_width) // 2
+        deck_y = 50
+
+        self.deck_buttons = []
+        for i in range(deck_count):
+            deck_x = start_x + i * (deck_width + deck_spacing)
+            deck_button = UIButton(
+                deck_x,
+                deck_y,
+                deck_width,
+                deck_height,
+                self.text_renderer,
+                text=f"Deck {i+1}",
+                color=(200, 100, 100),
+                on_hover=(255, 120, 120),
+                callback=lambda i=i: self.select_deck(i),
+            )
+            self.deck_buttons.append(deck_button)
+            self.deck_management_scene.add_ui_element(deck_button)
+
+        # Back button
+        back_button = UIButton(
+            50,
+            self.sdl.get_height() - 100,
+            150,
+            70,
+            self.text_renderer,
+            text="Back",
+            color=(200, 0, 0),
+            on_hover=(255, 50, 50),
+            callback=self.go_to_main_menu,
+        )
+        self.deck_management_scene.add_ui_element(back_button)
+
+        self.scene_manager.add_scene(self.deck_management_scene)
+
+    def open_shop(self):
+        self.scene_manager.load_scene("shop")
+
+    def open_deck_management(self):
+        self.scene_manager.load_scene("deck_management")
+
+    def buy_chest(self):
+        print("[SHOP] Chest Purchased!")
+
+    def select_deck(self, deck_index):
+        self.selected_deck = deck_index
+        print(f"[DECK] Deck {deck_index + 1} Selected!")
+
+    def buy_card(self, card_name):
+        print(f"[SHOP] {card_name} Purchased!")
+
     def start(self):
         """Starts the game loop."""
         self.run(self.tick)
@@ -614,9 +802,13 @@ class Game(Engine):
                 trophies_text = f"Trophies: {self.client.state.menu_state.trophies}"
                 self.text_renderer.draw_text(trophies_text, 60, 190, (255, 255, 0))
 
-                chest_text = f"Chests: {len(self.client.state.menu_state.chests)}"
-                self.text_renderer.draw_text(chest_text, 60, 260, (200, 200, 200))
-
+                for i, button in enumerate(self.chest_buttons):
+                    if len(self.client.state.menu_state.chests) > i:
+                        button.text = str(
+                            ChestRarity.from_val(
+                                self.client.state.menu_state.chests[i].rarity
+                            )
+                        )
         # If in battle, show battle state
         elif self.scene_manager.current_scene == self.battle_scene:
             if self.client.state and self.client.state.battle_state:
@@ -720,7 +912,11 @@ class Game(Engine):
                                         )
                                         or Arena.get_tile_owner((x, y)) == None
                                     ):
-                                        color = (color[0] - 20, color[1] - 20, color[2] - 20)
+                                        color = (
+                                            color[0] - 20,
+                                            color[1] - 20,
+                                            color[2] - 20,
+                                        )
                                         if color[2] < 0:
                                             color = (color[0], color[1], 0)
                                         if color[1] < 0:
@@ -735,25 +931,26 @@ class Game(Engine):
                                         rect[3],
                                         color[0],
                                         color[1],
-                                        color[2]
+                                        color[2],
                                     )
 
                             self.sdl.draw_rect(
                                 rect[0], rect[1], rect[2], rect[3], 255, 255, 255
                             )  # Add outline
 
-                            if tile_type in (3, 4) and not Arena.is_tower_dead(arena, x, y):  # Crown or King Tower
+                            if tile_type in (3, 4) and not Arena.is_tower_dead(
+                                arena, x, y
+                            ):  # Crown or King Tower
                                 for tower in arena.towers:
-                                    if (
-                                        tower.center_x == x
-                                            and tower.center_y == y
-                                    ):
+                                    if tower.center_x == x and tower.center_y == y:
                                         hp_bar_width = cell_size * 0.8
                                         hp_bar_height = cell_size / 5
-                                        hp_bar_x = rect[0] + (cell_size - hp_bar_width) / 2
+                                        hp_bar_x = (
+                                            rect[0] + (cell_size - hp_bar_width) / 2
+                                        )
                                         hp_bar_y = rect[1] + hp_bar_height - 2
 
-                                    # Calculate HP percentage
+                                        # Calculate HP percentage
                                         hp_percentage = (
                                             tower.current_hp / tower.max_hp
                                             if tower.max_hp > 0
@@ -774,9 +971,11 @@ class Game(Engine):
                                         hp_color = (
                                             (0, 255, 0)
                                             if hp_percentage > 0.5
-                                            else (255, 255, 0)
-                                            if hp_percentage > 0.2
-                                            else (255, 0, 0)
+                                            else (
+                                                (255, 255, 0)
+                                                if hp_percentage > 0.2
+                                                else (255, 0, 0)
+                                            )
                                         )
 
                                         self.sdl.fill_rect(
@@ -845,7 +1044,8 @@ class Game(Engine):
                                             (
                                                 unit.inner.unit_data.hitpoints
                                                 / unit.inner.underlying.hitpoints
-                                            ) * ((cell_size / 5) * 3)
+                                            )
+                                            * ((cell_size / 5) * 3)
                                         )
                                     ),
                                     int(cell_size - ((cell_size / 5) * 2)),

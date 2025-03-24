@@ -49,9 +49,9 @@ T = TypeVar("T")
 class Frame(Generic[T]):
     data: T = field(compare=False)
 
-    available_at: float = field(default_factory=time.time)  
-    priority: int = 0  
-    id: int = 0  
+    available_at: float = field(default_factory=time.time)
+    priority: int = 0
+    id: int = 0
 
     metadata: Optional[Dict[str, Any]] = field(default=None, compare=False)
     annotations: Dict[str, Any] = field(default_factory=dict, compare=False)

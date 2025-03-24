@@ -168,6 +168,11 @@ class Arena:
 
         # self.tiles = t.copy()
 
+    def has_won(self, owner: Owner) -> bool:
+        """Checks if the given owner has won the game."""
+        opponent = Owner.P2 if owner == Owner.P1 else Owner.P1
+        return any(tower.current_hp <= 0 for tower in self.towers if tower.owner == opponent and tower.tower_type == UnitTargetType.KING_TOWER)
+
     def find_path(
         self, start: Tuple[int, int], goal: Tuple[int, int]
     ) -> List[Tuple[int, int]]:

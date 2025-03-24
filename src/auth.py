@@ -50,6 +50,12 @@ class UserMap:
     def find_uuid(self, uuid: str) -> Optional[User]:
         return self.users_by_uuid.get(uuid)
 
+    def update_trophies(self, uuid: str, diff: int) -> None:
+        u = self.find_uuid(uuid)
+        if u:
+            u.data.trophies += diff
+            self.users.update({uuid: u})
+
     def update_battle(self, user_id: str, battle_id: Optional[str]):
         user = self.find_uuid(user_id)
         if user:

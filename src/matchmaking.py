@@ -31,6 +31,10 @@ from unit import (
 from util import DATE_FORMAT, Mutex, Pair
 from util import logger
 
+@dataclass 
+class MatchEndData:
+    won: bool
+
 MAX_TROPHY_DIFF = 100
 
 
@@ -48,18 +52,25 @@ class MatchThread:
         self.thread = threading.Thread(target=self.loop, daemon=True)
         self.fixed_thread = threading.Thread(target=self.fixed_tick, daemon=True)
         self.state = Mutex(initial_state)
+        self.finished = Mutex(False)
         self.arena = Arena()
+        self.stop_threads = threading.Event()
         self.thread.start()
         self.fixed_thread.start()
+        self.winner: Optional[str] = None
+        self.loser: Optional[str] = None
+
+    def end(self) -> None:
+        # self.stop_threads.set()
+        self.thread.join()
+        self.fixed_thread.join()
 
     def start(self) -> None:
         self.thread.start()
 
-    def end(self) -> None:
-        self.thread.join()
-
     def loop(self) -> None:
-        while True:
+        while not self.stop_threads.is_set():
+            print("i")
             start_time = time.monotonic()
             self.tick()
             elapsed_time = time.monotonic() - start_time
@@ -82,7 +93,7 @@ class MatchThread:
         self.state.set_data(state)
 
     def fixed_tick(self) -> None:
-        while True:
+        while not self.stop_threads.is_set():
             state = self.state.get_data()
 
             if not state:
@@ -100,7 +111,27 @@ class MatchThread:
                     if unit.inner.unit_data.hitpoints <= 0:
                         state.units.remove(unit)
                         print("================== DEAD ==================")
+
+            if self.arena.has_won(Owner.P1):
+                self.winner = state.p1.uuid
+                self.loser = state.p2.uuid
+                state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+                state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
+                self.finished.set_data(True)
+            elif self.arena.has_won(Owner.P2):
+                self.winner = state.p2.uuid
+                self.loser = state.p1.uuid
+                state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
+                state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+                self.finished.set_data(True)
+
+            if self.arena.has_won(Owner.P1) or self.arena.has_won(Owner.P2):
+                self.stop_threads.set()
+
             self.state.set_data(state)
+
+    def is_finished(self) -> bool:
+        return self.finished.get_data() or False
 
     def get_state(self) -> Battle:
         data = self.state.get_data()
@@ -158,7 +189,7 @@ class MatchThread:
             state.p1.hand = hand.copy()
 
             remaining = state.p1.remaining_in_deck.copy()
-            if len(remaining) == 0:
+            if len(remaining) == 1:
                 d = state.p1.deck.cards.copy()
                 random.shuffle(d)
                 state.p1.remaining_in_deck = d.copy()
@@ -176,7 +207,7 @@ class MatchThread:
             state.p2.hand = hand.copy()
 
             remaining = state.p2.remaining_in_deck.copy()
-            if len(remaining) == 0:
+            if len(remaining) == 1:
                 d = state.p2.deck.cards.copy()
                 random.shuffle(d)
                 state.p2.remaining_in_deck = d
@@ -200,12 +231,23 @@ class Matchmaking:
 
         for m in self.matches.values():
             if m.get_state().p1.uuid == d.uuid or m.get_state().p2.uuid == d.uuid:
+                print(m)
                 return
 
         # print(d)
         self.waiting.append(MatchRequestSocket(d, s))
 
-    def tick(self, update_battle: Callable[[str, Optional[str]], None]) -> None:
+    def tick(self, update_battle: Callable[[str, Optional[str]], None], update_trophies: Callable[[str, int], None]) -> None:
+        new_matches = self.matches.copy()
+        for match in self.matches.keys():
+            m = self.matches[match]
+            if self.matches[match] and self.matches[match].is_finished() and m.winner and m.loser:
+                update_trophies(m.winner, random.randint(25, 35))
+                update_trophies(m.loser, -random.randint(25, 35))
+                new_matches.pop(match)
+
+        self.matches = new_matches.copy()
+
         if len(self.waiting) < 2:
             return
 
@@ -227,6 +269,7 @@ class Matchmaking:
             update_battle(pair[1].inner.uuid, i)
             self.waiting.remove(pair[0])
             self.waiting.remove(pair[1])
+
 
     def get_match(
         self, uuid: str, player_uuid: str
@@ -301,6 +344,8 @@ class Matchmaking:
                 ),
             }
         )
+
+        print(req1, req2)
 
         req1.sock.sendall(
             Packet.from_struct(

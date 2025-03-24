@@ -137,7 +137,7 @@ class BattleClient:
 
 
 class GameNetworkClient(Client):
-    def __init__(self, name: str, ip: Optional[str]):
+    def __init__(self, name: str, ip: Optional[str], on_finish: Optional[Callable[[], None]]):
         super().__init__(ip if ip else "127.0.0.1", 12345)
 
         self.battle_client = BattleClient(self.send)
@@ -152,6 +152,8 @@ class GameNetworkClient(Client):
         self.auth_state: AuthState = AuthState(False, None, False, None)
         self.name = name
         self.side: Optional[str] = None
+
+        self.on_finish = on_finish
 
     def tick(self):
         if self.connection_status.last_connection:
@@ -232,6 +234,7 @@ class GameNetworkClient(Client):
             packet, PacketType.SERVER_CLIENT_SYNC, lambda: self.tick_state(packet.data)
         )
         do_if(packet, PacketType.MATCH_FOUND, lambda: self.found_match(packet))
+        do_if(packet, PacketType.MATCH_END, lambda: self.on_finish() if self.on_finish is not None else None)
 
     def found_match(self, packet: Packet):
         m: MatchFound = MatchFound(**json.loads(packet.data.decode()))
@@ -380,7 +383,7 @@ class NetworkStateObject(NetworkObject):
 
     def tick(self):
         self.matchmaking.tick(
-            lambda user_id, battle_id: self.users.update_battle(user_id, battle_id)
+            lambda user_id, battle_id: self.users.update_battle(user_id, battle_id), self.users.update_trophies
         )
 
 
@@ -412,7 +415,7 @@ class Game(Engine):
 
         self.camera = Camera((0, 0), zoom=0.75, screen_width=1200, screen_height=800)
         self.name = name
-        self.client = GameNetworkClient(self.name, ip)
+        self.client = GameNetworkClient(self.name, ip, on_finish=self.stop_matchmaking)
         self.matchmaking_started = False  # To track matchmaking state
 
         self.latency: Deque[int] = deque([0], maxlen=10)  # Track server latency
@@ -425,6 +428,9 @@ class Game(Engine):
         self.selected_card: Optional[Card] = None
 
         self.chest_buttons: List[UIButton] = []
+
+    def stop_matchmaking(self) -> None:
+        self.matchmaking_started = False
 
     def setup_scenes(self):
         """Initializes all scenes and UI elements."""
@@ -598,7 +604,7 @@ class Game(Engine):
             self.start_battle()
         elif (
             self.client.state
-            and self.client.battle_client is None
+            and self.client.state.battle_state is None
             and self.scene_manager.current_scene is not None
             and self.scene_manager.current_scene != "main_menu"
         ):

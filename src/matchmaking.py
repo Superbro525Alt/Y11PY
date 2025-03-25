@@ -113,8 +113,8 @@ class MatchThread:
                         print("================== DEAD ==================")
 
             if self.arena.has_won(Owner.P1):
-                self.winner = state.p2.uuid
-                self.loser = state.p1.uuid
+                self.winner = state.p1.uuid
+                self.loser = state.p2.uuid
 
                 try:
                     state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
@@ -124,8 +124,8 @@ class MatchThread:
 
                 self.finished.set_data(True)
             elif self.arena.has_won(Owner.P2):
-                self.winner = state.p1.uuid
-                self.loser = state.p2.uuid
+                self.winner = state.p2.uuid
+                self.loser = state.p1.uuid
 
                 try:
                     state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())

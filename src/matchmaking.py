@@ -113,16 +113,26 @@ class MatchThread:
                         print("================== DEAD ==================")
 
             if self.arena.has_won(Owner.P1):
-                self.winner = state.p1.uuid
-                self.loser = state.p2.uuid
-                state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
-                state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
-                self.finished.set_data(True)
-            elif self.arena.has_won(Owner.P2):
                 self.winner = state.p2.uuid
                 self.loser = state.p1.uuid
-                state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
-                state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+
+                try:
+                    state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+                    state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
+                except:
+                    pass
+
+                self.finished.set_data(True)
+            elif self.arena.has_won(Owner.P2):
+                self.winner = state.p1.uuid
+                self.loser = state.p2.uuid
+
+                try:
+                    state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
+                    state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+                except:
+                    pass
+
                 self.finished.set_data(True)
 
             if self.arena.has_won(Owner.P1) or self.arena.has_won(Owner.P2):
@@ -189,12 +199,13 @@ class MatchThread:
             state.p1.hand = hand.copy()
 
             remaining = state.p1.remaining_in_deck.copy()
-            if len(remaining) == 1:
+
+            if len(remaining) == 0:
                 d = state.p1.deck.cards.copy()
                 random.shuffle(d)
                 state.p1.remaining_in_deck = d.copy()
-
-            state.p1.remaining_in_deck = remaining
+            else:
+                state.p1.remaining_in_deck = remaining
 
             state.p1.next_card = state.p1.remaining_in_deck.pop()
 
@@ -207,12 +218,13 @@ class MatchThread:
             state.p2.hand = hand.copy()
 
             remaining = state.p2.remaining_in_deck.copy()
-            if len(remaining) == 1:
+
+            if len(remaining) == 0:
                 d = state.p2.deck.cards.copy()
                 random.shuffle(d)
                 state.p2.remaining_in_deck = d
-
-            state.p2.remaining_in_deck = remaining
+            else:
+                state.p2.remaining_in_deck = remaining
 
             state.p2.next_card = state.p2.remaining_in_deck.pop()
 

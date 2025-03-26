@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from types import SimpleNamespace
 from typing import Dict, List, Optional, Self, Tuple
 import heapq
 
@@ -82,7 +83,7 @@ class Card:
     )
 
 
-def from_namespace(namespace):
+def from_namespace(namespace: SimpleNamespace) -> Card:
     """Converts a namespace object to a Card dataclass instance."""
 
     card_type = CardType(namespace.card_type)
@@ -94,7 +95,7 @@ def from_namespace(namespace):
 
     damage_type = DamageType(namespace.damage_type) if namespace.damage_type else None
 
-    card = Card(
+    return Card(
         name=namespace.name,
         elixir_cost=namespace.elixir_cost,
         card_type=card_type,
@@ -116,9 +117,6 @@ def from_namespace(namespace):
         projectile_speed=namespace.projectile_speed,
         spawn_damage=namespace.spawn_damage,
     )
-
-    return card
-
 
 GOBLIN_SHAMAN = Card(
     name="Goblin Shaman",

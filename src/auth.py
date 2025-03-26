@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
+from card import Card
 from chest import Chest
 from clan import Clan
 from deck import Deck
@@ -26,7 +27,8 @@ class ServerUserData:
     decks: List[Deck]
     current_deck: int
     current_battle: Optional[str]
-
+    gold: int = 1000
+    cards: List[Card] = field(default_factory=lambda: [])
 
 @dataclass
 class User:

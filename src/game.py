@@ -2,7 +2,7 @@ from collections import deque
 import enum
 from functools import partial
 import json
-from logging import warn
+from logging import error, warn
 from random import randint, random
 from socket import socket
 from threading import Lock
@@ -31,7 +31,7 @@ from dataclasses import dataclass
 import datetime
 from chest import Chest, ChestRarity, generate_chest
 from clan import Clan
-from shop import Shop
+from shop import Shop, shop_default
 from card import (
     ARCANE_CANNON,
     EARTHQUAKE,
@@ -62,7 +62,7 @@ from engine import (
 from pipeline import Event, FramePipeline, StateData
 from engine import Engine
 from unit import Owner
-from util import json_to_dataclass
+from util import json_to_dataclass, logger
 
 
 @dataclass
@@ -191,10 +191,12 @@ class GameNetworkClient(Client):
                     data.decode(), object_hook=lambda d: SimpleNamespace(**d)
                 )
             except Exception as e:
+                logger.error(f"Server Connection Error: {e}")
                 # print("e")
-                raise ValueError(
-                    f"Transmitted Game State was in an invalid format: {e}"
-                )
+                # raise ValueError(
+                #     f"Transmitted Game State was in an invalid format: {e}"
+                # )
+                pass
 
             self.battle_client.tick(self.state)
 
@@ -272,6 +274,9 @@ class GameNetworkClient(Client):
         ):
             self.battle_client.place_unit(card, pos, self.auth_state.uuid)
 
+    def buy_card(self, card: Card):
+        pass
+
 
 class NetworkStateObject(NetworkObject):
     def __init__(self):
@@ -281,6 +286,7 @@ class NetworkStateObject(NetworkObject):
             PacketType.CLIENT_SERVER_SYNC,
             PacketType.MATCH_REQUEST,
             PacketType.DEPLOY_UNIT,
+            PacketType.SHOP_PURCHASE
         ]
         self.users: UserMap = UserMap(
             [
@@ -316,7 +322,7 @@ class NetworkStateObject(NetworkObject):
                 for i in range(2)
             ]
         )
-        self.shop = Shop([])
+        self.shop = shop_default()
         self.matchmaking = Matchmaking()
 
     def handle_packet(self, packet: Packet, client_sock: socket) -> None:
@@ -380,6 +386,8 @@ class NetworkStateObject(NetworkObject):
             )
 
             self.matchmaking.deploy_unit(data, data.battle_id)
+        elif packet.packet_type == PacketType.SHOP_PURCHASE:
+            pass
 
     def tick(self):
         self.matchmaking.tick(
@@ -606,7 +614,7 @@ class Game(Engine):
             self.client.state
             and self.client.state.battle_state is None
             and self.scene_manager.current_scene is not None
-            and self.scene_manager.current_scene != "main_menu"
+            and self.scene_manager.current_scene == "battle"
         ):
             self.go_to_main_menu()
 

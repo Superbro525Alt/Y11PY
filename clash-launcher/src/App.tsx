@@ -52,7 +52,7 @@ export default function HomePage() {
   const [name, setName] = useState("");
   const [ip, setIp] = useState("");
 
-  console.log(invoke("greet", {name: "ok"}))
+  // console.log(invoke("check_for_updates", {currentTag: ""}))
 
   // Sync darkMode with the .dark class on <html/>
   useEffect(() => {

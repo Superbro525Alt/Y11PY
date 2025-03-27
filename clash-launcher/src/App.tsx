@@ -53,7 +53,7 @@ export default function HomePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [name, setName] = useState("");
   const [ip, setIp] = useState("");
-  const [currentVersion, setCurrentVersion] = useState("v1.0");
+  const [currentVersion, setCurrentVersion] = useState("LOADING");
 
   // console.log(invoke("check_for_updates", {currentTag: ""}))
 
@@ -88,6 +88,14 @@ export default function HomePage() {
         };
     }
 }, [serverRunning]);
+
+  useEffect(() => {
+    listen<string>("config-current-version", (event) => {
+      setCurrentVersion(event.payload);
+    });
+
+    invoke("get_current_version");
+  })
 
   /**
    * Main "Update / Launch" action.
@@ -316,6 +324,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 onClick={handleAction}
+                  disabled={currentVersion == "LOADING"}
                 className="
                   relative w-full 
                   rounded-md
@@ -369,6 +378,7 @@ export default function HomePage() {
             <CardContent>
               <Button
                 onClick={handleToggleServer}
+                  disabled={currentVersion == "LOADING" || launcherState == LauncherState.NeedsUpdate}
                 className="
                   w-full 
                   rounded-md

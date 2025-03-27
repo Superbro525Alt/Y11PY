@@ -1,5 +1,6 @@
 use futures::stream::StreamExt;
 use futures::try_join;
+use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncBufRead, AsyncWriteExt};
 use std::io::{BufRead, BufReader};
 use std::net::{AddrParseError, SocketAddr, TcpListener};
@@ -245,7 +246,7 @@ fn start_game(app_handle: AppHandle, name: String, ip: String) -> Result<(), Str
 
 #[tauri::command]
 async fn start_server(app_handle: AppHandle) -> Result<(), String> {
-    kill_process_using_port(12345);
+    kill_process_using_port(12345).unwrap();
 
     let game_path = Path::new("./server_update").join("server.bin");
 
@@ -328,12 +329,32 @@ async fn stop_game(app_handle: AppHandle) -> Result<(), String> {
     }
 }
 
+#[tauri::command]
+fn get_current_version(app_handle: AppHandle) -> Result<(), String> {
+    let file_content = std::fs::read_to_string("config.json")
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+
+    let config: Config = serde_json::from_str(&file_content)
+        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+
+    app_handle.emit("config-current-version", config.current_version).unwrap();
+
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+struct Config {
+    current_version: String
+}
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+
             // Setup event listeners for stopping processes
+
             let app_handle = app.handle();
+
             app.listen("stop-server", move |_| {
                 #[cfg(not(windows))]
                 std::process::Command::new("pkill")
@@ -377,7 +398,8 @@ pub fn run() {
             start_game, 
             start_server, 
             stop_server, 
-            stop_game
+            stop_game,
+            get_current_version
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

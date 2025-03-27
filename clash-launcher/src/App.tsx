@@ -27,11 +27,13 @@ import {
 import "./App.css";
 import { Toaster, toast } from "react-hot-toast";
 import { invoke } from "@tauri-apps/api/core"
+import { listen } from '@tauri-apps/api/event';
 
 enum LauncherState {
   NeedsUpdate = "Needs Update",
   Updating = "Updating...",
   Ready = "Launch Game",
+  InitialState = "Check For Update"
 }
 
 export default function HomePage() {
@@ -43,7 +45,7 @@ export default function HomePage() {
   const [logs, setLogs] = useState<string[]>([]);
 
   // Game update/launch logic
-  const [launcherState, setLauncherState] = useState(LauncherState.NeedsUpdate);
+  const [launcherState, setLauncherState] = useState(LauncherState.InitialState);
   const [updateProgress, setUpdateProgress] = useState(0);
   const [gameLoading, setGameLoading] = useState(false);
 
@@ -51,6 +53,7 @@ export default function HomePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [name, setName] = useState("");
   const [ip, setIp] = useState("");
+  const [currentVersion, setCurrentVersion] = useState("v1.0");
 
   // console.log(invoke("check_for_updates", {currentTag: ""}))
 
@@ -60,30 +63,86 @@ export default function HomePage() {
     darkMode ? root.classList.add("dark") : root.classList.remove("dark");
   }, [darkMode]);
 
+
+  useEffect(() => {
+    if (serverRunning) {
+        const logListener = listen<string>('server-log', (event) => {
+            setLogs(prevLogs => {
+                const updatedLogs = [...prevLogs, `${event.payload}`];
+                return updatedLogs.slice(-100);
+            });
+        });
+
+        const errorListener = listen<string>('server-error', (event) => {
+            setLogs(prevLogs => {
+                const updatedLogs = [...prevLogs, `${event.payload}`];
+                return updatedLogs.slice(-100);
+            });
+        });
+
+        return () => {
+            // Unlisten to both events when component unmounts or server stops
+            Promise.all([logListener, errorListener]).then(unlisteners => {
+                unlisteners.forEach(unlisten => unlisten());
+            });
+        };
+    }
+}, [serverRunning]);
+
   /**
    * Main "Update / Launch" action.
    */
-  const handleAction = () => {
-    if (launcherState === LauncherState.NeedsUpdate) {
-      setLauncherState(LauncherState.Updating);
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 20;
-        setUpdateProgress(progress);
-        if (progress >= 100) {
-          clearInterval(interval);
+  const handleAction = async () => {
+    if (launcherState === LauncherState.NeedsUpdate || launcherState == LauncherState.InitialState) {
+      try {
+        // Simulate update progress for UI
+        setLauncherState(LauncherState.Updating);
+        
+        // Fetch update info again to get download URLs
+        const updateInfo = await invoke("check_for_updates", { currentTag: currentVersion }) as [string, string] | null;
+
+        console.log(updateInfo)
+        
+        if (updateInfo) {
+          const [clientUrl, serverUrl] = updateInfo;
+          
+          // Download and extract updates
+          await invoke("download_and_extract_updates", { 
+            clientUrl, 
+            serverUrl 
+          });
+
+          console.log("ok")
+
+          // Update current version 
+          // Note: In a real app, you'd extract the new version from the release
+          setCurrentVersion("v0.1.0");
+          
+          // Simulate progress
+          for (let progress = 0; progress <= 100; progress += 10) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            setUpdateProgress(progress);
+          }
+          
           setLauncherState(LauncherState.Ready);
-          setUpdateProgress(0);
+          toast.success("Update completed successfully!");
+        } else {
+          toast.success("No update required");
+          setLauncherState(LauncherState.Ready);
         }
-      }, 400);
+      } catch (error) {
+        console.error("Update failed:", error);
+        toast.error("Update failed. Please try again.");
+        setLauncherState(LauncherState.Ready);
+      }
     } else if (ip == "" || name == "") {
       toast.error("You have not set the client IP or name!")
     } else if (launcherState === LauncherState.Ready) {
       // Launch the game
       setGameLoading(true);
-      setTimeout(() => {
+      setTimeout(async () => {
         setGameLoading(false);
-        alert(`Clash Royale Launched!\nName: ${name}\nIP: ${ip}`);
+        await invoke("start_game", { ip, name });
       }, 2000);
     }
   };
@@ -91,24 +150,20 @@ export default function HomePage() {
   /**
    * Toggle server on/off + logs.
    */
-  const handleToggleServer = () => {
+  const handleToggleServer = async () => {
     const timestamp = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     });
     if (serverRunning) {
-      setLogs((prev) => [...prev, `[${timestamp}] Stopping server...`]);
-      setTimeout(() => {
-        setLogs((prev) => [...prev, `[${timestamp}] Server has stopped.`]);
+      setTimeout(async () => {
+        await invoke("stop_server");
         setServerRunning(false);
       }, 1000);
     } else {
-      setLogs([
-        `[${timestamp}] Starting server...`,
-        `[${timestamp}] Loading assets...`,
-        `[${timestamp}] Server is now running!`,
-      ]);
+      setLogs([])
+      await invoke("start_server"); 
       setServerRunning(true);
     }
   };

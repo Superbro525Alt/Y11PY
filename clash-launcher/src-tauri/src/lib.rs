@@ -1,9 +1,18 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use futures::stream::StreamExt;
 use futures::try_join;
+use tokio::io::{AsyncBufRead, AsyncWriteExt};
+use std::io::{BufRead, BufReader};
+use std::net::{AddrParseError, SocketAddr, TcpListener};
 use std::path::Path;
+use std::process::{Child, Command, Stdio};
+use std::str::FromStr;
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::{
+    task,
+};
+use tauri::{AppHandle, Emitter, Listener, Manager};
+use std::sync::Arc;
+use tokio::sync::Mutex as AsyncMutex;
 
 #[derive(serde::Deserialize)]
 struct GitHubRelease {
@@ -17,6 +26,71 @@ struct GitHubAsset {
     browser_download_url: String,
 }
 
+fn kill_process_using_port(port: u16) -> Result<Option<String>, String> {
+    let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().map_err(|e: AddrParseError| e.to_string())?;
+    
+    // Try to bind to the port to check if it's in use
+    match TcpListener::bind(addr) {
+        Ok(_) => {
+            // Port is free
+            Ok(None)
+        }
+        Err(_) => {
+            // Port is in use, attempt to kill the process
+            #[cfg(windows)]
+            {
+                let output = std::process::Command::new("netstat")
+                    .args(&["-ano"])
+                    .output()
+                    .map_err(|e| format!("Failed to run netstat: {}", e))?;
+                
+                let output_str = String::from_utf8_lossy(&output.stdout);
+                let pid_lines: Vec<&str> = output_str
+                    .lines()
+                    .filter(|line| line.contains(&format!(":{}", port)))
+                    .collect();
+                
+                if let Some(line) = pid_lines.first() {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() >= 5 {
+                        let pid = parts[4];
+                        let kill_output = std::process::Command::new("taskkill")
+                            .args(&["/PID", pid, "/F"])
+                            .output()
+                            .map_err(|e| format!("Failed to kill process: {}", e))?;
+                        
+                        return Ok(Some(format!("Killed process with PID {} using port {}", pid, port)));
+                    }
+                }
+            }
+            
+            #[cfg(not(windows))]
+            {
+                let output = std::process::Command::new("lsof")
+                    .args(&["-ti", &format!(":{}", port)])
+                    .output()
+                    .map_err(|e| format!("Failed to run lsof: {}", e))?;
+                
+                let pid = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                
+                if !pid.is_empty() {
+                    std::process::Command::new("kill")
+                        .arg("-9")
+                        .arg(&pid)
+                        .output()
+                        .map_err(|e| format!("Failed to kill process: {}", e))?;
+                    
+                    return Ok(Some(format!("Killed process with PID {} using port {}", pid, port)));
+                }
+            }
+            
+            Err(format!("Failed to identify process using port {}", port))
+        }
+    }
+}
+
+
+
 #[tauri::command]
 async fn check_for_updates(current_tag: String) -> Result<Option<(String, String)>, String> {
     let repo_owner = "Superbro525Alt";
@@ -29,7 +103,7 @@ async fn check_for_updates(current_tag: String) -> Result<Option<(String, String
     let client = reqwest::Client::new();
     let response = match client
         .get(&api_url)
-        .header("User-Agent", "YourAppName/YourVersion")
+        .header("User-Agent", "ClashRoyale/v1")
         .send()
         .await
     {
@@ -148,11 +222,163 @@ async fn download_and_extract_updates(client_url: String, server_url: String) ->
     Ok(())
 }
 
-// #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[tauri::command]
+fn start_game(app_handle: AppHandle, name: String, ip: String) -> Result<(), String> {
+    let game_path = Path::new("./client_update/client.dist").join("client.bin");
+    
+    if !game_path.exists() {
+        return Err("Game executable not found".into());
+    }
+
+    let mut cmd = Command::new(game_path);
+    cmd.arg("--name").arg(name);
+    cmd.arg("--ip").arg(ip);
+
+    match cmd.spawn() {
+        Ok(child) => {
+            app_handle.emit("game-process", child.id()).unwrap();
+            Ok(())
+        },
+        Err(e) => Err(format!("Failed to launch game: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn start_server(app_handle: AppHandle) -> Result<(), String> {
+    kill_process_using_port(12345);
+
+    let game_path = Path::new("./server_update").join("server.bin");
+
+    if !game_path.exists() {
+        return Err("Server executable not found".into());
+    }
+
+    let mut cmd = Command::new(game_path);
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+    let handle_stdout = app_handle.clone();
+    let handle_stderr = app_handle.clone();
+
+    match cmd.spawn() {
+        Ok(mut child) => {
+            let pid = child.id();
+            app_handle.emit("server-process", pid).unwrap();
+
+            let stdout_option = child.stdout.take();
+            let stderr_option = child.stderr.take();
+
+            if let Some(stdout) = stdout_option {
+                task::spawn(async move {
+                    let reader = BufReader::new(stdout);
+                    let mut lines = reader.lines().fuse();
+
+                    while let Some(result) = lines.next() {
+                        match result {
+                            Ok(line) => {
+                                handle_stdout.emit("server-log", line).unwrap();
+                            }
+                            Err(e) => {
+                                eprintln!("Error reading server stdout: {}", e);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+
+            if let Some(stderr) = stderr_option {
+                task::spawn(async move {
+                    let reader = BufReader::new(stderr);
+                    let mut lines = reader.lines().fuse();
+                    while let Some(result) = lines.next() {
+                        match result {
+                            Ok(line) => {
+                                handle_stderr.emit("server-error", line).unwrap();
+                            }
+                            Err(e) => {
+                                eprintln!("Error reading server stderr: {}", e);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+
+            Ok(())
+        }
+        Err(e) => Err(format!("Failed to start server: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn stop_server(app_handle: AppHandle) -> Result<(), String> {
+    let result = app_handle.emit("stop-server", ());
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("Failed to stop server: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn stop_game(app_handle: AppHandle) -> Result<(), String> {
+    let result = app_handle.emit("stop-game", ());
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("Failed to stop game: {}", e)),
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![download_and_extract_updates, check_for_updates])
+        .setup(|app| {
+            // Setup event listeners for stopping processes
+            let app_handle = app.handle();
+            app.listen("stop-server", move |_| {
+                #[cfg(not(windows))]
+                std::process::Command::new("pkill")
+                    .arg("-f")
+                    .arg("server.bin")
+                    .spawn()
+                    .ok();
+
+                #[cfg(windows)]
+                std::process::Command::new("taskkill")
+                    .arg("/F")
+                    .arg("/IM")
+                    .arg("server.bin")
+                    .spawn()
+                    .ok();
+            });
+
+            let app_handle_game = app_handle.clone();
+            app.listen("stop-game", move |_| {
+                #[cfg(not(windows))]
+                std::process::Command::new("pkill")
+                    .arg("-f")
+                    .arg("client.bin")
+                    .spawn()
+                    .ok();
+
+                #[cfg(windows)]
+                std::process::Command::new("taskkill")
+                    .arg("/F")
+                    .arg("/IM")
+                    .arg("client.bin")
+                    .spawn()
+                    .ok();
+            });
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            download_and_extract_updates, 
+            check_for_updates, 
+            start_game, 
+            start_server, 
+            stop_server, 
+            stop_game
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

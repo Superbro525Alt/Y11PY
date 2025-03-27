@@ -54,6 +54,7 @@ export default function HomePage() {
   const [name, setName] = useState("");
   const [ip, setIp] = useState("");
   const [currentVersion, setCurrentVersion] = useState("LOADING");
+  const [loaded, setLoaded] = useState(false);
 
   // console.log(invoke("check_for_updates", {currentTag: ""}))
 
@@ -89,13 +90,49 @@ export default function HomePage() {
     }
 }, [serverRunning]);
 
-  useEffect(() => {
-    listen<string>("config-current-version", (event) => {
-      setCurrentVersion(event.payload);
-    });
+    useEffect(() => {
+    if (!loaded) {
+      setLoaded(true);
 
-    invoke("get_current_version");
-  })
+      listen<string>("config-current-version", (event) => {
+        console.log(event.payload);
+        setCurrentVersion(event.payload);
+
+        // Check for updates when version is received
+        const checkUpdates = async () => {
+          try {
+            const updateInfo = await invoke("check_for_updates", { currentTag: event.payload }) as [string, string] | null;
+            
+            if (updateInfo) {
+              setLauncherState(LauncherState.NeedsUpdate);
+            } else {
+              setLauncherState(LauncherState.Ready);
+            }
+          } catch (error) {
+            console.error("Update check failed:", error);
+          }
+        };
+
+        checkUpdates();
+      });
+
+      invoke("get_current_version");
+    }
+  }, [loaded]);
+
+    useEffect(() => {
+    // Only start periodic checks if initial load is done
+    if (!loaded) return;
+
+    // Check version every 5 seconds
+    const versionInterval = setInterval(() => {
+      console.log()
+      invoke("get_current_version");
+    }, 5000);
+
+    // Clean up interval when component unmounts
+    return () => clearInterval(versionInterval);
+  }, [loaded]);
 
   /**
    * Main "Update / Launch" action.
@@ -159,11 +196,6 @@ export default function HomePage() {
    * Toggle server on/off + logs.
    */
   const handleToggleServer = async () => {
-    const timestamp = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
     if (serverRunning) {
       setTimeout(async () => {
         await invoke("stop_server");

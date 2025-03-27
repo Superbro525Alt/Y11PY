@@ -146,8 +146,9 @@ async fn check_for_updates(current_tag: String) -> Result<Option<(String, String
 }
 
 #[tauri::command]
-async fn download_and_extract_updates(client_url: String, server_url: String) -> Result<(), String> {
-    let download_dir = Path::new("updates");
+async fn download_and_extract_updates(app_handle: AppHandle, client_url: String, server_url: String) -> Result<(), String> {
+    let app_dir = app_handle.path().app_data_dir().unwrap();
+    let download_dir = app_dir.join("updates");
     fs::create_dir_all(&download_dir)
         .await
         .map_err(|e| format!("Failed to create download directory: {}", e))?;
@@ -192,12 +193,12 @@ async fn download_and_extract_updates(client_url: String, server_url: String) ->
     .map_err(|e| format!("Failed to download one or both files: {}", e))?;
 
     // Extraction
-    let client_extract_dir = Path::new("client_update");
+    let client_extract_dir = app_dir.join("client_update");
     fs::create_dir_all(&client_extract_dir)
         .await
         .map_err(|e| format!("Failed to create client extract directory: {}", e))?;
 
-    let server_extract_dir = Path::new("server_update");
+    let server_extract_dir = app_dir.join("server_update");
     fs::create_dir_all(&server_extract_dir)
         .await
         .map_err(|e| format!("Failed to create server extract directory: {}", e))?;
@@ -225,7 +226,7 @@ async fn download_and_extract_updates(client_url: String, server_url: String) ->
 
 #[tauri::command]
 fn start_game(app_handle: AppHandle, name: String, ip: String) -> Result<(), String> {
-    let game_path = Path::new("./client_update/client.dist").join("client.bin");
+    let game_path = app_handle.path().app_data_dir().unwrap().join("client_update").join("client.dist").join("client.bin");
     
     if !game_path.exists() {
         return Err("Game executable not found".into());
@@ -248,7 +249,7 @@ fn start_game(app_handle: AppHandle, name: String, ip: String) -> Result<(), Str
 async fn start_server(app_handle: AppHandle) -> Result<(), String> {
     kill_process_using_port(12345).unwrap();
 
-    let game_path = Path::new("./server_update").join("server.bin");
+    let game_path = app_handle.path().app_data_dir().unwrap().join("server_update").join("server.bin");
 
     if !game_path.exists() {
         return Err("Server executable not found".into());
@@ -331,13 +332,75 @@ async fn stop_game(app_handle: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 fn get_current_version(app_handle: AppHandle) -> Result<(), String> {
-    let file_content = std::fs::read_to_string("config.json")
-        .map_err(|e| format!("Failed to read file: {}", e))?;
+    // Log the start of the version retrieval
+    println!("Starting to retrieve current version");
 
+    let config_path = app_handle.path().app_data_dir()
+        .unwrap()
+        .join("config.json");
+
+    // Log the resolved config path
+    println!("Config path: {}", config_path.display());
+
+    // Create the file with initial content if it doesn't exist
+    if !config_path.exists() {
+        println!("Config file does not exist. Creating initial config.");
+
+        let initial_config = Config {
+            current_version: "0.1.0".to_string() // Set an initial version
+        };
+
+        // Ensure the app data directory exists
+        if let Some(parent_dir) = config_path.parent() {
+            std::fs::create_dir_all(parent_dir)
+                .map_err(|e| {
+                    let error_msg = format!("Failed to create app data directory: {}", e);
+                    println!("{}", error_msg);
+                    error_msg
+                })?;
+        }
+
+        // Write the initial config file
+        std::fs::write(&config_path, 
+            serde_json::to_string_pretty(&initial_config)
+                .map_err(|e| {
+                    let error_msg = format!("Failed to serialize initial config: {}", e);
+                    println!("{}", error_msg);
+                    error_msg
+                })?
+        )
+        .map_err(|e| {
+            let error_msg = format!("Failed to write initial config file: {}", e);
+            println!("{}", error_msg);
+            error_msg
+        })?;
+
+        println!("Initial config file created successfully");
+    }
+
+    // Read the config file
+    let file_content = std::fs::read_to_string(&config_path)
+        .map_err(|e| {
+            let error_msg = format!("Failed to read file: {}", e);
+            println!("{}", error_msg);
+            error_msg
+        })?;
+
+    // Parse the config
     let config: Config = serde_json::from_str(&file_content)
-        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+        .map_err(|e| {
+            let error_msg = format!("Failed to parse JSON: {}", e);
+            println!("{}", error_msg);
+            error_msg
+        })?;
 
+    // Log the current version
+    println!("Current version: {}", config.current_version);
+
+    // Emit the current version
     app_handle.emit("config-current-version", config.current_version).unwrap();
+
+    println!("Version retrieval completed successfully");
 
     Ok(())
 }

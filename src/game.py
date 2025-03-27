@@ -3,6 +3,7 @@ import enum
 from functools import partial
 import json
 from logging import error, warn
+import os
 from random import randint, random
 from socket import socket
 from threading import Lock
@@ -27,6 +28,8 @@ from network import (
     do_if,
     serialize_object,
 )
+from inspect import getsourcefile
+from os.path import abspath
 from dataclasses import dataclass
 import datetime
 from chest import Chest, ChestRarity, generate_chest
@@ -785,7 +788,7 @@ class Game(Engine):
         """Initial setup for the game."""
         self.text_renderer = TextRenderer(self.sdl)
         self.text_renderer.load_font(
-            "./src/SourceSansPro-Regular.otf", 24
+            os.path.dirname(os.path.abspath(__file__)) + "/SourceSansPro-Regular.otf", 24
         )
 
         self.setup_scenes()

@@ -1,8 +1,8 @@
 #include "SDL_mouse.h"
 #include "wrapper.h" // Your SDLWrapper header file
 #include <pybind11/pybind11.h>
-#include <SDL2/SDL_render.h> // You might need this for other functions
-#include <SDL2/SDL_surface.h> // Likely this one for SDL_Texture definition
+#include <SDL_render.h> // You might need this for other functions
+#include <SDL_surface.h> // Likely this one for SDL_Texture definition
 #include "SDL_stdinc.h"
 #include <cmath> // For circle drawing
 #include <SDL.h>

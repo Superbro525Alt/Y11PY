@@ -1,0 +1,28 @@
+# Python bytecode and temporary files
+__pycache__/
+*.pyc
+*.pyd
+*.so
+
+# Compiled object files
+*.o
+*.obj
+
+# Compilation database
+compile_commands.json
+
+# Python type stub
+bindings.pyi
+
+# Platform-specific bindings (you might want to be more specific if only targeting one platform)
+bindings.cpython-*
+bindings.cp*
+
+# Distribution archives
+*.tar.gz
+*.bin
+
+# Distribution directories
+client.dist/
+server.dist/
+sdl-wrapper/

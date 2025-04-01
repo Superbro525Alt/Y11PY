@@ -13,18 +13,27 @@
 \usepackage{titlesec}
 \usepackage{pgfgantt}
 
-% Float management
-\usepackage{float}        % Allows [H] specifier
-\usepackage{placeins}     % For \FloatBarrier
-\usepackage{tabularx}     % Auto-wrap columns
-\usepackage{adjustbox}    % For scaling large content (flowcharts, etc.)
+\usepackage{float}        
+\usepackage{placeins}     
+\usepackage{tabularx}     
+\usepackage{adjustbox}    
 \usepackage{booktabs}
 
-% --- TikZ and PGF for flowcharts ---
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows}
 \usepackage{minted}
+\usepackage{fancyhdr}  
 \usepackage[T1]{fontenc}
+\pagestyle{fancy}
+\fancyhf{}
+
+\fancyhead[L]{Royal Siege - Game Development}
+\fancyhead[C]{Paul Hodges}
+\fancyhead[R]{March 29, 2025}
+
+\fancyfoot[L]{Perth Modern School}
+\fancyfoot[C]{\thepage} 
+\fancyfoot[R]{Computer Science Task 1}
 
 \geometry{a4paper, margin=1in}
 
@@ -40,22 +49,19 @@
 \definecolor{keywordblue}{RGB}{33,33,255}
 \definecolor{commentgray}{RGB}{85,85,85}
 \definecolor{stringorange}{rgb}{0.71,0.22,0.05}
+\definecolor{gold}{rgb}{1.0, 0.84, 0.0}
 
-% Define a custom "Pseudo" language for listings
 \lstdefinelanguage{Pseudo}{
-  % Recognized keywords (add as needed)
   morekeywords={
     FUNCTION,END,ENDFUNCTION,ENDFUNCTION,
     IF,THEN,ELSE,ELIF,ENDIF,
     WHILE,ENDWHILE,
     FOR,ENDFOR,
     SWITCH,CASE,DEFAULT,BREAK,
-    RETURN,RAISE_ERROR,PRINT,
+    RETURN,PRINT,
     CREATE,INITIALIZE,
-    ADD,REMOVE,REGISTER,PROCESS,UPDATE,TERMINATE,
-    LOGOUT,
-    ASSIGN_THREAD,START_THREAD,
-    REPLENISH_ELIXIR
+    OTHERWISE, INFINITY, STR
+    IN, MIN, MAX, IS, OF, GLOBAL, CONST, CLASS, Attributes, Methods, DO, NULL, TRUE, FALSE
   },
   sensitive=false, 
   comment=[l]{\#},
@@ -64,16 +70,15 @@
 }
 
 \lstdefinestyle{pseudo}{
-  language=Pseudo,                         % use our custom language
-  backgroundcolor=\color{codebg},          % set background color
-  basicstyle=\small\ttfamily,              % base font style
-  keywordstyle=\bfseries\color{keywordblue},% style of keywords
-  commentstyle=\itshape\color{commentgray},% style of comments
-  stringstyle=\color{stringorange},        % style of strings
-  frame=single,                            % box around the code
-  rulecolor=\color{black},
-  numbers=left,                            % line numbers on the left
-  numberstyle=\tiny\color{commentgray},    % line number style
+  language=Pseudo,                        
+  backgroundcolor=\color{codebg},          
+  basicstyle=\small\ttfamily,              
+  keywordstyle=\bfseries\color{keywordblue},
+  commentstyle=\itshape\color{commentgray},
+  stringstyle=\color{stringorange},        
+  frame=single,                            
+  numbers=left,                            
+  numberstyle=\tiny\color{commentgray},    
   stepnumber=1,
   numbersep=6pt,
   showstringspaces=false,
@@ -98,7 +103,7 @@
 \begin{titlepage}
     \centering
     \vspace*{4cm}
-    {\Huge \textbf{Clash Royale} \par}
+    {\Huge \textbf{Royal Siege} \par}
     \vspace{2cm}
     {\Large by \par}
     \vspace{1cm}
@@ -140,24 +145,21 @@
 
 \ganttgroup[group/.append style={fill=blue!20}]{Phase 1: Planning \& Documentation}{1}{28} \\
 
-    % Requirements and Design
     \ganttbar[bar/.append style={fill=blue!50}]{Project Scope Definition}{1}{4} \\
     \ganttbar[bar/.append style={fill=blue!50}]{Game Rules and Mechanics Research}{5}{8} \\
     \ganttbar[bar/.append style={fill=blue!50}]{Requirement Specification}{9}{12} \\
     \ganttbar[bar/.append style={fill=blue!50}]{Functional \& Non-Functional Requirements}{13}{15} \\
-    \ganttmilestone[milestone/.append style={fill=red}]{Requirements Finalized}{15} \\
+    \ganttmilestone[milestone/.append style={fill=red}]{Requirements Finalised}{15} \\
 
-    % System Design
     \ganttbar[bar/.append style={fill=blue!50}]{System Architecture Design}{16}{18} \\
     \ganttbar[bar/.append style={fill=blue!50}]{Networking Protocol Design}{19}{21} \\
     \ganttbar[bar/.append style={fill=blue!50}]{ECS (Entity Component System) Structure}{22}{24} \\
-    \ganttbar[bar/.append style={fill=blue!50}]{Game State Synchronization}{25}{26} \\
+    \ganttbar[bar/.append style={fill=blue!50}]{Game State Synchronisation}{25}{26} \\
     \ganttmilestone[milestone/.append style={fill=red}]{System Design Complete}{26} \\
 
-    % Algorithm Development
     \ganttbar[bar/.append style={fill=blue!50}]{Flowchart Creation}{16}{20} \\
     \ganttbar[bar/.append style={fill=blue!50}]{Pseudocode for Core Systems}{21}{23} \\
-    \ganttbar[bar/.append style={fill=blue!50}]{Finalizing Planning Document}{27}{28} \\
+    \ganttbar[bar/.append style={fill=blue!50}]{Finalising Planning Document}{27}{28} \\
     \ganttmilestone[milestone/.append style={fill=red}]{Planning Document Complete}{28} \\
 
 \end{ganttchart}
@@ -189,180 +191,162 @@
 
 \ganttgroup[group/.append style={fill=green!20}]{Phase 2: Programming \& Development}{29}{56} \\
 
-    % Core Engine Development
     \ganttbar[bar/.append style={fill=green!50}]{ECS System Implementation}{29}{32} \\
     \ganttbar[bar/.append style={fill=green!50}]{Rendering System (2D/3D Hybrid)}{33}{35} \\
     \ganttmilestone[milestone/.append style={fill=red}]{Core Engine Ready}{35} \\
 
-    % Networking
     \ganttbar[bar/.append style={fill=green!50}]{Server-Client Communication}{36}{38} \\
     \ganttbar[bar/.append style={fill=green!50}]{Binary Protocol Implementation}{39}{40} \\
     \ganttmilestone[milestone/.append style={fill=red}]{Networking Ready}{40} \\
 
-    % Gameplay Mechanics
     \ganttbar[bar/.append style={fill=green!50}]{Card System \& Deck Management}{41}{43} \\
     \ganttbar[bar/.append style={fill=green!50}]{Real-time Battle Logic}{44}{46} \\
     \ganttbar[bar/.append style={fill=green!50}]{Tower AI and Targeting}{47}{48} \\
     \ganttmilestone[milestone/.append style={fill=red}]{Core Gameplay Functional}{48} \\
 
-    % Testing and Debugging
     \ganttbar[bar/.append style={fill=green!50}]{Unit Testing (Game Logic)}{49}{51} \\
     \ganttbar[bar/.append style={fill=green!50}]{Multiplayer Testing}{52}{53} \\
-    \ganttbar[bar/.append style={fill=green!50}]{Final Debugging \& Optimization}{54}{55} \\
+    \ganttbar[bar/.append style={fill=green!50}]{Final Debugging \& Optimisation}{54}{55} \\
     \ganttmilestone[milestone/.append style={fill=red}]{Development Complete}{56} \\
 
 \end{ganttchart}
 
 \section{Problem Outline}
-
-The purpose of this project is to develop a simplified but functional online version of Clash Royale using Python. This real-time strategy game implementation will focus on core gameplay mechanics and network functionality, demonstrating practical software development skills in a gaming context.
+The purpose of this project is to develop a simplified but functional online version of Clash Royale using Python. This real-time strategy game implementation will focus on core gameplay mechanics and network functionality.
 
 \noindent The game will allow players to:
-\begin{itemize}
+\begin{itemize}[label={--}]
     \item Engage in real-time, online strategic battles against other players
-    \item Build and customize card decks from their collection
+    \item Build and customise card decks from their collection
     \item Progress through a skill-based arena system
     \item Earn rewards through a chest system to expand their card collection
     \item Experience the core strategic elements that make Clash Royale engaging
 \end{itemize}
 
-\noindent This implementation serves as both an educational tool for understanding game development principles and a demonstration of networking, database management, and software architecture skills in a cohesive application.
-
 \section{Problem Description}
 
 \subsection{Game Overview}
-Clash Royale is a \textbf{fast-paced, real-time strategy} (RTS) game that incorporates elements from multiple genres:
-
+Clash Royale is a fast-paced, real-time strategy (RTS) game that incorporates elements from multiple genres:
 \begin{itemize}
-    \item \textbf{Collectible Card Game (CCG):} Players build and customize decks from a pool of collectible cards. Each card corresponds to a troop, spell, or building, each with its own unique attributes and effects.
-    \item \textbf{Tower Defense:} Players must defend their own towers (two Princess Towers and one King Tower) from enemy attacks while simultaneously attempting to destroy opponent towers.
-    \item \textbf{Multiplayer Online Battle Arena (MOBA):} Two players face off in a real-time battle, managing resources (elixir) and positioning units tactically on a symmetrical arena.
+    \item Collectible Card Game (CCG): Players build and customise decks from a pool of collectible cards. Each card corresponds to a troop, spell, or building, each with its own unique attributes and effects.
+    \item Tower Defense: Players must defend their own towers (two Princess Towers and one King Tower) from enemy attacks while simultaneously attempting to destroy opponent towers.
+    \item Multiplayer Online Battle Arena (MOBA): Two players face off in a real-time battle, managing resources (elixir) and positioning units tactically on a symmetrical arena.
 \end{itemize}
 
-Key aspects include:
+\noindent Key aspects include:
 \begin{itemize}
-    \item \textbf{Short Match Durations:} Standard matches last 3 minutes, potentially extended by sudden-death overtime.
-    \item \textbf{Focus on Tactics and Timing:} Players must carefully manage elixir and deploy units at optimal moments.
-    \item \textbf{Intense Head-to-Head Combat:} Each battle is a direct confrontation with another human opponent.
+    \item Short Match Durations: Standard matches last 3 minutes, potentially extended by sudden-death overtime.
+    \item Focus on Tactics and Timing: Players must carefully manage elixir and deploy units at optimal moments.
+    \item Intense Head-to-Head Combat: Each battle is a direct confrontation with another human opponent.
 \end{itemize}
 
 \subsection{Game Objectives}
 \begin{itemize}
-    \item \textbf{Primary Goal:} Destroy more towers than the opponent before time runs out, or immediately win by destroying the enemy King Tower.
-    \item \textbf{Crown System:}
+    \item Primary Goal: Destroy more towers than the opponent before time runs out, or immediately win by destroying the enemy King Tower.
+    \item Crown System:
     \begin{itemize}
         \item Destroying a Princess Tower yields 1 crown.
         \item Destroying the King Tower yields 3 crowns, resulting in an instant victory.
     \end{itemize}
-    \item \textbf{Overtime:} If both players have an equal number of crowns at the end of 3 minutes, the match enters a sudden-death overtime (up to 2 minutes). The first player to gain a lead in crowns during overtime wins immediately.
-    \item \textbf{Draw:} If neither player gains an advantage by the end of overtime, the match ends in a draw.
+    \item Overtime: If both players have an equal number of crowns at the end of 3 minutes, the match enters a sudden-death overtime (up to 2 minutes). The first player to gain a lead in crowns during overtime wins immediately.
+    \item Draw: If neither player gains an advantage by the end of overtime, the match ends in a draw.
 \end{itemize}
 
 \subsection{Core Game Rules}
 \begin{enumerate}[label=\arabic*.]
-    \item \textbf{Deck and Card Mechanics:}
+    \item Deck and Card Mechanics:
     \begin{itemize}
-        \item Each player prepares an \textbf{8-card deck} to bring into a match.
-        \item At the start of a match, players see \textbf{4 random cards} from their deck.
-        \item Once a card is played, it is immediately replaced from the remaining deck cards to maintain a 4-card hand.
+        \item Each player constructs an 8-card deck. At match start, 4 cards are randomly drawn from the deck. When a card is played, it is replaced by another from the remaining deck to maintain a 4-card hand.
         \item Cards have different rarities (Common, Rare, Epic, Legendary) and can be upgraded to increase stats.
     \end{itemize}
-
-    \item \textbf{Elixir Resource:}
+    \item Elixir Resource:
     \begin{itemize}
-        \item Elixir is the primary resource used to deploy cards. 
-        \item Elixir regenerates at a base rate of \textbf{1 elixir per 2.8 seconds}.
-        \item The maximum elixir capacity is \textbf{10 units}.
+        \item Elixir is the primary resource used to deploy cards.
+        \item Elixir regenerates at a base rate of 1 elixir per 2.8 seconds.
+        \item The maximum elixir capacity is 10 units.
         \item During the first minute of overtime, elixir generation doubles (about 1 elixir per 1.4 seconds), and it can triple in the second minute (about 1 elixir per 0.9 seconds), depending on the game mode.
     \end{itemize}
-
-    \item \textbf{Deployment Rules:}
+    \item Deployment Rules:
     \begin{itemize}
         \item Troops and buildings must generally be deployed on the player's side of the arena.
         \item Certain spells can be deployed anywhere (e.g., damage spells) as allowed by individual card mechanics.
         \item Cards cannot be deployed if the player does not have enough elixir; partial elixir usage is not possible.
     \end{itemize}
-
-    \item \textbf{Unit Behavior:}
+    \item Unit Behavior:
     \begin{itemize}
         \item Troops move automatically toward enemy units or towers following predefined paths, typically targeting the nearest threat or specific priority targets (e.g., building-focused troops).
         \item Air and ground units have separate movement planes, meaning air troops may bypass ground-only defenses if not countered by anti-air.
         \item Troops have attributes such as health, damage per second (DPS), movement speed, attack speed, attack range, and special abilities (e.g., area damage).
     \end{itemize}
-
-    \item \textbf{Match Duration and Victory:}
+    \item Match Duration and Victory:
     \begin{itemize}
-        \item The standard match duration is \textbf{3 minutes}.
-        \item If the crowns are tied after 3 minutes, \textbf{overtime} begins with sudden-death rules.
+        \item The standard match duration is 3 minutes.
+        \item If the crowns are tied after 3 minutes, overtime begins with sudden-death rules.
         \item Destroying an opponent’s King Tower results in an immediate victory regardless of time or remaining towers.
     \end{itemize}
 \end{enumerate}
 
 \subsection{Gameplay Flow}
 \begin{enumerate}[label=\arabic*.]
-    \item \textbf{Matchmaking:}
+    \item Matchmaking:
     \begin{itemize}
         \item Players are paired based on trophy count, ensuring comparable skill levels (within acceptable matchmaking ranges).
         \item Additional factors (e.g., hidden matchmaking rating, player level) can be considered to improve match quality.
     \end{itemize}
-
-    \item \textbf{Battle Start:}
+    \item Battle Start:
     \begin{itemize}
-        \item Each player begins with around \textbf{5 elixir} (default) and 4 randomly drawn cards from their 8-card deck.
-        \item A short \textbf{countdown} (e.g., 3 seconds) precedes the start of the match, allowing players to view their starting hand.
+        \item Each player begins with around 5 elixir (default) and 4 randomly drawn cards from their 8-card deck.
+        \item A short countdown (e.g., 3 seconds) precedes the start of the match, allowing players to view their starting hand.
     \end{itemize}
-
-    \item \textbf{Real-Time Combat:}
+    \item Real-Time Combat:
     \begin{itemize}
-        \item Players deploy troops, buildings, or spells using elixir. 
+        \item Players deploy troops, buildings, or spells using elixir.
         \item Units spawn at the chosen deployment location and automatically engage enemy targets.
         \item Spell effects apply immediately if valid (e.g., damage, stun, or buff).
     \end{itemize}
-
-    \item \textbf{Tower Destruction:}
+    \item Tower Destruction:
     \begin{itemize}
         \item When a tower's HP reaches zero, it is destroyed. The opposing player gains crowns accordingly.
         \item Destruction of the King Tower instantly ends the match with a 3-crown victory for the attacker.
     \end{itemize}
-
-    \item \textbf{Overtime and Conclusion:}
+    \item Overtime and Conclusion:
     \begin{itemize}
-        \item If crowns are tied at the end of regulation, the match enters \textbf{overtime}.
-        \item Elixir generation rate may \textbf{double or triple} during overtime for faster-paced final engagements.
-        \item If the tie persists after overtime, the match concludes in a \textbf{draw}.
-        \item Players are shown a \textbf{results screen} detailing crowns, trophies gained/lost, and any rewards.
+        \item If crowns are tied at the end of regulation, the match enters overtime.
+        \item Elixir generation rate may double or triple during overtime for faster-paced final engagements.
+        \item If the tie persists after overtime, the match concludes in a draw.
+        \item Players are shown a results screen detailing crowns, trophies gained/lost, and any rewards.
     \end{itemize}
 \end{enumerate}
 
 \subsection{Scoring System}
 \begin{itemize}
-    \item \textbf{Princess Tower Destruction:} +1 crown per destroyed Princess Tower.
-    \item \textbf{King Tower Destruction:} +3 crowns; match ends immediately.
-    \item \textbf{Time Expiration:} If no King Tower is destroyed, the player with the most crowns wins.
-    \item \textbf{Draw:} If the match remains tied after overtime, both players neither gain nor lose trophies (in most modes).
-    \item \textbf{Trophy Adjustment:} Winners gain trophies; losers lose trophies. Draws typically result in no or minimal trophy change.
+    \item Princess Tower Destruction: +1 crown per destroyed Princess Tower.
+    \item King Tower Destruction: +3 crowns; match ends immediately.
+    \item Time Expiration: If no King Tower is destroyed, the player with the most crowns wins.
+    \item Draw: If the match remains tied after overtime, both players neither gain nor lose trophies (in most modes).
+    \item Trophy Adjustment: Winners gain trophies; losers lose trophies. Draws typically result in no or minimal trophy change.
 \end{itemize}
 
 \subsection{Winner Determination}
 \begin{itemize}
-    \item \textbf{Instant Victory:} Destroying the opponent’s King Tower at any time.
-    \item \textbf{Crown Comparison:} If neither King Tower is destroyed, the number of Princess Towers destroyed determines the winner.
-    \item \textbf{Overtime Mechanic:} Sudden death rules apply, where the next destroyed tower (or difference in crowns) decides the match outcome.
-    \item \textbf{Draw:} If neither player secures a lead by the end of overtime, the match is declared a draw.
+    \item Instant Victory: Destroying the opponent’s King Tower at any time.
+    \item Crown Comparison: If neither King Tower is destroyed, the number of Princess Towers destroyed determines the winner.
+    \item Overtime Mechanic: Sudden death rules apply, where the next destroyed tower (or difference in crowns) decides the match outcome.
+    \item Draw: If neither player secures a lead by the end of overtime, the match is declared a draw.
 \end{itemize}
 
 \subsection{Advanced Game Mechanics and Strategies}
 \begin{itemize}
-    \item \textbf{Elixir Management:} Maintaining a balance between offense and defense, ensuring players do not overspend or waste potential elixir generation.
-    \item \textbf{Counter Deployment:} Identifying key counters for popular units (e.g., swarm troops counter single-target tanks, ranged troops counter slow-moving units, etc.).
-    \item \textbf{Card Synergies:} Combining cards (e.g., tank + high-DPS unit) for effective pushes. Air-ground synergy is particularly important.
-    \item \textbf{Lane Pressure:} Forcing opponents to split their defenses by attacking both left and right lanes strategically.
-    \item \textbf{Elixir Counting:} Skilled players track the approximate elixir of the opponent to gauge when to launch a heavy push.
-    \item \textbf{Card Cycle Management:} Players cycle quickly to return to \textbf{core cards} (win conditions or essential counters).
-    \item \textbf{Tower Trading:} Allowing a weaker tower to fall can free elixir for a stronger, faster offensive counter-push.
-    \item \textbf{Spell Value:} Using damaging spells to hit multiple units at once, or a unit plus a tower, maximizes elixir efficiency.
-    \item \textbf{Unit Placement:} Subtle differences in troop deployment positions can dramatically change the outcome of an interaction (kiting, path manipulation).
-    \item \textbf{Timing:} Well-timed deployments catch opponents low on elixir or out of defensive options, leading to big elixir swings.
+    \item Elixir Management: Maintaining a balance between offence and defence, ensuring players do not overspend or waste potential elixir generation.
+    \item Counter Deployment: Identifying key counters for popular units (e.g., swarm troops counter single-target tanks, ranged troops counter slow-moving units, etc.).
+    \item Card Synergies: Combining cards (e.g., tank + high-DPS unit) for effective pushes. Air-ground synergy is particularly important.
+    \item Lane Pressure: Forcing opponents to split their defences by attacking both left and right lanes strategically.
+    \item Elixir Counting: Skilled players track the approximate elixir of the opponent to gauge when to launch a heavy push.
+    \item Card Cycle Management: Players cycle quickly to return to core cards (win conditions or essential counters).
+    \item Tower Trading: Allowing a weaker tower to fall can free elixir for a stronger, faster offensive counter-push.
+    \item Spell Value: Using damaging spells to hit multiple units at once, or a unit plus a tower, maximises elixir efficiency.
+    \item Unit Placement: Subtle differences in troop deployment positions can dramatically change the outcome of an interaction (kiting, path manipulation).
+    \item Timing: Well-timed deployments catch opponents low on elixir or out of defensive options, leading to big elixir swings.
 \end{itemize}
 
 \newpage
@@ -370,300 +354,409 @@ Key aspects include:
 \section{Requirements}
 
 \subsection{Functional Requirements}
-
-\begin{enumerate}[label=\textbf{FR\arabic*.}]
-
-\item \textbf{Server-Client Architecture}
-\begin{itemize}
-    \item \textbf{Real-Time Multiplayer Connection:}
+\begin{enumerate}[label=\textbf{FR\arabic*:}]
+    \item Server-Client Architecture
     \begin{itemize}
-        \item The system shall use a \textbf{persistent connection protocol} (e.g., WebSockets) to ensure minimal latency and real-time data exchange.
-        \item Each client connection shall be \textbf{encrypted} (e.g., TLS/SSL) to protect sensitive information.
+        \item Real-Time Multiplayer Connection:
+        \begin{itemize}
+            \item The system shall use a persistent connection protocol (e.g., WebSockets) to ensure minimal latency and real-time data exchange.
+            \item Each client connection shall be encrypted (e.g., TLS/SSL) to protect sensitive information.
+        \end{itemize}
+        \item Centralised Game Logic:
+        \begin{itemize}
+            \item The server shall manage all core gameplay elements (e.g., elixir ticks, card interactions, damage calculations) for fairness and anti-cheat purposes.
+            \item Clients shall send deployment/spell actions, and the server shall validate and execute these actions within game state updates.
+        \end{itemize}
+        \item Scalability and Load Balancing:
+        \begin{itemize}
+            \item The architecture must allow horizontal scaling with load balancers to distribute matchmaking requests and battle servers as the player base grows.
+            \item A master server may handle matchmaking, while additional battle servers simulate individual matches.
+        \end{itemize}
+        \item Connection Handling:
+        \begin{itemize}
+            \item The system must manage client disconnections gracefully, allowing rejoin within a defined grace period (e.g., 30 seconds).
+            \item Idle sessions shall be terminated to free server resources.
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Centralized Game Logic:}
+    
+    \item Card Management System
     \begin{itemize}
-        \item The server shall manage all core gameplay elements (e.g., elixir ticks, card interactions, damage calculations) for fairness and anti-cheat purposes.
-        \item Clients shall send deployment/spell actions, and the server shall validate and execute these actions within game state updates.
+        \item Card Collection:
+        \begin{itemize}
+            \item Each player has a personal inventory of collected cards, stored and displayed in a dedicated UI (e.g., ``Card Collection'' screen).
+            \item Cards are grouped by rarity (Common, Rare, Epic, Legendary) and may also be sorted by elixir cost, usage frequency, or level.
+        \end{itemize}
+        \item Deck Building:
+        \begin{itemize}
+            \item Players must be able to create, edit, and save multiple decks of exactly 8 cards.
+            \item The deck-building interface shall validate that the deck has no illegal combinations if such constraints exist (e.g., no duplicates in standard modes).
+            \item Players shall have the option to rename their decks for quick identification.
+        \end{itemize}
+        \item Card Upgrades:
+        \begin{itemize}
+            \item Each card has level-based attributes. Upgrades require gold and a certain number of card copies.
+            \item Players shall receive a notification or prompt when they have enough copies and gold to perform an upgrade.
+            \item Upgrading a card increases hitpoints, damage, or other relevant stats depending on the card type.
+        \end{itemize}
+        \item Card Unlocking:
+        \begin{itemize}
+            \item New cards become available as players reach certain trophy thresholds (arena levels).
+            \item Players can obtain these cards through chests, shop purchases (if implemented), or special events.
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Scalability and Load Balancing:}
+    
+    \item Real-time Battle Simulation
     \begin{itemize}
-        \item The architecture must allow horizontal scaling with load balancers to distribute matchmaking requests and battle servers as the player base grows.
-        \item A \textbf{master server} may handle matchmaking, while additional \textbf{battle servers} simulate individual matches.
+        \item Game State Updates:
+        \begin{itemize}
+            \item The server shall send synchronised updates (positions, health, elixir, etc.) at a rate of at least 10 ticks per second.
+            \item Clients shall interpolate or render the game state for smooth animations on the front end.
+        \end{itemize}
+        \item Deployment and Combat Resolution:
+        \begin{itemize}
+            \item Each deployment request from the client must include card ID, position, and current elixir count.
+            \item The server validates and executes the deployment if the player has sufficient elixir and the placement is valid.
+            \item Combat is automatically resolved by the server, computing damage based on unit stats, interactions, and spells.
+        \end{itemize}
+        \item Collisions and Pathfinding:
+        \begin{itemize}
+            \item The system shall implement a simplified pathfinding algorithm to prevent units from occupying the same space.
+            \item If two units meet head-on, one or both may adjust pathing slightly to avoid overlap, or a priority system may determine which unit yields ground.
+        \end{itemize}
+        \item Overtime Mechanics:
+        \begin{itemize}
+            \item Once regulation time ends in a tie, the system triggers sudden death and adjusts the elixir regeneration rate.
+            \item If a tower is destroyed during sudden death, the match ends instantly.
+            \item If the tie persists after the defined overtime period, the match is declared a draw.
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Connection Handling:}
+    
+    \item Progression System
     \begin{itemize}
-        \item The system must manage client \textbf{disconnections} gracefully, allowing rejoin within a defined grace period (e.g., 30 seconds).
-        \item Idle sessions shall be terminated to free server resources.
+        \item Trophy-Based Ranking:
+        \begin{itemize}
+            \item Each victory adds trophies to the player's total, and each loss subtracts trophies.
+            \item The trophy adjustment may consider the trophy difference between opponents, awarding or deducting more/less accordingly.
+        \end{itemize}
+        \item Arena Unlocks:
+        \begin{itemize}
+            \item Each trophy milestone corresponds to a new arena, with unique visuals and an expanding pool of unlockable cards.
+            \item The UI shall highlight newly unlocked features or cards when a player enters a new arena.
+        \end{itemize}
+        \item Matchmaking and Leagues:
+        \begin{itemize}
+            \item At higher trophy counts, players may enter league divisions (e.g., Challenger, Master, Champion), each conferring distinct rewards.
+            \item Seasonal resets may occur in leagues, reducing trophies to a certain baseline and distributing end-of-season rewards.
+        \end{itemize}
     \end{itemize}
-\end{itemize}
-
-\item \textbf{Card Management System}
-\begin{itemize}
-    \item \textbf{Card Collection:}
+    
+    \item Reward System
     \begin{itemize}
-        \item Each player has a \textbf{personal inventory} of collected cards, stored and displayed in a dedicated UI (e.g., ``Card Collection'' screen).
-        \item Cards are grouped by rarity (Common, Rare, Epic, Legendary) and may also be sorted by elixir cost, usage frequency, or level.
+        \item Chest Types and Mechanics:
+        \begin{itemize}
+            \item Victory chests are acquired after each win, each having a timer to unlock (ranging from a few hours to a full day).
+            \item Chest rewards scale with arena level, offering more cards and gold at higher tiers.
+            \item Special chest types (e.g., Giant, Magical, Legendary) have different probability distributions for rare cards.
+        \end{itemize}
+        \item Unlocking Process:
+        \begin{itemize}
+            \item A player may only have a limited number of chest slots (e.g., 4). Additional wins while slots are full do not grant new chests.
+            \item Players can spend premium currency (gems) to speed up or instantly finish chest unlocks.
+            \item Upon unlock, players receive the content immediately, with any new cards indicated visually in the UI.
+        \end{itemize}
+        \item Additional Rewards:
+        \begin{itemize}
+            \item Daily login bonuses, quests, or event chests may provide extra gold, cards, or currency.
+            \item The system can incorporate battle pass mechanics with tiered rewards for active players.
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Deck Building:}
+    
+    \item Clan System
     \begin{itemize}
-        \item Players must be able to \textbf{create, edit, and save multiple decks} of exactly 8 cards.
-        \item The deck-building interface shall validate that the deck has no illegal combinations if such constraints exist (e.g., no duplicates in standard modes).
-        \item Players shall have the option to \textbf{rename} their decks for quick identification.
+        \item Clan Creation and Membership:
+        \begin{itemize}
+            \item Any player meeting a minimum requirement (e.g., certain trophy threshold) can create a clan.
+            \item Clans can have a maximum capacity (e.g., 50 members), with join requests requiring leader or co-leader approval.
+        \end{itemize}
+        \item Clan Roles and Permissions:
+        \begin{itemize}
+            \item Leader can promote/demote members, accept/kick members, and modify clan settings.
+            \item Co-leader has similar privileges but may not be able to transfer leadership.
+            \item Elder typically can accept or reject join requests and assist in management.
+            \item Members can donate/request cards and participate in clan events.
+        \end{itemize}
+        \item Clan Chat and Donations:
+        \begin{itemize}
+            \item A real-time chat allows members to communicate, share strategies, and coordinate.
+            \item Players can request specific card donations, and other clan members can donate from their own card pool, earning gold or experience in return.
+        \end{itemize}
+        \item Clan Wars or Clan Events (Optional Advanced Feature):
+        \begin{itemize}
+            \item Clans can compete in organised clan wars or events for collective rewards (cards, gold, clan trophies).
+            \item Each participant’s contributions in a clan war might be limited (e.g., a certain number of attacks per day).
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Card Upgrades:}
+    
+    \item User Authentication
     \begin{itemize}
-        \item Each card has \textbf{level-based} attributes. Upgrades require gold and a certain number of card copies.
-        \item Players shall receive a notification or prompt when they have enough copies and gold to perform an upgrade.
-        \item Upgrading a card increases \textbf{hitpoints, damage, or other relevant stats} depending on the card type.
+        \item Registration and Secure Login:
+        \begin{itemize}
+            \item Users must register with a unique username/email. A secure password mechanism with complexity rules (minimum length, character diversity) is required.
+            \item Passwords shall be stored using salted hashing algorithms (e.g., bcrypt, Argon2) to protect credentials in case of database breaches.
+        \end{itemize}
+        \item Session Management:
+        \begin{itemize}
+            \item After login, the server issues a session token (e.g., JWT) which must be presented with each subsequent request.
+            \item Session tokens expire after a predefined period (e.g., 24 hours or configurable), or upon explicit logout.
+            \item Failed login attempts shall be rate-limited or locked after repeated failures to mitigate brute-force attacks.
+        \end{itemize}
     \end{itemize}
-    \item \textbf{Card Unlocking:}
+    
+    \item Database Integration
     \begin{itemize}
-        \item New cards become available as players reach certain \textbf{trophy thresholds} (arena levels).
-        \item Players can obtain these cards through \textbf{chests}, shop purchases (if implemented), or special events.
+        \item Data Storage:
+        \begin{itemize}
+            \item A relational or NoSQL database will store player profiles, trophies, card inventories, deck configurations, clan information, and transaction logs.
+            \item Battle replays or partial replay data (moves, timestamps) may be stored for a set period to allow replay features.
+        \end{itemize}
+        \item Atomic Transactions:
+        \begin{itemize}
+            \item High-value operations (e.g., purchases, chest openings, card upgrades) shall be transactional to ensure data consistency (ACID properties).
+            \item Rollback logic should revert partial updates if an operation fails partway.
+        \end{itemize}
+        \item Backup and Recovery:
+        \begin{itemize}
+            \item Automated incremental and full backups of the database must be performed regularly.
+            \item Disaster recovery procedures shall be documented, ensuring minimal downtime and data loss in case of critical failures.
+        \end{itemize}
+        \item Scalability Considerations:
+        \begin{itemize}
+            \item The database shall support sharding or replication to accommodate a growing user base.
+            \item Indexing on frequently queried fields (e.g., user IDs, trophy counts) shall be optimised to reduce query latency.
+        \end{itemize}
     \end{itemize}
-\end{itemize}
-
-\item \textbf{Real-time Battle Simulation}
-\begin{itemize}
-    \item \textbf{Game State Updates:}
-    \begin{itemize}
-        \item The server shall send synchronized updates (positions, health, elixir, etc.) at a rate of at least \textbf{10 ticks per second}.
-        \item Clients shall interpolate or render the game state for smooth animations on the front end.
-    \end{itemize}
-    \item \textbf{Deployment and Combat Resolution:}
-    \begin{itemize}
-        \item Each deployment request from the client must include \textbf{card ID, position, and current elixir count}. 
-        \item The server validates and executes the deployment if the player has sufficient elixir and the placement is valid.
-        \item Combat is automatically resolved by the server, computing \textbf{damage} based on unit stats, interactions, and spells.
-    \end{itemize}
-    \item \textbf{Collisions and Pathfinding:}
-    \begin{itemize}
-        \item The system shall implement a simplified pathfinding algorithm to prevent units from occupying the same space. 
-        \item If two units meet head-on, one or both may adjust pathing slightly to avoid overlap, or a priority system may determine which unit yields ground.
-    \end{itemize}
-    \item \textbf{Overtime Mechanics:}
-    \begin{itemize}
-        \item Once regulation time ends in a tie, the system triggers \textbf{sudden death} and adjusts the elixir regeneration rate.
-        \item If a tower is destroyed during sudden death, the match ends instantly.
-        \item If the tie persists after the defined overtime period, the match is declared a draw.
-    \end{itemize}
-\end{itemize}
-
-\item \textbf{Progression System}
-\begin{itemize}
-    \item \textbf{Trophy-Based Ranking:}
-    \begin{itemize}
-        \item Each victory adds trophies to the player's total, and each loss subtracts trophies.
-        \item The trophy adjustment may consider the \textbf{trophy difference} between opponents, awarding or deducting more/less accordingly.
-    \end{itemize}
-    \item \textbf{Arena Unlocks:}
-    \begin{itemize}
-        \item Each trophy milestone corresponds to a new \textbf{arena}, with unique visuals and an expanding pool of unlockable cards.
-        \item The UI shall \textbf{highlight} newly unlocked features or cards when a player enters a new arena.
-    \end{itemize}
-    \item \textbf{Matchmaking and Leagues:}
-    \begin{itemize}
-        \item At higher trophy counts, players may enter \textbf{league divisions} (e.g., Challenger, Master, Champion), each conferring distinct rewards.
-        \item Seasonal resets may occur in leagues, reducing trophies to a certain baseline and distributing \textbf{end-of-season rewards}.
-    \end{itemize}
-\end{itemize}
-
-\item \textbf{Reward System}
-\begin{itemize}
-    \item \textbf{Chest Types and Mechanics:}
-    \begin{itemize}
-        \item Victory chests are acquired after each win, each having a \textbf{timer} to unlock (ranging from a few hours to a full day).
-        \item Chest rewards scale with \textbf{arena level}, offering more cards and gold at higher tiers.
-        \item Special chest types (e.g., Giant, Magical, Legendary) have different \textbf{probability distributions} for rare cards.
-    \end{itemize}
-    \item \textbf{Unlocking Process:}
-    \begin{itemize}
-        \item A player may only have a limited number of chest slots (e.g., 4). Additional wins while slots are full do not grant new chests.
-        \item Players can spend \textbf{premium currency} (gems) to speed up or instantly finish chest unlocks.
-        \item Upon unlock, players receive the content immediately, with any new cards indicated visually in the UI.
-    \end{itemize}
-    \item \textbf{Additional Rewards:}
-    \begin{itemize}
-        \item Daily login bonuses, quests, or \textbf{event chests} may provide extra gold, cards, or currency.
-        \item The system can incorporate \textbf{battle pass} mechanics with tiered rewards for active players.
-    \end{itemize}
-\end{itemize}
-
-\item \textbf{Clan System}
-\begin{itemize}
-    \item \textbf{Clan Creation and Membership:}
-    \begin{itemize}
-        \item Any player meeting a minimum requirement (e.g., certain trophy threshold) can \textbf{create a clan}.
-        \item Clans can have a maximum capacity (e.g., 50 members), with join requests requiring \textbf{leader or co-leader approval}.
-    \end{itemize}
-    \item \textbf{Clan Roles and Permissions:}
-    \begin{itemize}
-        \item \textbf{Leader} can promote/demote members, accept/kick members, and modify clan settings.
-        \item \textbf{Co-leader} has similar privileges but may not be able to transfer leadership.
-        \item \textbf{Elder} typically can accept or reject join requests and assist in management.
-        \item \textbf{Members} can donate/request cards and participate in clan events.
-    \end{itemize}
-    \item \textbf{Clan Chat and Donations:}
-    \begin{itemize}
-        \item A \textbf{real-time chat} allows members to communicate, share strategies, and coordinate.
-        \item Players can \textbf{request} specific card donations, and other clan members can donate from their own card pool, earning gold or experience in return.
-    \end{itemize}
-    \item \textbf{Clan Wars or Clan Events (Optional Advanced Feature):}
-    \begin{itemize}
-        \item Clans can compete in organized \textbf{clan wars} or events for collective rewards (cards, gold, clan trophies).
-        \item Each participant’s contributions in a clan war might be limited (e.g., a certain number of attacks per day).
-    \end{itemize}
-\end{itemize}
-
-\item \textbf{User Authentication}
-\begin{itemize}
-    \item \textbf{Registration and Secure Login:}
-    \begin{itemize}
-        \item Users must register with a unique username/email. A secure password mechanism with \textbf{complexity rules} (minimum length, character diversity) is required.
-        \item Passwords shall be stored using \textbf{salted hashing} algorithms (e.g., bcrypt, Argon2) to protect credentials in case of database breaches.
-    \end{itemize}
-    \item \textbf{Session Management:}
-    \begin{itemize}
-        \item After login, the server issues a \textbf{session token} (e.g., JWT) which must be presented with each subsequent request.
-        \item Session tokens expire after a predefined period (e.g., 24 hours or configurable), or upon explicit logout.
-        \item Failed login attempts shall be \textbf{rate-limited} or locked after repeated failures to mitigate brute-force attacks.
-    \end{itemize}
-\end{itemize}
-
-\item \textbf{Database Integration}
-\begin{itemize}
-    \item \textbf{Data Storage:}
-    \begin{itemize}
-        \item A relational or NoSQL database will store \textbf{player profiles}, trophies, card inventories, deck configurations, clan information, and transaction logs.
-        \item Battle replays or partial replay data (moves, timestamps) may be stored for a set period to allow replay features.
-    \end{itemize}
-    \item \textbf{Atomic Transactions:}
-    \begin{itemize}
-        \item High-value operations (e.g., purchases, chest openings, card upgrades) shall be \textbf{transactional} to ensure data consistency (ACID properties).
-        \item Rollback logic should revert partial updates if an operation fails partway.
-    \end{itemize}
-    \item \textbf{Backup and Recovery:}
-    \begin{itemize}
-        \item Automated \textbf{incremental and full backups} of the database must be performed regularly.
-        \item Disaster recovery procedures shall be documented, ensuring minimal downtime and data loss in case of critical failures.
-    \end{itemize}
-    \item \textbf{Scalability Considerations:}
-    \begin{itemize}
-        \item The database shall support \textbf{sharding or replication} to accommodate a growing user base.
-        \item Indexing on frequently queried fields (e.g., user IDs, trophy counts) shall be optimized to reduce query latency.
-    \end{itemize}
-\end{itemize}
-
 \end{enumerate}
 
 \newpage
 
 \subsection{Non-Functional Requirements}
-
-\begin{enumerate}[label=\textbf{NFR\arabic*.}]
-
-\item \textbf{Performance}
-\begin{itemize}
-    \item \textbf{Concurrent Users:} The system shall support at least \textbf{100 concurrent} players seamlessly, with a roadmap to scale to thousands if the user base grows.
-    \item \textbf{Response Time:} Average server response time for high-frequency operations (e.g., deploying a card) shall not exceed \textbf{200\,ms} under typical load.
-    \item \textbf{Tick Rate:} The battle server shall \textbf{update} game state at least \textbf{10 times per second} (ideally 20+ for smoother experience).
-    \item \textbf{Client Frame Rate:} The client shall maintain a minimum of \textbf{30\,FPS} on recommended device specifications for fluid animations.
-\end{itemize}
-
-\item \textbf{Reliability}
-\begin{itemize}
-    \item \textbf{Uptime Guarantee:} The system should achieve \textbf{99\%} or higher uptime annually, excluding scheduled maintenance.
-    \item \textbf{Failover and Recovery:} In case of server crashes, automated restart processes must \textbf{resume} the service with minimal downtime and no data corruption.
-    \item \textbf{Reconnection Logic:} If the client disconnects due to network issues, it should automatically attempt to \textbf{reconnect}, rejoining an active match if still in progress.
-    \item \textbf{Data Integrity Checks:} The database shall regularly run integrity checks (checksums or similar) to detect and fix corruption.
-\end{itemize}
-
-\item \textbf{Scalability}
-\begin{itemize}
-    \item \textbf{Horizontal Scaling:} The system architecture must allow adding more servers to handle increased load without significant refactoring.
-    \item \textbf{Matchmaking Algorithm:} The matchmaking system must handle larger player populations efficiently, maintaining reasonable queue times and matching fairness.
-    \item \textbf{Database Sharding/Replication:} As the player base grows, the database layer should scale by distributing data across multiple nodes or using replication strategies.
-\end{itemize}
-
-\item \textbf{Maintainability}
-\begin{itemize}
-    \item \textbf{Coding Standards:} The codebase shall conform to PEP\,8 (Python) or a recognized standard (if other languages are used) to ensure \textbf{readability and uniformity}.
-    \item \textbf{Modular Architecture:} Features like matchmaking, battle simulation, user authentication, and clan management should be \textbf{modularized} or separated into microservices.
-    \item \textbf{Documentation and Comments:}
+\begin{enumerate}[label=\textbf{NFR\arabic*:}]
+    \item Performance
     \begin{itemize}
-        \item Detailed \textbf{API documentation} (using tools like Swagger/OpenAPI) should be provided for each service endpoint.
-        \item Inline comments and \textbf{design notes} shall clarify complex logic for future maintainers.
+        \item Concurrent Users: The system shall support at least 100 concurrent players seamlessly, with a roadmap to scale to thousands if the user base grows.
+        \item Response Time: Average server response time for high-frequency operations (e.g., deploying a card) shall not exceed 200\,ms under typical load.
+        \item Tick Rate: The battle server shall update game state at least 10 times per second (ideally 20+ for smoother experience).
+        \item Client Frame Rate: The client shall maintain a minimum of 30\,FPS on recommended device specifications for fluid animations.
     \end{itemize}
-    \item \textbf{Logging and Monitoring:}
+    \item Reliability
     \begin{itemize}
-        \item A standardized \textbf{logging format} with log levels (debug, info, warning, error) must be used across services.
-        \item Monitoring tools (e.g., Prometheus, Grafana) shall be in place to track CPU usage, memory, network latency, etc.
+        \item Uptime Guarantee: The system should achieve 99\% or higher uptime annually, excluding scheduled maintenance.
+        \item Failover and Recovery: In case of server crashes, automated restart processes must resume the service with minimal downtime and no data corruption.
+        \item Reconnection Logic: If the client disconnects due to network issues, it should automatically attempt to reconnect, rejoining an active match if still in progress.
+        \item Data Integrity Checks: The database shall regularly run integrity checks (checksums or similar) to detect and fix corruption.
     \end{itemize}
-\end{itemize}
-
-\item \textbf{Security}
-\begin{itemize}
-    \item \textbf{Credential Storage:} All user passwords must be stored using \textbf{salted hashing} (bcrypt, Argon2, PBKDF2). Plaintext passwords are strictly forbidden.
-    \item \textbf{Encryption:} All communication between client and server must be secured with \textbf{TLS/SSL} to protect data in transit.
-    \item \textbf{Input Validation:} The server must rigorously \textbf{validate} client inputs (e.g., deployment commands, user IDs, trophy updates) to prevent injection attacks or exploits.
-    \item \textbf{Attack Mitigation:}
+    \item Scalability
     \begin{itemize}
-        \item Protect against \textbf{common web vulnerabilities} (SQL injection, cross-site scripting, CSRF) via standard frameworks and best practices.
-        \item Rate-limit login attempts and critical actions to prevent \textbf{brute force} or \textbf{DDoS} style attacks.
+        \item Horizontal Scaling: The system architecture must allow adding more servers to handle increased load without significant refactoring.
+        \item Matchmaking Algorithm: The matchmaking system must handle larger player populations efficiently, maintaining reasonable queue times and matching fairness.
+        \item Database Sharding/Replication: As the player base grows, the database layer should scale by distributing data across multiple nodes or using replication strategies.
     \end{itemize}
-\end{itemize}
-
+    \item Maintainability
+    \begin{itemize}
+        \item Coding Standards: The codebase shall conform to PEP\,8 (Python) or a recognised standard (if other languages are used) to ensure readability and uniformity.
+        \item Modular Architecture: Features like matchmaking, battle simulation, user authentication, and clan management should be modularised or separated into microservices.
+        \item Documentation and Comments:
+        \begin{itemize}
+            \item Detailed API documentation (using tools like Swagger/OpenAPI) should be provided for each service endpoint.
+            \item Inline comments and design notes shall clarify complex logic for future maintainers.
+        \end{itemize}
+        \item Logging and Monitoring:
+        \begin{itemize}
+            \item A standardised logging format with log levels (debug, info, warning, error) must be used across services.
+            \item Monitoring tools (e.g., Prometheus, Grafana) shall be in place to track CPU usage, memory, network latency, etc.
+        \end{itemize}
+    \end{itemize}
+    \item Security
+    \begin{itemize}
+        \item Credential Storage: All user passwords must be stored using salted hashing (bcrypt, Argon2, PBKDF2). Plaintext passwords are strictly forbidden.
+        \item Encryption: All communication between client and server must be secured with TLS/SSL to protect data in transit.
+        \item Input Validation: The server must rigorously validate client inputs (e.g., deployment commands, user IDs, trophy updates) to prevent injection attacks or exploits.
+        \item Attack Mitigation:
+        \begin{itemize}
+            \item Protect against common web vulnerabilities (SQL injection, cross-site scripting, CSRF) via standard frameworks and best practices.
+            \item Rate-limit login attempts and critical actions to prevent brute force or DDoS style attacks.
+        \end{itemize}
+    \end{itemize}
 \end{enumerate}
 
-\section{Additional Considerations}
-
-\subsection{Cross-Platform Support}
-\begin{itemize}
-    \item The client software should be compatible with both \textbf{iOS} and \textbf{Android} platforms. 
-    \item A browser-based or desktop client can be considered for broader accessibility.
-    \item The UI must be optimized for various \textbf{screen sizes} and different performance capabilities (lower-end vs. high-end devices).
-\end{itemize}
-
-\subsection{Analytics and Telemetry}
-\begin{itemize}
-    \item \textbf{Player Behavior Data:} Collect anonymized usage statistics (most-played cards, average match duration, win/loss ratios) to inform balancing decisions.
-    \item \textbf{System Performance Metrics:} Implement real-time monitoring for server load, memory consumption, and network bandwidth to scale effectively.
-    \item \textbf{Event Logging:} All significant in-game actions (card deployments, spell usage, tower destruction) should be logged for debugging or replay features.
-\end{itemize}
-
-\subsection{Live Operations and Balancing}
-\begin{itemize}
-    \item \textbf{Card Balance Changes:} A live operations team may frequently update card stats to maintain a fair meta, requiring \textbf{backend tools} to adjust stats without full server redeployments.
-    \item \textbf{Seasonal Events and Modes:} Periodic special events (e.g., draft modes, 2v2 modes, tournaments) can increase engagement and test new mechanics.
-    \item \textbf{Patch Management:} A versioning system should ensure clients are notified to update to the latest build when major changes occur.
-\end{itemize}
-
-\subsection{User Engagement Features}
-\begin{itemize}
-    \item \textbf{Daily Login Rewards:} Offering small incentives (gold, gems, or cards) encourages consistent login behavior.
-    \item \textbf{Quests and Challenges:} Short-term or medium-term goals (e.g., ``Play 20 spells'' or ``Win 3 battles in a row'') provide variety and a sense of progression.
-    \item \textbf{Push Notifications:} Notify players of chest unlock completions, clan invitations, or special events to encourage re-engagement.
-\end{itemize}
-
-\subsection{Compliance and Data Protection}
-\begin{itemize}
-    \item \textbf{GDPR and Privacy:} If operating in regions with strict data protection laws, ensure user data can be \textbf{exported} or \textbf{deleted} upon request.
-    \item \textbf{Age Restrictions:} Comply with \textbf{COPPA} or similar regulations for younger players, requiring parental consent or restricted in-app purchases.
-    \item \textbf{Policy Documents:} Provide a clear \textbf{terms of service} and \textbf{privacy policy} within the application, detailing data usage and rights.
-\end{itemize}
-
-\section{Conclusion}
-This document outlines a comprehensive set of functional and non-functional requirements for developing a \textbf{Clash Royale-style real-time strategy game}. The specification includes detailed mechanics for card management, real-time battle simulation, progression systems, social (clan) features, and robust security considerations.
-
-By adhering to these requirements, the resulting product should provide:
-\begin{itemize}
-    \item A stable and \textbf{engaging} gameplay experience with minimal latency.
-    \item \textbf{Scalable} infrastructure to accommodate a growing player base.
-    \item Strong \textbf{security} and \textbf{reliability} measures for player data and transactions.
-    \item A balanced and \textbf{replayable} multiplayer environment that encourages long-term player engagement.
-\end{itemize}
-
 \section{Design}
+
+\subsection{Screen Layouts}
+
+\subsubsection{Main Menu}
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \fill[gray!20] (0,0) rectangle (10,6);
+        
+        \node at (5,5.5) {\Huge \textbf{Royal Siege}};
+        
+        \fill[blue!60] (3,4) rectangle (7,3.5);
+        \node at (5,3.75) {\Large \textbf{Start Game}};
+        
+        \fill[blue!40] (3,3) rectangle (7,2.5);
+        \node at (5,2.75) {\Large \textbf{Deck Builder}};
+        
+        \fill[blue!20] (3,2) rectangle (7,1.5);
+        \node at (5,1.75) {\Large \textbf{Settings}};
+        
+        \node at (5,0.5) {\small \textbf{© 2025 Royal Siege Inc.}};
+    \end{tikzpicture}
+    \caption{Main Menu Screen}
+    \label{fig:main_menu}
+\end{figure}
+
+\subsubsection{Matchmaking screen}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \fill[gray!20] (0,0) rectangle (10,6);
+        
+        \node at (5,5.5) {\Huge \textbf{Matchmaking}};
+        
+        \node at (5,2.5) {\Large Searching for opponent...};
+        
+        \fill[red!50] (3,1) rectangle (7,1.5);
+        \node at (5,1.25) {\Large \textbf{Cancel}};
+    \end{tikzpicture}
+    \caption{Matchmaking Screen}
+    \label{fig:matchmaking}
+\end{figure}
+
+\subsubsection{Battle Arena}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        % Background (Vertical Arena Field)
+        \fill[green!20] (0,0) rectangle (6,10);
+        
+        % Middle Line (Dividing the two sides)
+        \draw[dashed, thick] (3,0) -- (3,10);
+        
+        % --- Top Side (Opponent Towers) ---
+        % Left Princess Tower
+        \fill[red!70] (0.8,8) rectangle (2.2,9);
+        \draw (0.8,8) rectangle (2.2,9);
+        \node at (1.5,8.5) {\textbf{Tower}};
+        
+        % King Tower (Set back)
+        \fill[red!90] (2.4,8.5) rectangle (3.6,9.5);
+        \draw (2.4,8.5) rectangle (3.6,9.5);
+        \node at (3,9) {\textbf{King}};
+        
+        % Right Princess Tower
+        \fill[red!70] (3.8,8) rectangle (5.2,9);
+        \draw (3.8,8) rectangle (5.2,9);
+        \node at (4.5,8.5) {\textbf{Tower}};
+
+        % --- Bottom Side (Player Towers) ---
+        % Left Princess Tower
+        \fill[blue!70] (0.8,1) rectangle (2.2,2);
+        \draw (0.8,1) rectangle (2.2,2);
+        \node at (1.5,1.5) {\textbf{Tower}};
+
+        % King Tower (Set back)
+        \fill[blue!90] (2.4,0.5) rectangle (3.6,1.5);
+        \draw (2.4,0.5) rectangle (3.6,1.5);
+        \node at (3,1) {\textbf{King}};
+
+        % Right Princess Tower
+        \fill[blue!70] (3.8,1) rectangle (5.2,2);
+        \draw (3.8,1) rectangle (5.2,2);
+        \node at (4.5,1.5) {\textbf{Tower}};
+
+        % --- Player's Cards (Below the Towers) ---
+        \fill[gray!40] (0.5,0) rectangle (1.5,0.5);
+        \draw (0.5,0) rectangle (1.5,0.5);
+        \node at (1,0.25) {\textbf{Card}};
+
+        \fill[gray!40] (1.7,0) rectangle (2.7,0.5);
+        \draw (1.7,0) rectangle (2.7,0.5);
+        \node at (2.2,0.25) {\textbf{Card}};
+
+        \fill[gray!40] (2.9,0) rectangle (3.9,0.5);
+        \draw (2.9,0) rectangle (3.9,0.5);
+        \node at (3.4,0.25) {\textbf{Card}};
+
+        \fill[gray!40] (4.1,0) rectangle (5.1,0.5);
+        \draw (4.1,0) rectangle (5.1,0.5);
+        \node at (4.6,0.25) {\textbf{Card}};
+
+        % --- Elixir Bar Below Cards ---
+        \fill[blue!50] (1.5,-0.6) rectangle (4.5,-0.4);
+        \draw (1.5,-0.6) rectangle (4.5,-0.4);
+        \node at (3,-0.5) {\textbf{Elixir: 5/10}};
+        
+        % --- UI Labels ---
+        \node at (3,9.8) {\textbf{Opponent Towers}};
+        \node at (3,2.2) {\textbf{Your Towers}};
+    \end{tikzpicture}
+    \caption{Vertical Battle Arena Layout}
+    \label{fig:vertical_battle_arena}
+\end{figure}
+
+\subsubsection{Deck Builder}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        % Background
+        \fill[gray!20] (0,0) rectangle (10,6);
+        
+        % Title
+        \node at (5,5.5) {\Huge \textbf{Deck Builder}};
+        
+        % Deck Slots
+        \fill[gray!40] (1,4) rectangle (2,5);
+        \fill[gray!40] (3,4) rectangle (4,5);
+        \fill[gray!40] (5,4) rectangle (6,5);
+        \fill[gray!40] (7,4) rectangle (8,5);
+        
+        \fill[gray!40] (1,2.5) rectangle (2,3.5);
+        \fill[gray!40] (3,2.5) rectangle (4,3.5);
+        \fill[gray!40] (5,2.5) rectangle (6,3.5);
+        \fill[gray!40] (7,2.5) rectangle (8,3.5);
+        
+        % Save Button
+        \fill[blue!50] (3,1) rectangle (7,1.5);
+        \node at (5,1.25) {\Large \textbf{Save Deck}};
+    \end{tikzpicture}
+    \caption{Deck Builder Screen}
+    \label{fig:deck_builder}
+\end{figure}
+
+\subsubsection{Victory}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        % Background
+        \fill[gold!30] (0,0) rectangle (10,6);
+        
+        % Title
+        \node at (5,5.5) {\Huge \textbf{Victory!}};
+        
+        % Score & Rewards
+        \node at (5,4) {\Large +30 Trophies};
+        \node at (5,3.5) {\textbf{You received a Gold Chest!}};
+        
+        % Continue Button
+        \fill[blue!50] (3,1) rectangle (7,1.5);
+        \node at (5,1.25) {\Large \textbf{Continue}};
+    \end{tikzpicture}
+    \caption{Victory Screen}
+    \label{fig:victory_screen}
+\end{figure}
+
 
 \subsection{Core System Design}
 
@@ -678,7 +771,7 @@ The engine is written in Python, based on the design off of one of my previous R
 The Entity Component System (ECS) architecture separates logic (components) from entities (system). Entities are simple IDs that contain components, and components execute logic when told to through the pipeline (see \ref{pipeline}). Components operate through entities that have the component attached. Components a separate, even from other components of the same type. This design promotes data-oriented programming, improving cache efficiency and making the code more modular and maintainable. In this Python implementation, I use dictionaries and lists to store and manage entities and their related components. This decoupling of different logic systems and containers allows for flexible entity composition and avoids the complexities of traditional inheritance-based object oriented programming.
 
 \paragraph{2D/3D Cameras}
-The engine will support both orthographic and perspective cameras. Orthographic cameras provide a parallel projection, useful for classic 2D views where depth isn't emphasized. Perspective cameras simulate real-world vision, where objects appear smaller as they recede into the distance. This is crucial for creating the simulated 3D look. The camera implementation will likely involve a transformation matrix that converts world coordinates to screen coordinates. For perspective cameras, this matrix will include a perspective projection component, while orthographic cameras will use a simple scaling and translation matrix. I have functions to easily switch between camera types, and to adjust the field of view of the perspective camera.
+The engine will support both orthographic and perspective cameras. Orthographic cameras provide a parallel projection, useful for classic 2D views where depth isn't emphasised. Perspective cameras simulate real-world vision, where objects appear smaller as they recede into the distance. This is crucial for creating the simulated 3D look. The camera implementation will likely involve a transformation matrix that converts world coordinates to screen coordinates. For perspective cameras, this matrix will include a perspective projection component, while orthographic cameras will use a simple scaling and translation matrix. I have functions to easily switch between camera types, and to adjust the field of view of the perspective camera.
 
 \paragraph{GameObjects and Components}
 GameObjects serve as containers for components. By assigning different combinations of components to a GameObject, I can create a wide variety of entities with unique behaviors. For example, a "Player" GameObject might have "Position," "Velocity," "Sprite," "Input," and "Health" components. A "Tree" GameObject might have "Position" and "Sprite" components. This modularity allows for easy creation and modification of game entities without modifying core engine code. The component data will be stored in data structures that are easily accessible by the systems.
@@ -687,7 +780,7 @@ GameObjects serve as containers for components. By assigning different combinati
 To create the illusion of depth in a 2D environment, I will use layered sprites. Sprites representing objects closer to the "camera" will be rendered on top of sprites representing objects further away. I will implement a sorting mechanism based on the Y-coordinate (or a custom depth value) of the entities to determine the rendering order. This will allow for overlapping sprites to create a sense of depth. Furthermore, I will have the capability to assign a layer number to each sprite, allowing for more manual control over the draw order, and enabling the creation of backgrounds, midgrounds, and foregrounds.
 
 \paragraph{Rendering}
-The rendering for the python engine are not done using conventional methods like \verb|pygame|. I use a custom library that I created myself which uses SDL2 to draw to the screen and provides more complex methods for other things like textures, images and keyboard input. I create the python bindings (for the cpython module) using \verb|pybind11|. The library is compiled, the binds are compiled and then the library is linked with the binds to produce a cpython library. The stub file for the LSP is then generated using stubgen, which is shipped with python.
+ The rendering in my Python engine does not use conventional libraries like \verb|pygame|. Instead, I developed a custom C++ library that utilises SDL2 for drawing to the screen. This library also provides advanced functionality for handling textures, images, and keyboard input. To enable usage in Python, I create bindings using \verb|pybind11|. The process involves compiling the library separately for Windows and Linux, then compiling the bindings, and finally linking them together to produce a CPython-compatible library. Additionally, I generate a stub file for Language Server Protocol (LSP) support using \verb|stubgen|, a tool included with Python.
 
 \paragraph{Shared State}
 \label{pipeline}
@@ -731,7 +824,7 @@ I will implement a client-server architecture, where the server acts as the auth
 To avoid blocking the main game loop, I will use asynchronous sockets. Asynchronous sockets allow the game to continue running while waiting for network data. I will use python's asyncio library or similar, to handle the asynchronous network operations. This will prevent the game from freezing or becoming unresponsive during network communication.
 
 \paragraph{Packet Listener and Broadcaster}
-The server will have a packet listener to receive incoming packets from clients and a packet broadcaster to send packets to all connected clients. The listener will parse incoming packets and dispatch them to the appropriate game logic. The broadcaster will efficiently distribute game state updates to all clients, minimizing network traffic. I will implement packet queuing and throttling to prevent network congestion. The broadcaster will only send data that has changed, to reduce the amount of data sent.
+The server will have a packet listener to receive incoming packets from clients and a packet broadcaster to send packets to all connected clients. The listener will parse incoming packets and dispatch them to the appropriate game logic. The broadcaster will efficiently distribute game state updates to all clients, minimising network traffic. I will implement packet queuing and throttling to prevent network congestion. The broadcaster will only send data that has changed, to reduce the amount of data sent.
 
 \subsubsection{2D with 3D Illusion}
 
@@ -749,731 +842,926 @@ To further enhance the 3D illusion, I will implement perspective scaling. Object
 \section{Pseudocode Implementation}
 
 \begin{lstlisting}[style=pseudo]
-###################################################
+##############################################################################
+# CONSTANTS AND GLOBAL VARIABLES
+##############################################################################
+CONST MAX_WORKERS = 8
+CONST MAX_PENDING_CONNECTIONS = 100
+CONST HOST = "127.0.0.1"
+CONST PORT = 3000
+
+GLOBAL server_running = TRUE
+GLOBAL PLAYER_ID_COUNTER = 0
+GLOBAL GAME_ID_COUNTER = 0
+
+##############################################################################
+# CLASS DEFINITIONS
+##############################################################################
+
+CLASS Player
+    Attributes:
+        id = 0
+        connection = NULL
+        address = NULL
+        elixir = 0
+        is_active = TRUE
+        arena = 1
+        chests = []
+        request_queue = []
+
+    Methods:
+        FUNCTION Player(new_player_id, new_connection, new_address)
+            id = new_player_id
+            connection = new_connection
+            address = new_address
+            elixir = 0
+            is_active = TRUE
+            arena = 1
+            chests = []
+            request_queue = []
+        END Player
+
+        FUNCTION WAIT_FOR_REQUEST()
+            raw_data = connection.READ()
+            IF raw_data == EMPTY THEN
+                RETURN NULL
+            END IF
+
+            parsed_request = PARSE_REQUEST(raw_data)
+            RETURN parsed_request
+        END WAIT_FOR_REQUEST
+
+        FUNCTION ADD_REQUEST(request)
+            request_queue.append(request)
+        END ADD_REQUEST
+
+        FUNCTION has_pending_requests()
+            IF request_queue.length > 0 THEN
+                RETURN TRUE
+            ELSE
+                RETURN FALSE
+            END IF
+        END has_pending_requests
+
+        FUNCTION GET_REQUEST()
+            IF request_queue.length == 0 THEN
+                RETURN NULL
+            END IF
+
+            req = request_queue[0]
+            request_queue.remove_at(0)
+            RETURN req
+        END GET_REQUEST
+
+        FUNCTION SEND_MESSAGE(messageData)
+            connection.WRITE(messageData)  # Stub
+        END SEND_MESSAGE
+END Player
+
+
+CLASS Entity
+    Attributes:
+        id = 0
+        type = ""
+        hp = 0
+        damage = 0
+        range = 0
+        position = {"x": 0, "y": 0}
+        side = ""
+
+    Methods:
+        FUNCTION Entity()
+            id = GENERATE_ENTITY_ID()  
+            type = ""
+            hp = 0
+            damage = 0
+            range = 0
+            position = {"x": 0, "y": 0}
+            side = ""
+        END Entity
+
+        FUNCTION IS_DESTROYED()
+            IF hp <= 0 THEN
+                RETURN TRUE
+            END IF
+            RETURN FALSE
+        END IS_DESTROYED
+
+        FUNCTION PROCESS_BEHAVIOR(game)
+            # Placeholder for AI or behavior
+        END PROCESS_BEHAVIOR
+
+        FUNCTION UPDATE_POSITION(game)
+            # Placeholder for movement logic
+        END UPDATE_POSITION
+END Entity
+
+
+CLASS Tower : Entity
+    Attributes:
+        owner = 0
+        opposing_player_id = 0
+
+    Methods:
+        FUNCTION Tower(owner_id, initial_hp, tower_side)
+            Entity()  # Call parent constructor
+            owner = owner_id
+            hp = initial_hp
+            side = tower_side
+            opposing_player_id = 0
+        END Tower
+END Tower
+
+
+CLASS Game
+    Attributes:
+        id = 0
+        players = []
+        player_ids = []
+        entities = []
+        towers = []
+        event_dispatcher = NULL
+        is_terminated = FALSE
+        time_elapsed = 0
+        max_duration = 180
+
+    Methods:
+        FUNCTION Game()
+            id = 0
+            players = []
+            player_ids = []
+            entities = []
+            towers = []
+            event_dispatcher = NULL
+            is_terminated = FALSE
+            time_elapsed = 0
+            max_duration = 180
+        END Game
+
+        FUNCTION ADD_PLAYER(player)
+            players.append(player)
+            player_ids.append(player.id)
+        END ADD_PLAYER
+
+        FUNCTION INCREMENT_TIME(delta_time)
+            time_elapsed = time_elapsed + delta_time
+        END INCREMENT_TIME
+
+        FUNCTION TERMINATE()
+            is_terminated = TRUE
+        END TERMINATE
+
+        FUNCTION REPLENISH_ELIXIR(delta_time)
+            REPLENISH_ELIXIR(self, delta_time)
+        END REPLENISH_ELIXIR
+
+        FUNCTION BROADCAST_GAME_STATE()
+            state_snapshot = {
+                "type": "game_state",
+                "entities": [],
+                "time_elapsed": time_elapsed
+            }
+
+            FOR e IN entities DO
+                entitySnapshot = {
+                    "id": e.id,
+                    "hp": e.hp,
+                    "position": e.position
+                }
+                state_snapshot["entities"].append(entitySnapshot)
+            END FOR
+
+            FOR p IN players DO
+                p.SEND_MESSAGE(state_snapshot)
+            END FOR
+        END BROADCAST_GAME_STATE
+
+        FUNCTION UPDATE(delta_time)
+            UPDATE_GAME(self, delta_time)
+        END UPDATE
+END Game
+
+
+CLASS Chest
+    Attributes:
+        type = ""
+        unlock_time = 0
+        rewards = []
+
+    Methods:
+        FUNCTION Chest()
+            type = ""
+            unlock_time = 0
+            rewards = []
+        END Chest
+
+        FUNCTION ASSIGN_UNLOCK_TIME()
+            CASE type OF
+                "silver":
+                    unlock_time = 3 * 3600
+                "gold":
+                    unlock_time = 8 * 3600
+                "epic":
+                    unlock_time = 12 * 3600
+                OTHERWISE:
+                    unlock_time = 1 * 3600
+            END CASE
+        END ASSIGN_UNLOCK_TIME
+
+        FUNCTION ALLOCATE_GOLD_REWARDS(player)
+            base_gold = 100
+            arena_factor = player.arena
+            total_gold = base_gold + (arena_factor * 10)
+            rewards.append({
+                "type": "gold",
+                "amount": total_gold
+            })
+        END ALLOCATE_GOLD_REWARDS
+
+        FUNCTION ALLOCATE_CARD_REWARDS(player)
+            ALLOCATE_CARD_REWARDS(self, player)
+        END ALLOCATE_CARD_REWARDS
+
+        FUNCTION ADD_CARDS(cards_list)
+            FOR c IN cards_list DO
+                rewards.append({
+                    "type": "card",
+                    "card_id": c["id"],
+                    "rarity": c["rarity"]
+                })
+            END FOR
+        END ADD_CARDS
+END Chest
+
+
+CLASS Thread
+    Attributes:
+        functionToRun = NULL
+        args = []
+
+    Methods:
+        FUNCTION Thread(fn, fn_args)
+            functionToRun = fn
+            args = fn_args
+        END Thread
+
+        FUNCTION start()
+            # Stub for a new system thread
+        END start
+END Thread
+
+
+CLASS ThreadPool
+    Attributes:
+        size = 0
+        tasks = []
+
+    Methods:
+        FUNCTION ThreadPool(poolSize)
+            size = poolSize
+            tasks = []
+        END ThreadPool
+
+        FUNCTION init_workers()
+            # Stub
+        END init_workers
+
+        FUNCTION add_task(fn, fn_args)
+            tasks.append([fn, fn_args])
+        END add_task
+END ThreadPool
+
+
+CLASS PriorityQueue
+    Attributes:
+        internal_queue = []
+
+    Methods:
+        FUNCTION PriorityQueue()
+            internal_queue = []
+        END PriorityQueue
+
+        FUNCTION ADD(player, priority)
+            internal_queue.append({"player": player, "priority": priority})
+            # In practice, reorder by priority
+        END ADD
+
+        FUNCTION HAS_AVAILABLE_PAIRS()
+            IF internal_queue.length >= 2 THEN
+                RETURN TRUE
+            END IF
+            RETURN FALSE
+        END HAS_AVAILABLE_PAIRS
+
+        FUNCTION GET_MATCHED_PLAYERS()
+            IF internal_queue.length < 2 THEN
+                RETURN (NULL, NULL)
+            END IF
+
+            internal_queue = SORT_BY_PRIORITY_DESC(internal_queue)
+            p1 = internal_queue[0]["player"]
+            p2 = internal_queue[1]["player"]
+            internal_queue.remove_at(0)
+            internal_queue.remove_at(0)
+
+            RETURN (p1, p2)
+        END GET_MATCHED_PLAYERS
+
+        FUNCTION REMOVE(player)
+            FOR i = 0 TO internal_queue.length - 1 DO
+                IF internal_queue[i]["player"].id == player.id THEN
+                    internal_queue.remove_at(i)
+                    BREAK
+                END IF
+            END FOR
+        END REMOVE
+END PriorityQueue
+
+
+CLASS EventDispatcher
+    Attributes:
+        events = []
+
+    Methods:
+        FUNCTION EventDispatcher()
+            events = []
+        END EventDispatcher
+
+        FUNCTION CREATE_EVENT(event_name, data)
+            events.append({"name": event_name, "data": data})
+        END CREATE_EVENT
+
+        FUNCTION EXECUTE_PENDING_EVENTS()
+            # Stub to process events
+            events = []
+        END EXECUTE_PENDING_EVENTS
+
+        FUNCTION SCHEDULE_EVENT(target, event_name)
+            events.append({"name": event_name, "target": target})
+        END SCHEDULE_EVENT
+END EventDispatcher
+
+
+##############################################################################
+# GLOBAL OBJECTS
+##############################################################################
+GLOBAL GLOBAL_THREAD_POOL = new ThreadPool(MAX_WORKERS)
+GLOBAL matchmaking_queue = new PriorityQueue()
+
+
+##############################################################################
 # 1. Main Server Loop
-###################################################
-
-FUNCTION RunServer():
-    # 1. Initialization
+##############################################################################
+FUNCTION RunServer()
     server_socket = INITIALIZE_SERVER_SOCKET(HOST, PORT)
-    player_registry = {}    # {player_id: Player}
-    active_games = {}       # {game_id: Game}
-    matchmaking_queue = CREATE_PRIORITY_QUEUE()  
-    event_dispatcher = CREATE_EVENT_DISPATCHER()
-    worker_threads = CREATE_THREAD_POOL(SIZE=MAX_WORKERS)
-    
-    # Start a thread responsible for updating all active games
-    game_update_thread = START_THREAD(
-        UpdateAllGames, 
-        args=(active_games, event_dispatcher)
-    )
+    player_registry = {}  # {player_id: Player}
+    active_games = {}     # {game_id: Game}
+    event_dispatcher = new EventDispatcher()
 
-    # 2. Main Loop
-    WHILE server_running:
-        # 2.1 Poll for new connections
+    GLOBAL_THREAD_POOL.init_workers()
+
+    START_THREAD(UpdateAllGames, [active_games, event_dispatcher])
+
+    WHILE server_running == TRUE DO
         new_connections = server_socket.POLL_CONNECTIONS()
-        FOR connection_request IN new_connections:
-            connection, address = server_socket.ACCEPT(connection_request)
+        FOR connection_request IN new_connections DO
+            (connection, address) = server_socket.ACCEPT(connection_request)
             player = REGISTER_PLAYER(connection, address)
             player_registry[player.id] = player
+            ASSIGN_THREAD(HANDLE_PLAYER, [player])
+        END FOR
 
-            # Assign a worker thread to handle I/O for this player
-            ASSIGN_THREAD(HANDLE_PLAYER, args=(player,))
-
-        # 2.2 Process queued requests from each player
-        FOR player_id, player IN player_registry.items():
-            WHILE player.has_pending_requests():
-                request = player.GET_REQUEST()
+        FOR each_player_id IN player_registry.keys DO
+            WHILE player_registry[each_player_id].has_pending_requests() == TRUE DO
+                pending_request = player_registry[each_player_id].GET_REQUEST()
                 HANDLE_PLAYER_REQUEST(
-                    player, 
-                    request, 
-                    matchmaking_queue, 
-                    active_games, 
+                    player_registry[each_player_id],
+                    pending_request,
+                    matchmaking_queue,
+                    active_games,
                     event_dispatcher
                 )
+            END WHILE
+        END FOR
 
-        # 2.3 Handle Matchmaking
-        PROCESS_MATCHMAKING(
-            matchmaking_queue, 
-            active_games, 
-            event_dispatcher
-        )
-
-        # 2.4 Execute any cross-system events
+        PROCESS_MATCHMAKING(matchmaking_queue, active_games, event_dispatcher)
         event_dispatcher.EXECUTE_PENDING_EVENTS()
+    END WHILE
 
-    # 3. Cleanup after server_running is false
     CLEANUP_SERVER_RESOURCES(server_socket, player_registry, active_games)
-END FUNCTION
+END RunServer
 
-
-###################################################
+##############################################################################
 # 2. Player Handling and Requests
-###################################################
-
-FUNCTION HANDLE_PLAYER(player):
-    """
-    Runs in a worker thread, dedicated to a single player's I/O.
-    Continues until the player is disconnected or flagged inactive.
-    """
-    WHILE player.is_active:
-        # Potentially blocks until data arrives
+##############################################################################
+FUNCTION HANDLE_PLAYER(player)
+    WHILE player.is_active == TRUE DO
         request = player.WAIT_FOR_REQUEST()
-        
-        IF request IS NOT NULL:
-            # Instead of directly handling logic here, we queue it 
-            # or handle it in the main loop for concurrency control
+        IF request != NULL THEN
             player.ADD_REQUEST(request)
-    
-    # Cleanup resources for this player after the loop ends
+        END IF
+    END WHILE
+
     CLEANUP_PLAYER(player)
-END FUNCTION
+END HANDLE_PLAYER
 
-
-###################################################
+##############################################################################
 # 3. Request Routing
-###################################################
-
-FUNCTION HANDLE_PLAYER_REQUEST(
-    player, 
-    request, 
-    matchmaking_queue, 
-    active_games, 
-    event_dispatcher
-):
-    SWITCH request.type:
-        CASE "matchmaking":
-            rank_value = request.data.get("rank", 0)
-            matchmaking_queue.ADD(player, priority=rank_value)
+##############################################################################
+FUNCTION HANDLE_PLAYER_REQUEST(player, request, matchmaking_queue, active_games, event_dispatcher)
+    CASE request.type OF
+        "matchmaking":
+            rank_value = request.data["rank"]
+            IF rank_value == NULL THEN
+                rank_value = 0
+            END IF
+            matchmaking_queue.ADD(player, rank_value)
             SEND_INFO(player, "You have been queued for matchmaking.")
 
-        CASE "game_action":
-            # Identify which game the player is in
+        "game_action":
             game = GET_ACTIVE_GAME_FOR_PLAYER(player, active_games)
-            IF game IS NOT NULL:
-                # The request.data might contain something like 
-                # {"action": "deploy", "card_id": "knight", "position": (x,y)}
-                action_type = request.data.get("action")
-                IF action_type == "deploy":
-                    card_id = request.data.get("card_id")
-                    position = request.data.get("position")
-                    IF card_id IS NOT NULL AND position IS NOT NULL:
+            IF game != NULL THEN
+                action_type = request.data["action"]
+                IF action_type == "deploy" THEN
+                    card_id = request.data["card_id"]
+                    position = request.data["position"]
+                    IF card_id != NULL AND position != NULL THEN
                         ProcessCardDeployment(game, player, card_id, position)
-                    ELSE:
+                    ELSE
                         SEND_ERROR(player, "Invalid deployment data.")
-                ELSE:
-                    # Additional game actions can be handled here
-                    game.EXECUTE_ACTION(player, request.data)
-            ELSE:
+                    END IF
+                ELSE
+                    game.UPDATE(0)  # Stub
+                    game.EXECUTE_ACTION(player, request.data)  # Placeholder
+                END IF
+            ELSE
                 SEND_ERROR(player, "You have no active game.")
+            END IF
 
-        CASE "disconnect":
+        "disconnect":
             LOGOUT_PLAYER(player)
             SEND_INFO(player, "You have disconnected.")
 
-        CASE "custom_event":
-            event_data = request.data.get("event_data", {})
-            event_dispatcher.CREATE_EVENT(
-                "CustomPlayerEvent", 
-                data=event_data
-            )
+        "custom_event":
+            event_data = request.data["event_data"]
+            IF event_data == NULL THEN
+                event_data = {}
+            END IF
+            event_dispatcher.CREATE_EVENT("CustomPlayerEvent", event_data)
 
-        DEFAULT:
+        OTHERWISE:
             SEND_ERROR(player, "Unknown request type: " + request.type)
-END FUNCTION
+    END CASE
+END HANDLE_PLAYER_REQUEST
 
-
-###################################################
+##############################################################################
 # 4. Matchmaking Process
-###################################################
-
-FUNCTION PROCESS_MATCHMAKING(
-    matchmaking_queue, 
-    active_games, 
-    event_dispatcher
-):
-    # Keep pairing until we cannot form a valid match
-    WHILE matchmaking_queue.HAS_AVAILABLE_PAIRS():
-        player1, player2 = matchmaking_queue.GET_MATCHED_PLAYERS()
-        
-        IF player1 IS NOT NULL AND player2 IS NOT NULL:
-            new_game = INITIALIZE_NEW_GAME(
-                player1, 
-                player2, 
-                event_dispatcher
-            )
+##############################################################################
+FUNCTION PROCESS_MATCHMAKING(matchmaking_queue, active_games, event_dispatcher)
+    WHILE matchmaking_queue.HAS_AVAILABLE_PAIRS() == TRUE DO
+        (player1, player2) = matchmaking_queue.GET_MATCHED_PLAYERS()
+        IF player1 != NULL AND player2 != NULL THEN
+            new_game = INITIALIZE_NEW_GAME(player1, player2, event_dispatcher)
             active_games[new_game.id] = new_game
-
             NOTIFY_PLAYERS_OF_MATCH(player1, player2, new_game)
-        ELSE:
-            # If we can't form a pair, break out
+        ELSE
             BREAK
-END FUNCTION
+        END IF
+    END WHILE
+END PROCESS_MATCHMAKING
 
-
-###################################################
+##############################################################################
 # 5. Game Update Thread
-###################################################
-
-FUNCTION UpdateAllGames(active_games, event_dispatcher):
-    TICK_RATE = 30      # frames per second
+##############################################################################
+FUNCTION UpdateAllGames(active_games, event_dispatcher)
+    TICK_RATE = 30
     FRAME_DURATION = 1.0 / TICK_RATE
 
-    WHILE server_running:
-        current_games = list(active_games.values())
-        
-        FOR game IN current_games:
-            # Make sure the game hasn't ended
-            IF NOT game.is_terminated:
-                game.UPDATE(FRAME_DURATION)
-                # Optionally dispatch an event after each update
-                event_dispatcher.SCHEDULE_EVENT(game, "update_completed")
-            ELSE:
-                # If the game is terminated, optionally remove from active_games
-                active_games.pop(game.id, None)
+    WHILE server_running == TRUE DO
+        current_games = active_games.values()
+        FOR each_game IN current_games DO
+            IF each_game.is_terminated == FALSE THEN
+                each_game.UPDATE(FRAME_DURATION)
+                event_dispatcher.SCHEDULE_EVENT(each_game, "update_completed")
+            ELSE
+                active_games.pop(each_game.id, NULL)
+            END IF
+        END FOR
 
-        # Wait for next frame
         SLEEP(FRAME_DURATION)
-END FUNCTION
+    END WHILE
+END UpdateAllGames
 
-
-###################################################
+##############################################################################
 # 6. Game Update Logic
-###################################################
-
-FUNCTION UPDATE_GAME(game, delta_time):
-    # Advance the simulation
+##############################################################################
+FUNCTION UPDATE_GAME(game, delta_time)
     game.INCREMENT_TIME(delta_time)
-    
-    # Check if the game is over
-    IF CHECK_GAME_END_CONDITIONS(game):
+
+    IF CHECK_GAME_END_CONDITIONS(game) == TRUE THEN
         game.TERMINATE()
         RETURN
+    END IF
 
-    # Replenish resources like elixir
     game.REPLENISH_ELIXIR(delta_time)
-
-    # Update all entities in the game
     UPDATE_ENTITIES(game)
-
-    # Broadcast the latest game state to players
     game.BROADCAST_GAME_STATE()
-END FUNCTION
+END UPDATE_GAME
 
-FUNCTION CHECK_GAME_END_CONDITIONS(game):
-    # Check whether towers are destroyed or time has elapsed
-    # Simple example: If any player's Crown Tower HP <= 0, game ends
-    IF game.time_elapsed >= game.max_duration:
+FUNCTION CHECK_GAME_END_CONDITIONS(game)
+    IF game.time_elapsed >= game.max_duration THEN
         DETERMINE_GAME_WINNER_BY_HP(game)
         RETURN TRUE
+    END IF
 
-    FOR tower IN game.towers:
-        IF tower.hp <= 0:
-            # We have a winner
+    FOR tower IN game.towers DO
+        IF tower.hp <= 0 THEN
             ASSIGN_WINNER(game, tower.opposing_player_id)
             RETURN TRUE
+        END IF
+    END FOR
 
     RETURN FALSE
+END CHECK_GAME_END_CONDITIONS
 
-FUNCTION ASSIGN_WINNER(game, winning_player_id):
+FUNCTION ASSIGN_WINNER(game, winning_player_id)
     game.winner_id = winning_player_id
     game.is_terminated = TRUE
-    # Additional logic: update stats, ranks, etc.
+    # Additional logic
+END ASSIGN_WINNER
 
-FUNCTION DETERMINE_GAME_WINNER_BY_HP(game):
-    # Compares tower HP sums for all players to determine a winner
+FUNCTION DETERMINE_GAME_WINNER_BY_HP(game)
     best_score = -1
-    winning_player = None
-    FOR eachPlayerId IN game.players:
-        total_hp = SUM_OF_ALL_TOWERS_HP(game, eachPlayerId)
-        IF total_hp > best_score:
+    winning_player = NULL
+
+    FOR each_player IN game.players DO
+        total_hp = SUM_OF_ALL_TOWERS_HP(game, each_player)  # Stub
+        IF total_hp > best_score THEN
             best_score = total_hp
-            winning_player = eachPlayerId
-    ASSIGN_WINNER(game, winning_player)
+            winning_player = each_player
+        END IF
+    END FOR
 
-FUNCTION REPLENISH_ELIXIR(game, delta_time):
-    # For each player in the game
-    FOR p IN game.players:
+    ASSIGN_WINNER(game, winning_player.id)
+END DETERMINE_GAME_WINNER_BY_HP
+
+FUNCTION REPLENISH_ELIXIR(game, delta_time)
+    FOR p IN game.players DO
         current_elixir = p.elixir
-        regen_rate = game.get_elixir_regen_rate()
-        p.elixir = MIN(
-            10, 
-            current_elixir + regen_rate * delta_time
-        )
+        regen_rate = game.get_elixir_regen_rate()  # Stub
+        p.elixir = MIN(10, current_elixir + (regen_rate * delta_time))
+    END FOR
+END REPLENISH_ELIXIR
 
-FUNCTION UPDATE_ENTITIES(game):
+FUNCTION UPDATE_ENTITIES(game)
     entities_copy = game.entities[:]
-    FOR entity IN entities_copy:
-        IF entity.IS_DESTROYED():
-            game.REMOVE_ENTITY(entity)
-        ELSE:
+
+    FOR entity IN entities_copy DO
+        IF entity.IS_DESTROYED() == TRUE THEN
+            game.entities.remove(entity)
+        ELSE
             entity.PROCESS_BEHAVIOR(game)
             entity.UPDATE_POSITION(game)
-END FUNCTION
+        END IF
+    END FOR
+END UPDATE_ENTITIES
 
-
-###################################################
+##############################################################################
 # 7. Card Deployment Process
-###################################################
-
-FUNCTION ProcessCardDeployment(game, player, card_id, position):
-    IF NOT VALIDATE_DEPLOYMENT_POSITION(game, player, position):
+##############################################################################
+FUNCTION ProcessCardDeployment(game, player, card_id, position)
+    IF VALIDATE_DEPLOYMENT_POSITION(game, player, position) == FALSE THEN
         SEND_ERROR(player, "Invalid position for deployment.")
         RETURN
+    END IF
 
-    card = player.GET_CARD_FROM_HAND(card_id)
-    IF card IS NULL:
+    card = player.GET_CARD_FROM_HAND(card_id)  # Stub
+    IF card == NULL THEN
         SEND_ERROR(player, "Card not found in hand.")
         RETURN
+    END IF
 
-    IF NOT VERIFY_ELIXIR_COST(player, card):
+    IF VERIFY_ELIXIR_COST(player, card) == FALSE THEN
         SEND_ERROR(player, "Insufficient elixir.")
         RETURN
+    END IF
 
-    # Spend elixir and remove card from hand
-    player.SPEND_ELIXIR(card.elixir_cost)
+    player.SPEND_ELIXIR(card.elixir_cost)  
     player.DISCARD_CARD(card_id)
     player.DRAW_NEXT_CARD()
 
     entity = CREATE_ENTITY_FROM_CARD(card, position, player.side)
-    game.REGISTER_ENTITY(entity)
+    game.entities.append(entity)
 
     BROADCAST_DEPLOYMENT_UPDATE(game, player, card, position)
-END FUNCTION
+END ProcessCardDeployment
 
-FUNCTION VALIDATE_DEPLOYMENT_POSITION(game, player, position):
-    # Example: position must be on the player's side of the arena
-    # Simple check: x between 0 and game.arena_width, 
-    #              y in [0, half_arena_height] for one side
-    # In practice, more advanced boundary checks are needed
-    IF position.x < 0 OR position.x > game.arena_width:
+FUNCTION VALIDATE_DEPLOYMENT_POSITION(game, player, position)
+    IF position["x"] < 0 OR position["x"] > game.arena_width THEN
         RETURN FALSE
-    IF player.side == "bottom":
-        IF position.y < 0 OR position.y > (game.arena_height / 2):
+    END IF
+
+    IF player.side == "bottom" THEN
+        IF position["y"] < 0 OR position["y"] > (game.arena_height / 2) THEN
             RETURN FALSE
-    ELSE:
-        IF position.y < (game.arena_height / 2) OR position.y > game.arena_height:
+        END IF
+    ELSE
+        IF position["y"] < (game.arena_height / 2) OR position["y"] > game.arena_height THEN
             RETURN FALSE
+        END IF
+    END IF
+
     RETURN TRUE
+END VALIDATE_DEPLOYMENT_POSITION
 
-FUNCTION VERIFY_ELIXIR_COST(player, card):
-    RETURN (player.elixir >= card.elixir_cost)
+FUNCTION VERIFY_ELIXIR_COST(player, card)
+    IF player.elixir >= card.elixir_cost THEN
+        RETURN TRUE
+    ELSE
+        RETURN FALSE
+    END IF
+END VERIFY_ELIXIR_COST
 
-FUNCTION CREATE_ENTITY_FROM_CARD(card, position, side):
-    # Instantiate a Troop/Spell/Building entity 
-    # with properties from the card definition
-    new_entity = Entity()
-    new_entity.type = card.type       # e.g., "troop"
+FUNCTION CREATE_ENTITY_FROM_CARD(card, position, side)
+    new_entity = new Entity()
+    new_entity.type = card.type
     new_entity.hp = card.hp
     new_entity.damage = card.damage
     new_entity.range = card.range
     new_entity.position = position
     new_entity.side = side
-    return new_entity
 
-FUNCTION BROADCAST_DEPLOYMENT_UPDATE(game, player, card, position):
-    # Notifies all players about the new entity
+    RETURN new_entity
+END CREATE_ENTITY_FROM_CARD
+
+FUNCTION BROADCAST_DEPLOYMENT_UPDATE(game, player, card, position)
     update_message = {
         "type": "deployment",
         "player_id": player.id,
         "card_id": card.id,
         "position": position
     }
-    FOR p IN game.players:
+
+    FOR p IN game.players DO
         p.SEND_MESSAGE(update_message)
+    END FOR
+END BROADCAST_DEPLOYMENT_UPDATE
 
-
-###################################################
+##############################################################################
 # 8. Target Selection Algorithm
-###################################################
-
-FUNCTION DetermineBestTarget(attacker, game_state):
-    potential_targets = game_state.GET_ENEMY_ENTITIES(attacker.side)
+##############################################################################
+FUNCTION DetermineBestTarget(attacker, game_state)
+    potential_targets = game_state.GET_ENEMY_ENTITIES(attacker.side)  # Stub
     best_target = NULL
     minimum_threat_score = INFINITY
 
-    FOR target IN potential_targets:
+    FOR target IN potential_targets DO
         threat_score = COMPUTE_THREAT_SCORE(attacker, target)
-        IF threat_score < minimum_threat_score:
+        IF threat_score < minimum_threat_score THEN
             minimum_threat_score = threat_score
             best_target = target
+        END IF
+    END FOR
 
     RETURN best_target
-END FUNCTION
+END DetermineBestTarget
 
-FUNCTION COMPUTE_THREAT_SCORE(attacker, target):
-    # Weighted factors
+FUNCTION COMPUTE_THREAT_SCORE(attacker, target)
     DISTANCE_FACTOR = 1.0
-    HEALTH_FACTOR   = 0.01
+    HEALTH_FACTOR = 0.01
     PRIORITY_FACTOR = 5.0
 
-    distance_val = CALCULATE_DISTANCE(
-        attacker.position, 
-        target.position
-    )
+    distance_val = CALCULATE_DISTANCE(attacker.position, target.position)  # Stub
     distance_weight = distance_val * DISTANCE_FACTOR
-
-    health_weight = target.health * HEALTH_FACTOR
-    priority_weight = target.PRIORITY() * PRIORITY_FACTOR
+    health_weight = target.hp * HEALTH_FACTOR
+    priority_weight = target.PRIORITY() * PRIORITY_FACTOR  # Stub
 
     total = distance_weight + health_weight + priority_weight
     RETURN total
-END FUNCTION
+END COMPUTE_THREAT_SCORE
 
-
-###################################################
+##############################################################################
 # 9. Chest Reward System
-###################################################
+##############################################################################
+FUNCTION GenerateRewardChest(player, chest_type)
+    newChest = new Chest()
+    newChest.type = chest_type
+    newChest.ASSIGN_UNLOCK_TIME()
+    newChest.ALLOCATE_GOLD_REWARDS(player)
+    newChest.ALLOCATE_CARD_REWARDS(player)
 
-FUNCTION GenerateRewardChest(player, chest_type):
-    chest = CREATE_CHEST_INSTANCE(chest_type)
-    chest.ASSIGN_UNLOCK_TIME()
-    chest.ALLOCATE_GOLD_REWARDS(player)
-    chest.ALLOCATE_CARD_REWARDS(player)
+    player.chests.append(newChest)
+    SEND_REWARD_NOTIFICATION(player, newChest)
+END GenerateRewardChest
 
-    player.INCREMENT_CHEST_COLLECTION(chest)
-    SEND_REWARD_NOTIFICATION(player, chest)
-END FUNCTION
-
-FUNCTION CREATE_CHEST_INSTANCE(chest_type):
-    chest = Chest()
-    chest.type = chest_type
-    # Example: define base times or vary by type
-    chest.unlock_time = 0    # assigned later
-    chest.rewards = []
-    RETURN chest
-
-FUNCTION chest.ASSIGN_UNLOCK_TIME():
-    # Simple logic: 
-    SWITCH self.type:
-        CASE "silver":
-            self.unlock_time = 3 * 3600  # 3 hours
-        CASE "gold":
-            self.unlock_time = 8 * 3600  # 8 hours
-        CASE "epic":
-            self.unlock_time = 12 * 3600
-        DEFAULT:
-            self.unlock_time = 1 * 3600   # fallback
-
-FUNCTION chest.ALLOCATE_GOLD_REWARDS(player):
-    # Reward formula can be based on player's arena
-    base_gold = 100
-    arena_factor = player.arena
-    total_gold = base_gold + (arena_factor * 10)
-    # Add to chest
-    self.rewards.append({
-        "type": "gold",
-        "amount": total_gold
-    })
-
-FUNCTION chest.ALLOCATE_CARD_REWARDS(player):
-    ALLOCATE_CARD_REWARDS(self, player)
-
-FUNCTION ALLOCATE_CARD_REWARDS(chest, player):
+FUNCTION ALLOCATE_CARD_REWARDS(chest, player)
     card_distribution = DETERMINE_CARD_DISTRIBUTION(player.arena, chest.type)
     available_cards = FETCH_AVAILABLE_CARDS(player.arena)
 
-    FOR rarity, count IN card_distribution.items():
+    FOR (rarity, count) IN card_distribution.items DO
         selected_cards = PICK_RANDOM_CARDS(available_cards, rarity, count)
         chest.ADD_CARDS(selected_cards)
+    END FOR
+END ALLOCATE_CARD_REWARDS
 
-FUNCTION DETERMINE_CARD_DISTRIBUTION(arena, chest_type):
-    # Basic table-based distribution
-    # For example:
-    IF chest_type == "silver":
+FUNCTION DETERMINE_CARD_DISTRIBUTION(arena, chest_type)
+    IF chest_type == "silver" THEN
         RETURN {"common": 10, "rare": 2}
-    ELIF chest_type == "gold":
+    ELSE IF chest_type == "gold" THEN
         RETURN {"common": 20, "rare": 5, "epic": 1}
-    ELSE:
+    ELSE
         RETURN {"common": 5, "rare": 1}
+    END IF
+END DETERMINE_CARD_DISTRIBUTION
 
-FUNCTION FETCH_AVAILABLE_CARDS(arena):
-    # In a real system, fetch from a database or config
-    # For simplicity, pretend we have these cards
-    return [
+FUNCTION FETCH_AVAILABLE_CARDS(arena)
+    RETURN [
         {"id": "knight", "rarity": "common"},
         {"id": "archer", "rarity": "common"},
         {"id": "giant",  "rarity": "rare"},
         {"id": "dragon", "rarity": "epic"}
     ]
+END FETCH_AVAILABLE_CARDS
 
-FUNCTION PICK_RANDOM_CARDS(cards, rarity, count):
-    # Filter by rarity
+FUNCTION PICK_RANDOM_CARDS(cards, rarity, count)
     same_rarity_cards = []
-    FOR c IN cards:
-        IF c["rarity"] == rarity:
-            same_rarity_cards.append(c)
-
     selected = []
-    # Example: random choice logic
-    FOR i IN RANGE(count):
-        IF same_rarity_cards IS NOT EMPTY:
-            r = RANDOM_INDEX(0, LEN(same_rarity_cards)-1)
+
+    FOR c IN cards DO
+        IF c["rarity"] == rarity THEN
+            same_rarity_cards.append(c)
+        END IF
+    END FOR
+
+    FOR i = 1 TO count DO
+        IF same_rarity_cards.length > 0 THEN
+            r = RANDOM_INDEX(0, same_rarity_cards.length - 1)
             selected_card = same_rarity_cards[r]
             selected.append(selected_card)
+        END IF
+    END FOR
+
     RETURN selected
+END PICK_RANDOM_CARDS
 
-FUNCTION chest.ADD_CARDS(cards_list):
-    FOR c IN cards_list:
-        self.rewards.append({
-            "type": "card",
-            "card_id": c["id"],
-            "rarity": c["rarity"]
-        })
-
-FUNCTION player.INCREMENT_CHEST_COLLECTION(chest):
-    # Add chest to player's chest inventory
-    self.chests.append(chest)
-
-FUNCTION SEND_REWARD_NOTIFICATION(player, chest):
+FUNCTION SEND_REWARD_NOTIFICATION(player, chest)
     notification = {
         "type": "chest_reward",
         "chest_type": chest.type,
         "estimated_unlock_time": chest.unlock_time
     }
+
     player.SEND_MESSAGE(notification)
+END SEND_REWARD_NOTIFICATION
 
-
-###################################################
+##############################################################################
 # 10. Detailed Definitions of Referenced Functions
-###################################################
+##############################################################################
+FUNCTION INITIALIZE_SERVER_SOCKET(host, port)
+    sock = CREATE_SOCKET()
+    sock.BIND(host, port)
+    sock.LISTEN(MAX_PENDING_CONNECTIONS)
+    RETURN sock
+END INITIALIZE_SERVER_SOCKET
 
-FUNCTION INITIALIZE_SERVER_SOCKET(host, port):
-    socket_obj = CREATE_SOCKET()
-    socket_obj.BIND(host, port)
-    socket_obj.LISTEN(MAX_PENDING_CONNECTIONS)
-    RETURN socket_obj
-END FUNCTION
-
-FUNCTION server_socket.POLL_CONNECTIONS():
-    # Implementation depends on the environment.
-    # Typically uses select/poll to find new connection requests.
-    # Returns a list of pending connection objects.
-    pending_connections = OS_SPECIFIC_POLL(self.internal_socket)
+FUNCTION server_socket.POLL_CONNECTIONS()
+    pending_connections = OS_SPECIFIC_POLL(self.internal_socket)  # Stub
     RETURN pending_connections
-END FUNCTION
+END server_socket.POLL_CONNECTIONS
 
-FUNCTION server_socket.ACCEPT(connection_request):
-    # Accepts a connection, returns a (connection, address) tuple
-    conn, addr = OS_ACCEPT(connection_request)
+FUNCTION server_socket.ACCEPT(connection_request)
+    (conn, addr) = OS_ACCEPT(connection_request)  # Stub
     RETURN (conn, addr)
-END FUNCTION
+END server_socket.ACCEPT
 
-FUNCTION CREATE_THREAD_POOL(SIZE):
-    pool = ThreadPool(SIZE)
-    # Initialize worker threads
-    pool.init_workers()
-    RETURN pool
-END FUNCTION
+FUNCTION CREATE_SOCKET()
+    my_socket = {
+        "BIND": (host, port) -> None,
+        "LISTEN": (maxConn) -> None,
+        "CLOSE": () -> None,
+        "internal_socket": "OS_Socket_Object"
+    }
+    RETURN my_socket
+END CREATE_SOCKET
 
-FUNCTION ASSIGN_THREAD(function, args=()):
-    # Queues the task into the pool
-    GLOBAL_THREAD_POOL.add_task(function, args)
-END FUNCTION
+FUNCTION ASSIGN_THREAD(functionToRun, args)
+    GLOBAL_THREAD_POOL.add_task(functionToRun, args)
+END ASSIGN_THREAD
 
-FUNCTION START_THREAD(function, args=()):
-    # Creates a single dedicated thread for a specific function
-    t = Thread(target=function, args=args)
+FUNCTION START_THREAD(functionToRun, args)
+    t = new Thread(functionToRun, args)
     t.start()
     RETURN t
-END FUNCTION
+END START_THREAD
 
-FUNCTION REGISTER_PLAYER(connection, address):
-    global PLAYER_ID_COUNTER
-    PLAYER_ID_COUNTER += 1
+FUNCTION REGISTER_PLAYER(connection, address)
+    PLAYER_ID_COUNTER = PLAYER_ID_COUNTER + 1
     new_player_id = PLAYER_ID_COUNTER
-    new_player = Player(
-        id=new_player_id,
-        connection=connection,
-        address=address
-    )
-    new_player.elixir = 0
-    new_player.is_active = True
-    new_player.arena = 1
-    new_player.chests = []
-    # Possibly send a welcome message
+
+    new_player = new Player(new_player_id, connection, address)
     SEND_INFO(new_player, "Welcome! Your player ID is " + STR(new_player_id))
     RETURN new_player
-END FUNCTION
+END REGISTER_PLAYER
 
-FUNCTION Player.WAIT_FOR_REQUEST():
-    # Blocks or non-blocks reading from socket
-    # parse data into a Request object
-    raw_data = self.connection.READ()
-    IF raw_data IS EMPTY:
-        RETURN NULL
-    parsed_request = PARSE_REQUEST(raw_data)
-    RETURN parsed_request
-END FUNCTION
-
-FUNCTION Player.ADD_REQUEST(request):
-    self.request_queue.append(request)
-END FUNCTION
-
-FUNCTION Player.has_pending_requests():
-    RETURN (LEN(self.request_queue) > 0)
-END FUNCTION
-
-FUNCTION Player.GET_REQUEST():
-    IF LEN(self.request_queue) == 0:
-        RETURN NULL
-    RETURN self.request_queue.pop(0)
-END FUNCTION
-
-FUNCTION CLEANUP_PLAYER(player):
-    # Closes the socket connection if still open
-    IF player.connection IS NOT NULL:
+FUNCTION CLEANUP_PLAYER(player)
+    IF player.connection != NULL THEN
         player.connection.CLOSE()
-
-    # Mark as inactive
-    player.is_active = False
-
-    # Remove from matchmaking if needed
-    # (Implementation depends on how matchmaking queue is structured)
+    END IF
+    player.is_active = FALSE
     matchmaking_queue.REMOVE(player)
+END CLEANUP_PLAYER
 
-    # Additional persistence if necessary
-END FUNCTION
-
-FUNCTION GET_ACTIVE_GAME_FOR_PLAYER(player, active_games):
-    FOR game_id, game IN active_games.items():
-        IF player.id IN game.player_ids:
+FUNCTION GET_ACTIVE_GAME_FOR_PLAYER(player, active_games)
+    FOR game_id IN active_games.keys DO
+        game = active_games[game_id]
+        IF player.id IN game.player_ids THEN
             RETURN game
+        END IF
+    END FOR
     RETURN NULL
-END FUNCTION
+END GET_ACTIVE_GAME_FOR_PLAYER
 
-FUNCTION SEND_ERROR(player, message):
+FUNCTION SEND_ERROR(player, message)
     error_packet = {
         "type": "error",
         "message": message
     }
     player.SEND_MESSAGE(error_packet)
+END SEND_ERROR
 
-FUNCTION SEND_INFO(player, message):
+FUNCTION SEND_INFO(player, message)
     info_packet = {
         "type": "info",
         "message": message
     }
     player.SEND_MESSAGE(info_packet)
+END SEND_INFO
 
-FUNCTION LOGOUT_PLAYER(player):
-    player.is_active = False
-    # Additional logic: remove from matchmaking queue if present
+FUNCTION LOGOUT_PLAYER(player)
+    player.is_active = FALSE
     matchmaking_queue.REMOVE(player)
-    # Possibly broadcast that this player has disconnected
+END LOGOUT_PLAYER
 
-FUNCTION INITIALIZE_NEW_GAME(player1, player2, event_dispatcher):
-    new_game = CREATE_GAME_INSTANCE()
-    new_game.ADD_PLAYER(player1)
-    new_game.ADD_PLAYER(player2)
-    new_game.id = GENERATE_UNIQUE_GAME_ID()
+FUNCTION INITIALIZE_NEW_GAME(player1, player2, event_dispatcher)
+    GAME_ID_COUNTER = GAME_ID_COUNTER + 1
+
+    new_game = new Game()
+    new_game.id = GAME_ID_COUNTER
     new_game.event_dispatcher = event_dispatcher
     new_game.is_terminated = FALSE
     new_game.time_elapsed = 0
-    new_game.max_duration = 180  # 3 minutes, for example
-    # Setup default towers, base elixir, etc.
+    new_game.max_duration = 180
+
+    new_game.ADD_PLAYER(player1)
+    new_game.ADD_PLAYER(player2)
+
     new_game.towers = CREATE_DEFAULT_TOWERS(player1, player2)
-    # Register them in the game
-    FOR tower IN new_game.towers:
+    FOR tower IN new_game.towers DO
         new_game.entities.append(tower)
+    END FOR
 
     RETURN new_game
-END FUNCTION
+END INITIALIZE_NEW_GAME
 
-FUNCTION CREATE_GAME_INSTANCE():
-    g = Game()
-    g.entities = []
-    g.players = []
-    RETURN g
+FUNCTION CREATE_DEFAULT_TOWERS(player1, player2)
+    tower1 = new Tower(player1.id, 3000, "bottom")
+    tower2 = new Tower(player1.id, 2000, "bottom")
+    tower3 = new Tower(player1.id, 2000, "bottom")
+    tower4 = new Tower(player2.id, 3000, "top")
+    tower5 = new Tower(player2.id, 2000, "top")
+    tower6 = new Tower(player2.id, 2000, "top")
 
-FUNCTION Game.ADD_PLAYER(player):
-    self.players.append(player)
-    self.player_ids.append(player.id)
+    tower1.opposing_player_id = player2.id
+    tower2.opposing_player_id = player2.id
+    tower3.opposing_player_id = player2.id
+    tower4.opposing_player_id = player1.id
+    tower5.opposing_player_id = player1.id
+    tower6.opposing_player_id = player1.id
 
-FUNCTION GENERATE_UNIQUE_GAME_ID():
-    global GAME_ID_COUNTER
-    GAME_ID_COUNTER += 1
-    RETURN GAME_ID_COUNTER
+    tower_list = [tower1, tower2, tower3, tower4, tower5, tower6]
+    RETURN tower_list
+END CREATE_DEFAULT_TOWERS
 
-FUNCTION NOTIFY_PLAYERS_OF_MATCH(player1, player2, game):
-    match_info = {
-        "type": "match_found",
-        "opponent_ids": [player1.id, player2.id],
-        "game_id": game.id
-    }
-    player1.SEND_MESSAGE(match_info)
-    player2.SEND_MESSAGE(match_info)
-
-FUNCTION UpdateAllGames(active_games, event_dispatcher):
-    # Already defined, with a TICK_RATE, etc.
-
-FUNCTION UPDATE_GAME(game, delta_time):
-    # Called from game.UPDATE(delta_time)
-    game.INCREMENT_TIME(delta_time)
-    # rest is same as above
-END FUNCTION
-
-FUNCTION game.INCREMENT_TIME(delta_time):
-    self.time_elapsed += delta_time
-
-FUNCTION game.TERMINATE():
-    self.is_terminated = TRUE
-    # Additional logic: mark final states, award trophies, etc.
-
-FUNCTION game.REPLENISH_ELIXIR(delta_time):
-    # Implementation shown above
-
-FUNCTION game.BROADCAST_GAME_STATE():
-    # Gather positions, HP, etc., and send to all players
-    state_snapshot = {
-        "type": "game_state",
-        "entities": [
-            {
-                "id": e.id,
-                "hp": e.hp,
-                "position": e.position
-            } 
-            FOR e IN self.entities
-        ],
-        "time_elapsed": self.time_elapsed
-    }
-    FOR p IN self.players:
-        p.SEND_MESSAGE(state_snapshot)
-
-FUNCTION CREATE_DEFAULT_TOWERS(player1, player2):
-    # Typically each player has 1 King Tower + 2 Princess Towers
-    tower1 = Tower(owner=player1.id, hp=3000, side="bottom")
-    tower2 = Tower(owner=player1.id, hp=2000, side="bottom")
-    tower3 = Tower(owner=player1.id, hp=2000, side="bottom")
-    tower4 = Tower(owner=player2.id, hp=3000, side="top")
-    tower5 = Tower(owner=player2.id, hp=2000, side="top")
-    tower6 = Tower(owner=player2.id, hp=2000, side="top")
-    return [tower1, tower2, tower3, tower4, tower5, tower6]
-
-FUNCTION CLEANUP_SERVER_RESOURCES(server_socket, player_registry, active_games):
+FUNCTION CLEANUP_SERVER_RESOURCES(server_socket, player_registry, active_games)
     server_socket.CLOSE()
-    FOR player_id, player IN player_registry.items():
-        CLEANUP_PLAYER(player)
-    FOR game_id, game IN active_games.items():
-        game.TERMINATE()
-END FUNCTION
 
+    FOR pid IN player_registry.keys DO
+        CLEANUP_PLAYER(player_registry[pid])
+    END FOR
 
-###################################################
+    FOR gid IN active_games.keys DO
+        g = active_games[gid]
+        g.TERMINATE()
+    END FOR
+END CLEANUP_SERVER_RESOURCES
+
+##############################################################################
 # 11. Error Handling & Validation
-###################################################
-
-FUNCTION RAISE_ERROR(message):
-    # Throws an exception in actual code
-    # For pseudocode, we might just print or log it
+##############################################################################
+FUNCTION RAISE_ERROR(message)
     PRINT("ERROR: " + message)
-    # Or raise an exception if the language supports it
-
-FUNCTION SEND_ERROR(player, message):
-    # Already defined above
-
+END RAISE_ERROR
 \end{lstlisting}
-
 %---------------------------------------------
 % FLOWCHARTS
 %---------------------------------------------
@@ -1483,7 +1771,6 @@ FUNCTION SEND_ERROR(player, message):
 \subsubsection{Main Server Loop Flowchart}
 \begin{figure}[H]
 \centering
-% Scale to 80% of page height to ensure it fits
 \adjustbox{max height=0.8\textheight}{%
 \begin{tikzpicture}[node distance=2.2cm]
 \node (start) [startstop] {Start Server};
@@ -1676,13 +1963,11 @@ Remove \& Replace Card};
 \FloatBarrier
 
 \section{Trace Tables}
-The following subsections provide example trace tables for typical scenarios in each major workflow.
-
-\subsection{Main Server Loop Trace Table}
+\subsection{Main Server Loop}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.2cm}|p{4cm}|p{2.5cm}|p{2.5cm}|}
+\begin{tabular}{|c|l|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{player\_registry} & \textbf{active\_games} \\
 \hline
@@ -1702,11 +1987,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Main Server Loop - Two Players Matching}
 \end{table}
 
-\subsection{Player Handling (HANDLE\_PLAYER) Trace Table}
+\subsection{Player Handling (HANDLE\_PLAYER)}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{4cm}|p{4cm}|p{2.5cm}|}
+\begin{tabular}{|c|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{Outcome}\\
 \hline
@@ -1722,11 +2007,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{HANDLE\_PLAYER - Disconnect Scenario}
 \end{table}
 
-\subsection{Request Routing (HANDLE\_PLAYER\_REQUEST) Trace Table}
+\subsection{Request Routing (HANDLE\_PLAYER\_REQUEST)}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{4cm}|p{2.5cm}|}
+\begin{tabular}{|c|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Input} & \textbf{Check / Action} & \textbf{Outcome}\\
 \hline
@@ -1742,11 +2027,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Request Routing - Deploy Action}
 \end{table}
 
-\subsection{Matchmaking Process Trace Table}
+\subsection{Matchmaking Process}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{4cm}|p{2.5cm}|p{2.5cm}|}
+\begin{tabular}{|c|l|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{matchmaking\_queue} & \textbf{active\_games} \\
 \hline
@@ -1760,11 +2045,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Matchmaking - Single Pair Scenario}
 \end{table}
 
-\subsection{Game Update Thread (UpdateAllGames) Trace Table}
+\subsection{Game Update Thread (UpdateAllGames)}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{3.5cm}|p{3cm}|p{3cm}|}
+\begin{tabular}{|c|l|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Games} & \textbf{Check} & \textbf{Action} & \textbf{Result}\\
 \hline
@@ -1778,11 +2063,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Game Update Thread - One Terminated, One Active}
 \end{table}
 
-\subsection{Game Update Logic (UPDATE\_GAME) Trace Table}
+\subsection{Game Update Logic (UPDATE\_GAME)}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3cm}|p{5cm}|p{3cm}|}
+\begin{tabular}{|c|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{Outcome}\\
 \hline
@@ -1796,11 +2081,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Game Update Logic - Timeout Scenario}
 \end{table}
 
-\subsection{Card Deployment Process Trace Table}
+\subsection{Card Deployment Process}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{4cm}|p{3cm}|}
+\begin{tabular}{|c|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Condition} & \textbf{Action} & \textbf{Result}\\
 \hline
@@ -1820,11 +2105,11 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Card Deployment - Valid Scenario}
 \end{table}
 
-\subsection{Target Selection Algorithm Trace Table}
+\subsection{Target Selection Algorithm}
 \begin{table}[H]
 \centering
 \footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{4cm}|p{3.5cm}|}
+\begin{tabular}{|c|l|l|l|}
 \hline
 \textbf{Step} & \textbf{Targets} & \textbf{Compute Score} & \textbf{Min Score Target}\\
 \hline
@@ -1836,27 +2121,4 @@ The following subsections provide example trace tables for typical scenarios in 
 \caption{Target Selection - Closest Target Example}
 \end{table}
 
-\subsection{Chest Reward System Trace Table}
-\begin{table}[H]
-\centering
-\footnotesize
-\begin{tabular}{|c|p{3.5cm}|p{5cm}|p{3cm}|}
-\hline
-\textbf{Step} & \textbf{Input} & \textbf{Action} & \textbf{Outcome}\\
-\hline
-1 & chest\_type="gold" & CREATE\_CHEST\_INSTANCE("gold") & chest.type=gold \\
-\hline
-2 & ASSIGN\_UNLOCK\_TIME & 8 hours & chest.unlock\_time=28800 \\
-\hline
-3 & ALLOCATE\_GOLD\_REWARDS & base=100+(arena*10) & added to chest \\
-\hline
-4 & ALLOCATE\_CARD\_REWARDS & \{common:20, rare:5, epic:1\} & random picks \\
-\hline
-5 & INCREMENT\_CHEST\_COLLECTION & chest added to inventory & player has new chest \\
-\hline
-6 & SEND\_REWARD\_NOTIFICATION & player alerted & done \\
-\hline
-\end{tabular}
-\caption{Chest Reward System - Gold Chest Scenario}
-\end{table}
 \end{document}

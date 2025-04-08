@@ -1,18 +1,14 @@
 from collections import deque
-import enum
 from functools import partial
 import json
-from logging import error, warn
 import os
-from random import randint, random
+from random import randint
 from socket import socket
 from threading import Lock
-from time import time
 from types import SimpleNamespace
-from typing import Callable, Deque, Dict, List, Optional, Tuple
+from typing import Callable, Deque, List, Optional, Tuple
 
 from numpy import average
-from copy import copy
 from arena import Arena
 from auth import DataRequest, LoginRequest, LoginResponse, ServerUserData, User, UserMap
 from deck import Deck
@@ -24,12 +20,8 @@ from network import (
     Packet,
     Server,
     ServerStatus,
-    deserialize_object,
     do_if,
-    serialize_object,
 )
-from inspect import getsourcefile
-from os.path import abspath
 from dataclasses import dataclass
 import datetime
 from chest import Chest, ChestRarity, generate_chest
@@ -48,24 +40,16 @@ from card import (
 )
 from engine import (
     Camera,
-    Camera3D,
-    Component,
-    EngineCode,
     EngineFrameData,
-    GameObject,
     Scene,
     TextRenderer,
-    Transform,
-    Transform3D,
-    UIAnimation,
     UIButton,
     UIElement,
-    intersects,
 )
 from pipeline import Event, FramePipeline, StateData
 from engine import Engine
 from unit import Owner
-from util import json_to_dataclass, logger
+from util import logger
 
 
 @dataclass
@@ -224,7 +208,6 @@ class GameNetworkClient(Client):
         self.auth_state.requested = False
 
     def packet_callback(self, packet: Packet):
-        # print(packet)
         do_if(
             packet, PacketType.CONNECTION, lambda: self.update_connection_status(True)
         )

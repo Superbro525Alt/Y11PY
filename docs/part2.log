@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024/Arch Linux) (preloaded format=pdflatex 2025.4.30)  30 APR 2025 09:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024/Arch Linux) (preloaded format=pdflatex 2025.4.30)  30 APR 2025 13:55
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -613,10 +613,6 @@ Package Listings Warning: Text dropped after begin of listing on input line 134
 .
 
 
-Package Listings Warning: Text dropped after begin of listing on input line 152
-.
-
-
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
 (fancyhdr)                \setlength{\headheight}{13.59999pt}.
@@ -626,263 +622,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [4]
 
-Package Listings Warning: Text dropped after begin of listing on input line 168
+Package Listings Warning: Text dropped after begin of listing on input line 175
 .
 
 
-Package Listings Warning: Text dropped after begin of listing on input line 184
+Package Listings Warning: Text dropped after begin of listing on input line 217
 .
-
-
-Overfull \hbox (6.76695pt too wide) in paragraph at lines 197--198
-\T1/lmr/m/n/10.95 Concrete \T1/lmtt/m/n/10.95 GameNetworkClient \T1/lmr/m/n/10.
-95 drives LO-GIN, SYNC, MATCH_REQUEST and DE-PLOY_UNIT
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 206--206
-[]|\T1/lmr/bx/n/10.95 Detailed De-scrip-tion
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 209--210
-[]\T1/lmr/m/n/10.95 Initialise a 10\TS1/lmr/m/n/10.95 Ö\T1/lmr/m/n/10.95 10
- []
-
-
-Underfull \hbox (badness 6173) in paragraph at lines 209--210
-\T1/lmr/m/n/10.95 grid of all \T1/lmtt/m/n/10.95 EMPTY
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 210--211
-[]\T1/lmr/m/n/10.95 Call
- []
-
-
-Overfull \hbox (28.85144pt too wide) in paragraph at lines 210--211
-\T1/lmtt/m/n/10.95 find_path((0,0),(9,9))\T1/lmr/m/n/10.95 . 
- []
-
-
-Underfull \hbox (badness 3029) in paragraph at lines 211--212
-[]\T1/lmr/m/n/10.95 Assert path length
- []
-
-
-Underfull \hbox (badness 6125) in paragraph at lines 216--217
-[]\T1/lmr/m/n/10.95 Place a hor-i-zon-tal
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 216--217
-\T1/lmr/m/n/10.95 river across row
- []
-
-
-Underfull \hbox (badness 4205) in paragraph at lines 216--217
-\T1/lmr/m/n/10.95 5 with bridges at
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 217--218
-[]\T1/lmr/m/n/10.95 Call
- []
-
-
-Overfull \hbox (28.85144pt too wide) in paragraph at lines 217--218
-\T1/lmtt/m/n/10.95 find_path((1,5),(8,5))\T1/lmr/m/n/10.95 . 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 218--219
-\T1/lmr/m/n/10.95 bridge co-or-di-nates
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 223--224
-[]\T1/lmr/m/n/10.95 Mark start =
- []
-
-
-Underfull \hbox (badness 7631) in paragraph at lines 223--224
-\T1/lmtt/m/n/10.95 RIVER \T1/lmr/m/n/10.95 or goal =
- []
-
-
-Underfull \hbox (badness 1552) in paragraph at lines 225--226
-[]\T1/lmr/m/n/10.95 Assert re-sult is an
- []
-
-
-Underfull \hbox (badness 1331) in paragraph at lines 230--231
-[]\T1/lmr/m/n/10.95 Surround start and
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 237--238
-[]\T1/lmr/m/n/10.95 Create two troop
- []
-
-
-Underfull \hbox (badness 5431) in paragraph at lines 238--239
-[]\T1/lmr/m/n/10.95 Advance sim-u-la-tion
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 238--239
-\T1/lmr/m/n/10.95 by one tick via
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 239--240
-[]\T1/lmr/m/n/10.95 Assert at-tacker's
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 239--240
-\T1/lmr/m/n/10.95 HP on de-fender
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 239--240
-\T1/lmr/m/n/10.95 de-creases by
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 240--241
-[]\T1/lmr/m/n/10.95 Assert move-ment
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 246--247
-[]\T1/lmr/m/n/10.95 Assert
- []
-
-
-Overfull \hbox (77.5484pt too wide) in paragraph at lines 246--247
-\T1/lmtt/m/n/10.95 GameNetworkClient.deploy_unit()
- []
-
-
-Underfull \hbox (badness 1910) in paragraph at lines 247--248
-[]\T1/lmr/m/n/10.95 Use \T1/lmtt/m/n/10.95 unittest.mock
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 252--253
-[]\T1/lmr/m/n/10.95 Mock server to
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 252--253
-\T1/lmr/m/n/10.95 re-spond with
- []
-
-
-Underfull \hbox (badness 1642) in paragraph at lines 252--253
-\T1/lmtt/m/n/10.95 LOGIN_SUCCESS \T1/lmr/m/n/10.95 and
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 253--254
-[]\T1/lmr/m/n/10.95 Call
- []
-
-
-Overfull \hbox (80.59004pt too wide) in paragraph at lines 253--254
-\T1/lmtt/m/n/10.95 client.login(username,password)\T1/lmr/m/n/10.95 . 
- []
-
-
-Underfull \hbox (badness 6725) in paragraph at lines 254--255
-[]\T1/lmr/m/n/10.95 Assert on suc-cess:
- []
-
-
-Overfull \hbox (14.31233pt too wide) in paragraph at lines 254--255
-\T1/lmtt/m/n/10.95 client.authenticated
- []
-
-
-Underfull \hbox (badness 1325) in paragraph at lines 254--255
-\T1/lmr/m/n/10.95 is \T1/lmtt/m/n/10.95 True \T1/lmr/m/n/10.95 and UUID
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 255--256
-[]\T1/lmr/m/n/10.95 Assert on fail-ure:
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 255--256
-\T1/lmtt/m/n/10.95 authenticated \T1/lmr/m/n/10.95 re-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 255--256
-\T1/lmr/m/n/10.95 mains \T1/lmtt/m/n/10.95 False \T1/lmr/m/n/10.95 and
- []
-
-
-Overfull \hbox (5.18597pt too wide) in paragraph at lines 258--258
-[]|\T1/lmr/m/n/10.95 CLIENT_SERVER_SYNC| 
- []
-
-
-Underfull \hbox (badness 7064) in paragraph at lines 260--261
-[]\T1/lmr/m/n/10.95 After lo-gin, mock
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 262--263
-[]\T1/lmr/m/n/10.95 Assert
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 262--263
-\T1/lmtt/m/n/10.95 client.menu_state
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 267--268
-[]\T1/lmr/m/n/10.95 Issue
- []
-
-
-Overfull \hbox (11.60524pt too wide) in paragraph at lines 267--268
-\T1/lmtt/m/n/10.95 start_matchmaking()\T1/lmr/m/n/10.95 . 
- []
-
-
-Underfull \hbox (badness 2529) in paragraph at lines 269--270
-[]\T1/lmr/m/n/10.95 Assert both clients
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 274--275
-[]\T1/lmr/m/n/10.95 During an ac-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 274--275
-\T1/lmr/m/n/10.95 tive match, call
- []
-
-
-Overfull \hbox (8.5636pt too wide) in paragraph at lines 274--275
-\T1/lmtt/m/n/10.95 deploy_unit(cardID,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 275--276
-[]\T1/lmr/m/n/10.95 Assert server's
- []
-
-
-Overfull \hbox (25.8098pt too wide) in paragraph at lines 275--276
-\T1/lmtt/m/n/10.95 MatchThread.add_unit()
- []
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -894,6 +639,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [5]
 
+Package Listings Warning: Text dropped after begin of listing on input line 235
+.
+
+
+Package Listings Warning: Text dropped after begin of listing on input line 256
+.
+
+
+Package Listings Warning: Text dropped after begin of listing on input line 278
+.
+
+
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
 (fancyhdr)                \setlength{\headheight}{13.59999pt}.
@@ -902,6 +659,250 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [6]
+Underfull \hbox (badness 10000) in paragraph at lines 310--310
+[]|\T1/lmr/bx/n/10.95 Detailed De-scrip-tion
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 313--314
+[]\T1/lmr/m/n/10.95 Initialise a 10\TS1/lmr/m/n/10.95 Ö\T1/lmr/m/n/10.95 10
+ []
+
+
+Underfull \hbox (badness 6173) in paragraph at lines 313--314
+\T1/lmr/m/n/10.95 grid of all \T1/lmtt/m/n/10.95 EMPTY
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 314--315
+[]\T1/lmr/m/n/10.95 Call
+ []
+
+
+Overfull \hbox (28.85144pt too wide) in paragraph at lines 314--315
+\T1/lmtt/m/n/10.95 find_path((0,0),(9,9))\T1/lmr/m/n/10.95 . 
+ []
+
+
+Underfull \hbox (badness 3029) in paragraph at lines 315--316
+[]\T1/lmr/m/n/10.95 Assert path length
+ []
+
+
+Underfull \hbox (badness 6125) in paragraph at lines 320--321
+[]\T1/lmr/m/n/10.95 Place a hor-i-zon-tal
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 320--321
+\T1/lmr/m/n/10.95 river across row
+ []
+
+
+Underfull \hbox (badness 4205) in paragraph at lines 320--321
+\T1/lmr/m/n/10.95 5 with bridges at
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 321--322
+[]\T1/lmr/m/n/10.95 Call
+ []
+
+
+Overfull \hbox (28.85144pt too wide) in paragraph at lines 321--322
+\T1/lmtt/m/n/10.95 find_path((1,5),(8,5))\T1/lmr/m/n/10.95 . 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 322--323
+\T1/lmr/m/n/10.95 bridge co-or-di-nates
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 327--328
+[]\T1/lmr/m/n/10.95 Mark start =
+ []
+
+
+Underfull \hbox (badness 7631) in paragraph at lines 327--328
+\T1/lmtt/m/n/10.95 RIVER \T1/lmr/m/n/10.95 or goal =
+ []
+
+
+Underfull \hbox (badness 1552) in paragraph at lines 329--330
+[]\T1/lmr/m/n/10.95 Assert re-sult is an
+ []
+
+
+Underfull \hbox (badness 1331) in paragraph at lines 334--335
+[]\T1/lmr/m/n/10.95 Surround start and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 341--342
+[]\T1/lmr/m/n/10.95 Create two troop
+ []
+
+
+Underfull \hbox (badness 5431) in paragraph at lines 342--343
+[]\T1/lmr/m/n/10.95 Advance sim-u-la-tion
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 342--343
+\T1/lmr/m/n/10.95 by one tick via
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 343--344
+[]\T1/lmr/m/n/10.95 Assert at-tacker's
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 343--344
+\T1/lmr/m/n/10.95 HP on de-fender
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 343--344
+\T1/lmr/m/n/10.95 de-creases by
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 344--345
+[]\T1/lmr/m/n/10.95 Assert move-ment
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 350--351
+[]\T1/lmr/m/n/10.95 Assert
+ []
+
+
+Overfull \hbox (77.5484pt too wide) in paragraph at lines 350--351
+\T1/lmtt/m/n/10.95 GameNetworkClient.deploy_unit()
+ []
+
+
+Underfull \hbox (badness 1910) in paragraph at lines 351--352
+[]\T1/lmr/m/n/10.95 Use \T1/lmtt/m/n/10.95 unittest.mock
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 356--357
+[]\T1/lmr/m/n/10.95 Mock server to
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 356--357
+\T1/lmr/m/n/10.95 re-spond with
+ []
+
+
+Underfull \hbox (badness 1642) in paragraph at lines 356--357
+\T1/lmtt/m/n/10.95 LOGIN_SUCCESS \T1/lmr/m/n/10.95 and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 357--358
+[]\T1/lmr/m/n/10.95 Call
+ []
+
+
+Overfull \hbox (80.59004pt too wide) in paragraph at lines 357--358
+\T1/lmtt/m/n/10.95 client.login(username,password)\T1/lmr/m/n/10.95 . 
+ []
+
+
+Underfull \hbox (badness 6725) in paragraph at lines 358--359
+[]\T1/lmr/m/n/10.95 Assert on suc-cess:
+ []
+
+
+Overfull \hbox (14.31233pt too wide) in paragraph at lines 358--359
+\T1/lmtt/m/n/10.95 client.authenticated
+ []
+
+
+Underfull \hbox (badness 1325) in paragraph at lines 358--359
+\T1/lmr/m/n/10.95 is \T1/lmtt/m/n/10.95 True \T1/lmr/m/n/10.95 and UUID
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 359--360
+[]\T1/lmr/m/n/10.95 Assert on fail-ure:
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 359--360
+\T1/lmtt/m/n/10.95 authenticated \T1/lmr/m/n/10.95 re-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 359--360
+\T1/lmr/m/n/10.95 mains \T1/lmtt/m/n/10.95 False \T1/lmr/m/n/10.95 and
+ []
+
+
+Overfull \hbox (5.18597pt too wide) in paragraph at lines 362--362
+[]|\T1/lmr/m/n/10.95 CLIENT_SERVER_SYNC| 
+ []
+
+
+Underfull \hbox (badness 7064) in paragraph at lines 364--365
+[]\T1/lmr/m/n/10.95 After lo-gin, mock
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 366--367
+[]\T1/lmr/m/n/10.95 Assert
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 366--367
+\T1/lmtt/m/n/10.95 client.menu_state
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--372
+[]\T1/lmr/m/n/10.95 Issue
+ []
+
+
+Overfull \hbox (11.60524pt too wide) in paragraph at lines 371--372
+\T1/lmtt/m/n/10.95 start_matchmaking()\T1/lmr/m/n/10.95 . 
+ []
+
+
+Underfull \hbox (badness 2529) in paragraph at lines 373--374
+[]\T1/lmr/m/n/10.95 Assert both clients
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 378--379
+[]\T1/lmr/m/n/10.95 During an ac-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 378--379
+\T1/lmr/m/n/10.95 tive match, call
+ []
+
+
+Overfull \hbox (8.5636pt too wide) in paragraph at lines 378--379
+\T1/lmtt/m/n/10.95 deploy_unit(cardID,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 379--380
+[]\T1/lmr/m/n/10.95 Assert server's
+ []
+
+
+Overfull \hbox (25.8098pt too wide) in paragraph at lines 379--380
+\T1/lmtt/m/n/10.95 MatchThread.add_unit()
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -910,18 +911,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[7{/usr/share/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf-dis
+[7]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[8{/usr/share/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf-dis
 t/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/texmf-dist/fonts/enc/dvips/lm/lm-mat
 hit.enc}]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller to compensate:
-
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[8]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 13.59999pt, for example:
@@ -948,22 +949,31 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[11] (./part2.aux)
+[11]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[12] (./part2.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `part2.out' has not changed.
-(rerunfilecheck)             Checksum: E5628A655C1A270084F1C7800B059D34;4115.
+(rerunfilecheck)             Checksum: 80AD119E67F3FBB1C5D5FBCA300C2F2C;4393.
  ) 
 Here is how much of TeX's memory you used:
- 13558 strings out of 476033
- 198946 string characters out of 5792714
- 2157187 words of memory out of 5000000
- 35381 multiletter control sequences out of 15000+600000
+ 13710 strings out of 476033
+ 200992 string characters out of 5792714
+ 2251187 words of memory out of 5000000
+ 35443 multiletter control sequences out of 15000+600000
  611918 words of font info for 77 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 75i,12n,79p,291b,2045s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,79p,302b,2045s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf-dis
 t/fonts/type1/public/lm/lmbx12.pfb></usr/share/texmf-dist/fonts/type1/public/lm
 /lmmi10.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/share/
@@ -973,10 +983,10 @@ ublic/lm/lmr6.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmri10.pfb></usr
 /type1/public/lm/lmtk10.pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmtt10
 .pfb></usr/share/texmf-dist/fonts/type1/public/lm/lmtt9.pfb></usr/share/texmf-d
 ist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on part2.pdf (11 pages, 298697 bytes).
+Output written on part2.pdf (12 pages, 316833 bytes).
 PDF statistics:
- 348 PDF objects out of 1000 (max. 8388607)
- 305 compressed objects within 4 object streams
- 105 named destinations out of 1000 (max. 500000)
- 209 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 464 PDF objects out of 1000 (max. 8388607)
+ 419 compressed objects within 5 object streams
+ 195 named destinations out of 1000 (max. 500000)
+ 217 words of extra memory for PDF output out of 10000 (max. 10000000)
 

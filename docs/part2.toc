@@ -10,17 +10,18 @@
 \contentsline {subsection}{\numberline {5.1}InternalEngine}{4}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Engine subclass}{4}{subsection.5.2}%
 \contentsline {section}{\numberline {6}Networking Architecture}{4}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Server}{4}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Client}{5}{subsection.6.2}%
-\contentsline {section}{\numberline {7}Test Plan}{5}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Automated tests}{5}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Manual and edge‐case tests}{8}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Coverage and metrics}{8}{subsection.7.3}%
-\contentsline {section}{\numberline {8}User Acceptance Testing}{9}{section.8}%
-\contentsline {section}{\numberline {9}Unimplemented Part 1 Requirements}{9}{section.9}%
-\contentsline {section}{\numberline {10}Improvements and Limitations}{9}{section.10}%
-\contentsline {section}{\numberline {11}Retrospective}{9}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Development Process and Workflow}{9}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Metrics and Outcomes}{10}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Challenges and Lessons Learned}{10}{subsection.11.3}%
-\contentsline {subsection}{\numberline {11.4}Future Directions}{10}{subsection.11.4}%
+\contentsline {subsection}{\numberline {6.1}Packet Types and Framing}{4}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Packet Serialization / Deserialization}{5}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Server}{5}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Client}{6}{subsection.6.4}%
+\contentsline {section}{\numberline {7}Test Plan}{7}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Automated tests}{7}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Manual and edge‐case tests}{9}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Coverage and metrics}{10}{subsection.7.3}%
+\contentsline {section}{\numberline {8}User Acceptance Testing}{10}{section.8}%
+\contentsline {section}{\numberline {9}Unimplemented Part 1 Requirements}{10}{section.9}%
+\contentsline {section}{\numberline {10}Improvements and Limitations}{11}{section.10}%
+\contentsline {section}{\numberline {11}Retrospective}{11}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Development Process and Workflow}{11}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Challenges and Lessons Learned}{11}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Future Directions}{11}{subsection.11.3}%

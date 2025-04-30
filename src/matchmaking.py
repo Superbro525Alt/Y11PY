@@ -113,25 +113,26 @@ class MatchThread:
                         print("================== DEAD ==================")
 
             if self.arena.has_won(Owner.P1):
-                self.winner = state.p1.uuid
-                self.loser = state.p2.uuid
-
-                try:
-                    state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
-                    state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
-                except:
-                    pass
-
-                self.finished.set_data(True)
-            elif self.arena.has_won(Owner.P2):
                 self.winner = state.p2.uuid
                 self.loser = state.p1.uuid
 
                 try:
+                    state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
+                    state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
+                except Exception as e:
+                    logger.error(f"Error {e}")
+
+
+                self.finished.set_data(True)
+            elif self.arena.has_won(Owner.P2):
+                self.winner = state.p1.uuid
+                self.loser = state.p2.uuid
+
+                try:
                     state.p1.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(False)).serialize_with_length())
                     state.p2.sock.sendall(Packet.from_struct(PacketType.MATCH_END, MatchEndData(True)).serialize_with_length())
-                except:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error {e}")
 
                 self.finished.set_data(True)
 
@@ -203,6 +204,7 @@ class MatchThread:
             if len(remaining) == 0:
                 d = state.p1.deck.cards.copy()
                 random.shuffle(d)
+                d = list(set(d).difference(set(state.p1.hand)))
                 state.p1.remaining_in_deck = d.copy()
             else:
                 state.p1.remaining_in_deck = remaining
@@ -222,7 +224,8 @@ class MatchThread:
             if len(remaining) == 0:
                 d = state.p2.deck.cards.copy()
                 random.shuffle(d)
-                state.p2.remaining_in_deck = d
+                d = list(set(d).difference(set(state.p2.hand)))
+                state.p2.remaining_in_deck = d.copy()
             else:
                 state.p2.remaining_in_deck = remaining
 
@@ -298,12 +301,12 @@ class Matchmaking:
                     m.arena,
                 )
                 for m in [self.matches.get(uuid)]
-                if m
+                if m and not m.finished.get_data()
                 for p in [
                     network_player(m.get_state().p1),
                     network_player(m.get_state().p2),
                 ]
-                if p.uuid == player_uuid
+                if p.uuid == player_uuid and not m.finished.get_data()
             ),
             (None, None, None),
         )

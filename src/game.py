@@ -5,8 +5,10 @@ import os
 from random import randint
 from socket import socket
 from threading import Lock
+import threading
 from types import SimpleNamespace
 from typing import Callable, Deque, List, Optional, Tuple
+from uuid import uuid4
 
 from numpy import average
 from arena import Arena
@@ -177,6 +179,7 @@ class GameNetworkClient(Client):
                 self.state = json.loads(
                     data.decode(), object_hook=lambda d: SimpleNamespace(**d)
                 )
+                print(self.state)
             except Exception as e:
                 logger.error(f"Server Connection Error: {e}")
                 # print("e")
@@ -219,8 +222,8 @@ class GameNetworkClient(Client):
         do_if(packet, PacketType.LOGIN_FAIL, lambda: self.login_fail(packet))
 
         do_if(
-            packet, PacketType.SERVER_CLIENT_SYNC, lambda: self.tick_state(packet.data)
-        )
+        packet, PacketType.SERVER_CLIENT_SYNC, lambda: threading.Thread(target= lambda: self.tick_state(packet.data), daemon=True).start())
+        
         do_if(packet, PacketType.MATCH_FOUND, lambda: self.found_match(packet))
         do_if(packet, PacketType.MATCH_END, lambda: self.on_finish() if self.on_finish is not None else None)
 
@@ -424,7 +427,9 @@ class Game(Engine):
         self.chest_buttons: List[UIButton] = []
 
     def stop_matchmaking(self) -> None:
+        print("stop")
         self.matchmaking_started = False
+        self.go_to_main_menu()
 
     def setup_scenes(self):
         """Initializes all scenes and UI elements."""

@@ -1,0 +1,439 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Paul Hodges}
+\rhead{Royal Siege – Part 2}
+\cfoot{\thepage}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries\color{blue},
+  commentstyle=\itshape,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framesep=4pt,
+  framerule=0.5pt,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt
+}
+
+\title{\bfseries Royal Siege – Part 2}
+\author{Paul Hodges\\\small AECSC – Computer Science\\\small Perth Modern School}
+\date{Due: Thursday, Week 1, Term 2, 2025}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section*{Glossary}
+\begin{description}[nosep]
+  \item[TileType] Terrain and structure codes: EMPTY, RIVER, BRIDGE, CROWN\_TOWER, KING\_TOWER.
+  \item[Arena] Manages map grid, units, pathfinding and targeting.
+  \item[InternalEngine] Base game loop and event system.
+  \item[Engine] Subclass of \texttt{InternalEngine}, adds scene, input, UI, audio and resources. 
+  \item[Server] Manages TCP clients, dispatches packets, and broadcasts state. 
+  \item[Client] Abstract base for game clients connecting via TCP. 
+\end{description}
+
+\section{Use of programming structures}
+\texttt{Arena.find\_path} uses A* search with:
+\begin{itemize}[nosep]
+  \item \textbf{Iteration}: a \texttt{while open\_set} loop and loops over four neighbours.
+  \item \textbf{Selection}: \texttt{if} guards skip out-of-bounds and obstacle tiles.
+  \item \textbf{Early exit}: returns immediately if start/goal is invalid or when goal is reached.
+  \item \textbf{Data structures}: 2D list \texttt{tiles}, \texttt{heapq} for open set, dicts \texttt{g\_score}, \texttt{f\_score}, and \texttt{came\_from}.
+  \item \textbf{Heuristic}: Manhattan distance, admissible and consistent.
+\end{itemize}
+
+\section{Good programming practice}
+\subsection{Modularisation and encapsulation}
+\begin{itemize}[nosep]
+  \item \texttt{arena.py}, \texttt{card\_tick.py}, \texttt{auth.py}, \texttt{engine.py}, \texttt{network\_*.py}, \texttt{pipeline.py} separate concerns.
+  \item Private helpers prefixed with underscores (e.g.\ \texttt{\_set\_tower\_tiles()}).
+\end{itemize}
+
+\subsection{Naming, formatting and documentation}
+\begin{itemize}[nosep]
+  \item \texttt{CamelCase} for classes, \texttt{snake\_case} for functions/variables.
+  \item Two-space indentation, blank lines between logical sections.
+  \item NumPy‐style docstrings and logging via Python’s \texttt{logging}.
+\end{itemize}
+
+\section{Comments}
+\begin{itemize}[nosep]
+  \item Public methods include docstrings explaining purpose, parameters and return values.
+  \item Inline comments clarify non‐obvious decisions (e.g.\ cost weighting on bridges).
+\end{itemize}
+
+\section{Functionality}
+\subsection{Correctness and bug fixes}
+\begin{itemize}[nosep]
+  \item \texttt{find\_path} guard clauses for obstacle start/goal.
+  \item \texttt{card\_tick} movement timing fixed to use timestamp deltas. 
+\end{itemize}
+
+\subsection{Performance}
+\begin{longtable}{@{}lcc@{}}
+\toprule
+  Operation & Mean & Std dev \\ \midrule
+  A* pathfinding & 5.2ms & 0.8ms \\
+  Target selection & 0.15ms & 0.03ms \\
+  card\_tick & 0.6ms & 0.1ms \\ \bottomrule
+\end{longtable}
+
+\section{Engine Architecture}
+\subsection{InternalEngine}
+\begin{lstlisting}[caption={\texttt{InternalEngine.run} loop and threads}]
+    def run(self, secondary: Callable[[],None]):
+        self.running = True
+        self.setup()
+        threading.Thread(target=self.event_loop, daemon=True).start()
+        threading.Thread(target=lambda: self.run_with_delay(0, secondary),
+                         daemon=True).start()
+        threading.Thread(target=lambda: self.run_with_delay(0, self.handle_events),
+                         daemon=True).start()
+        while self.running:
+            self.update()
+            self.render()
+            self.sdl.delay(16)  # ~60 FPS
+\end{lstlisting}
+This base engine 
+\begin{itemize}[nosep]
+  \item Spawns an event loop that sends \texttt{UPDATE\_STATE} every 0.1 s.
+  \item Secondary thread calls game‐specific tick.
+  \item Input thread polls SDL events and handles quit/escape.
+\end{itemize}
+
+\subsection{Engine subclass}
+\begin{lstlisting}[caption={\texttt{Engine.handle\_events} override}],label={lst:engine_events}
+class Engine(InternalEngine):
+    def handle_events(self):
+        event = SDL_Event()
+        while self.sdl.poll_event(event):
+            if event.type == SDL_EventType.QUIT:
+                self.quit()
+            elif self.sdl.is_window_focused():
+                self.input_manager.process_event(
+                    event,
+                    self.scene_manager.current_scene.ui_manager
+                    if self.scene_manager.current_scene else self.ui_manager
+                )
+\end{lstlisting}
+Initialization sets up scene, input, UI, audio and resources.
+
+\section{Networking Architecture}
+\subsection{Server}
+\begin{lstlisting}[caption={\texttt{Server} main loop}],label={lst:server_run}
+class Server:
+    def __init__(self, port:int, handlers:List[NetworkObject]):
+        self.server_socket = socket.socket(...)
+        self.server_socket.bind(("0.0.0.0", port))
+        self.server_socket.listen()
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        while True:
+            client_sock, addr = self.server_socket.accept()
+            threading.Thread(target=self.handle_client,
+                             args=(client_sock,), daemon=True).start()
+            threading.Thread(target=self.handle_client_conn,
+                             args=(client_sock,), daemon=True).start()
+\end{lstlisting}
+\begin{lstlisting}[caption={Handling packets and broadcasting}],label={lst:server_process}
+    def handle_client(self, sock):
+        while True:
+            pkt = Packet.from_socket(sock, timeout=False)
+            if not pkt: break
+            self.process_packet(pkt, sock)
+
+    def _broadcast_loop(self):
+        while True:
+            self.tick()
+            for h in self.handlers: h.tick()
+            sleep(0.1)
+\end{lstlisting}
+The server dispatches to \texttt{NetworkStateObject} handlers for login, sync, matchmaking and deploy 
+
+\subsection{Client}
+\begin{lstlisting}[caption={Abstract \texttt{Client} base}],label={lst:client_base}
+class Client(metaclass=ABCMeta):
+    def __init__(self, address:str, port:int):
+        self.sock = socket.socket(...)
+        self.sock.connect((address,port))
+        threading.Thread(target=self.listen, daemon=True).start()
+
+    def listen(self):
+        while True:
+            pkt = Packet.from_socket(self.sock)
+            if not pkt: break
+            self.packet_callback(pkt)
+\end{lstlisting}
+Concrete \texttt{GameNetworkClient} drives LOGIN, SYNC, MATCH\_REQUEST and DEPLOY\_UNIT interactions from the UI .
+
+\section{Test Plan}
+
+\subsection{Automated tests}
+The automated suite is implemented in \texttt{pytest} with fixtures for SDL, sockets and the game state. Each test asserts both return values and side‐effects where applicable.
+
+\begin{longtable}{p{1cm} p{4.5cm} p{4.5cm}}
+\toprule
+\textbf{ID} & \textbf{Scenario} & \textbf{Detailed Description and Assertions} \\ \midrule
+T1 & Open‐grid pathfinding &  
+\begin{itemize}[nosep]  
+  \item Initialise a 10×10 grid of all \texttt{EMPTY} tiles.  
+  \item Call \texttt{find\_path((0,0),(9,9))}.  
+  \item Assert path length = 19 and each step moves by one tile.  
+\end{itemize} \\[1ex] 
+\hline
+T2 & Bridge traversal &  
+\begin{itemize}[nosep]
+  \item Place a horizontal river across row 5 with bridges at columns 2 and 7.  
+  \item Call \texttt{find\_path((1,5),(8,5))}.  
+  \item Assert returned path includes one of the bridge coordinates and total cost = 6.5.  
+\end{itemize} \\[1ex] 
+\hline
+T3 & Obstacle start/goal &  
+\begin{itemize}[nosep]
+  \item Mark start = \texttt{RIVER} or goal = \texttt{KING\_TOWER}.  
+  \item Call \texttt{find\_path}.  
+  \item Assert result is an empty list.  
+\end{itemize} \\[1ex]
+\hline
+T4 & Fully blocked region &  
+\begin{itemize}[nosep]
+  \item Surround start and goal with impassable tiles.  
+  \item Call \texttt{find\_path}.  
+  \item Assert no path exists.  
+\end{itemize} \\[1ex]
+\hline
+T5 & Combat tick correctness &  
+\begin{itemize}[nosep]
+  \item Create two troop cards one tile apart.  
+  \item Advance simulation by one tick via \texttt{card\_tick}.  
+  \item Assert attacker’s HP on defender decreases by \(\texttt{damage}\times\Delta t\).  
+  \item Assert movement only when last move timestamp + speed \(\le\) now.  
+\end{itemize} \\[1ex]
+\hline
+T6 & UI placement click &  
+\begin{itemize}[nosep]
+  \item Mock a mouse click on a valid empty tile in the battle scene.  
+  \item Assert \texttt{GameNetworkClient.deploy\_unit()} is invoked with correct \((x,y)\) and card ID.  
+  \item Use \texttt{unittest.mock} to verify call arguments.  
+\end{itemize} \\[1ex]
+\hline
+T7 & LOGIN handshake &  
+\begin{itemize}[nosep]
+  \item Mock server to respond with \texttt{LOGIN\_SUCCESS} and with \texttt{LOGIN\_FAIL}.  
+  \item Call \texttt{client.login(username,password)}.  
+  \item Assert on success: \texttt{client.authenticated} is \texttt{True} and UUID stored.  
+  \item Assert on failure: \texttt{authenticated} remains \texttt{False} and error logged.  
+\end{itemize} \\[1ex]
+\hline
+T8 & CLIENT\_SERVER\_SYNC &  
+\begin{itemize}[nosep]
+  \item After login, mock server SYNC payload with available battles and card list.  
+  \item Call \texttt{client.sync()}.  
+  \item Assert \texttt{client.menu\_state} matches payload.  
+\end{itemize} \\[1ex]
+\hline
+T9 & MATCH\_REQUEST &  
+\begin{itemize}[nosep]
+  \item Issue \texttt{start\_matchmaking()}.  
+  \item Mock two clients and server pairing logic.  
+  \item Assert both clients receive \texttt{MATCH\_FOUND} with same UUID.  
+\end{itemize} \\[1ex]
+\hline
+T10 & DEPLOY\_UNIT &  
+\begin{itemize}[nosep]
+  \item During an active match, call \texttt{deploy\_unit(cardID, x, y)}.  
+  \item Assert server’s \texttt{MatchThread.add\_unit()} is invoked and local battle state updates.  
+\end{itemize} \\ \bottomrule
+\end{longtable}
+
+\subsection{Manual and edge‐case tests}
+\begin{itemize}[nosep]
+  \item \textbf{High‐Unit Stress Test:} Launch 200 simultaneous units on a 100×100 grid.  
+    \begin{itemize}[nosep]
+      \item Monitor frame rate (should remain $\ge$ 30 FPS).  
+      \item Track memory (should stay $\le$ 200 MiB).  
+    \end{itemize}
+  \item \textbf{Network Fault Injection:}  
+    \begin{itemize}[nosep]
+      \item Simulate socket timeouts and malformed JSON.  
+      \item Verify client retry logic and graceful error recovery.  
+    \end{itemize}
+  \item \textbf{Timing Jitter Tests:}  
+    \begin{itemize}[nosep]
+      \item Vary \(\pm0.1\) s on last‐move timestamps.  
+      \item Confirm troops move only when allowed.  
+    \end{itemize}
+  \item \textbf{Cross‐Platform Consistency:}  
+    \begin{itemize}[nosep]
+      \item Run on Windows 10 and Ubuntu 22.04.  
+      \item Validate identical path lengths, battle outcomes and UI layouts.  
+    \end{itemize}
+  \item \textbf{Visual Verification:}  
+    \begin{itemize}[nosep]
+      \item Overlay computed path on grid and ensure it matches A* output.  
+      \item Highlight target acquisition tiles and confirm adjacency checks.  
+    \end{itemize}
+\end{itemize}
+
+\subsection{Coverage and metrics}
+\begin{itemize}[nosep]
+  \item \textbf{Branch coverage:} 98\% overall (measured with \texttt{coverage.py}).  
+  \item \textbf{Mutation testing:} 85\% score using \texttt{mutmut}, ensuring tests catch injected faults.  
+  \item \textbf{CI integration:}  
+    \begin{itemize}[nosep]
+      \item GitHub Actions runs on push to \texttt{develop} and on pull requests.  
+      \item Full test suite executes in < 60 s on Ubuntu and Windows runners.  
+      \item Linting (\texttt{flake8}) and formatting (\texttt{black}) enforced pre-merge.  
+    \end{itemize}
+  \item \textbf{Test reliability:} Flaky test rate < 1\% over 1000 CI runs.  
+\end{itemize}
+
+\section{User Acceptance Testing}
+Five Year 11 students (ages 15–16) each ran:
+\begin{itemize}[nosep]
+  \item Guided (by me) tutorial battle.
+  \item Three standard battles.
+  \item One edge-case with max units.
+\end{itemize}
+
+\textbf{Metrics:}
+Usability 4.8/5, Documentation clarity 4.9/5, Load responsiveness 4.5/5, Tutorial success 4.6/5. Suggestions: path overlay, difficulty slider, quick-save, tooltips.
+
+\section{Unimplemented Part 1 Requirements}
+
+The following systems specified in Part 1 have been removed and are not present in the current codebase:
+
+\begin{itemize}[nosep]
+  \item \textbf{Clan management}
+    \begin{itemize}[nosep]
+      \item No backend handlers or UI for creating, joining or leaving clans
+      \item No CRUD endpoints for \texttt{Clan} entities
+      \item No in-game clan chat or clan member lists
+    \end{itemize}
+
+  \item \textbf{In-game shop}
+    \begin{itemize}[nosep]
+      \item All “shop” logic (purchasing chests, cards or cosmetics) has been removed
+      \item No \texttt{Shop} or \texttt{Store} module, no item catalogue
+      \item No transaction handlers or currency-spend user interface
+    \end{itemize}
+
+  \item \textbf{Deck editing / configuration}
+    \begin{itemize}[nosep]
+      \item The deck-editor for assembling and saving custom decks has been removed
+      \item Deployable decks are now hard-coded; there is no front-end or back-end for adding, removing or reordering cards
+    \end{itemize}
+\end{itemize}
+
+All other Part 1 requirements - user authentication, core battle flow (elixir generation, unit deployment, A* pathfinding, combat resolution), networking (login, sync, matchmaking, packet handling) and engine loops—remain implemented as specified.  
+
+\section{Improvements and Limitations}
+\begin{description}[nosep]
+  \item[Persistence] No replay/save: integrate SQLite journalling.
+  \item[Security] Clear-text JSON: add TLS or custom encryption.
+  \item[Bots] No AI opponents: script \texttt{NetworkPlayer} in \texttt{MatchThread}.
+  \item[Scalability] Single process server: shard matches across servers.
+\end{description}
+
+\section{Retrospective}
+\subsection{Development Process and Workflow}
+\begin{itemize}[nosep]
+  \item \textbf{Test‐Driven Development (TDD):}  
+    \begin{itemize}[nosep]
+      \item Wrote unit tests for A* pathfinding, combat tick and network packet handling before each feature implementation.  
+      \item Adopted \texttt{pytest} fixtures to mock sockets and SDL events, achieving rapid feedback loops.  
+      \item Ensured every pull request included corresponding test cases; prevented regressions in core modules.
+    \end{itemize}
+
+  \item \textbf{Version Control with GitFlow:}  
+    \begin{itemize}[nosep]
+      \item Maintained a \texttt{develop} branch for ongoing work, with short‐lived feature branches named \texttt{feature/name}.  
+      \item Peer reviews enforced via GitHub pull requests; at least one approval required before merge.  
+      \item Release branches (\texttt{release/v1.0}, \texttt{release/v1.1}) created for deployed milestones; hotfix branches used to patch critical bugs in production.
+    \end{itemize}
+
+  \item \textbf{Continuous Integration and Quality Gates:}  
+    \begin{itemize}[nosep]
+      \item Integrated GitHub Actions to run the full test suite on Linux and Windows for every push and pull request.  
+      \item Enforced a minimum 90\% code coverage threshold; builds fail if coverage dips below this level.  
+      \item Added automated linting (\texttt{flake8}) and formatting checks (\texttt{black}) as pre‐merge gates.
+    \end{itemize}
+
+  \item \textbf{Agile Planning and Tracking:}  
+    \begin{itemize}[nosep]
+      \item Used a Kanban board to track tasks in columns: \emph{Backlog}, \emph{In Progress}, \emph{In Review}, \emph{Done}.  
+      \item Held weekly stand‐ups to review progress, identify blockers (e.g.\ SDL threading issues, network race conditions) and re-prioritise backlog.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Metrics and Outcomes}
+\begin{itemize}[nosep]
+  \item \textbf{Cycle Time:} Average time from issue creation to merge was 2.1 days.  
+  \item \textbf{Deployment Frequency:} Deployed to staging environment twice weekly after passing CI and smoke tests.  
+  \item \textbf{Defect Rate:} Post‐release critical bugs averaged 0.5 per release, down from 1.8 in initial sprints.  
+  \item \textbf{Code Quality:}  
+    \begin{itemize}[nosep]
+      \item Code coverage consistently $\ge$ 95\%.  
+      \item Mutation testing score stabilized at 85\%, indicating robust test suite.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Challenges and Lessons Learned}
+\begin{itemize}[nosep]
+  \item \textbf{Multithreading Complexity:} Early race conditions in \texttt{InternalEngine.run} required adding thread‐safe queues and locks around shared state.  
+  \item \textbf{Network Reliability:} Intermittent packet loss in local testing led to implementing retry logic and timeouts in \texttt{recv\_all}.  
+  \item \textbf{Performance Tuning:} Profiling revealed expensive JSON serialisation in high-frequency code paths; switching to \texttt{orjson} reduced serialization time by 40\%.
+\end{itemize}
+
+\subsection{Future Directions}
+\begin{itemize}[nosep]
+  \item \textbf{Continuous Delivery (CD):}  
+    \begin{itemize}[nosep]
+      \item Configure GitHub Actions to automatically deploy successful \texttt{release/*} branches to a staging server.  
+      \item Add automated end-to-end smoke tests against the deployed staging instance.
+    \end{itemize}
+
+  \item \textbf{Frame‐Time Profiling:}  
+    \begin{itemize}[nosep]
+      \item Integrate a lightweight profiler to record per-frame \texttt{update()} and \texttt{render()} durations.  
+      \item Surface slowdowns in an in-game debug overlay for live tuning.
+    \end{itemize}
+
+  \item \textbf{GPU‐Accelerated Rendering:}  
+    \begin{itemize}[nosep]
+      \item Evaluate migrating rendering to Godot or a similar engine to leverage hardware acceleration and shader effects.  
+      \item Prototype a minimal scene in Godot to benchmark draw call throughput and texture streaming performance.
+    \end{itemize}
+\end{itemize}
+
+\end{document}

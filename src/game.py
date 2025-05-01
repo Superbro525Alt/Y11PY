@@ -211,6 +211,7 @@ class GameNetworkClient(Client):
         self.auth_state.requested = False
 
     def packet_callback(self, packet: Packet):
+        print(packet.packet_type)
         do_if(
             packet, PacketType.CONNECTION, lambda: self.update_connection_status(True)
         )

@@ -211,7 +211,6 @@ class GameNetworkClient(Client):
         self.auth_state.requested = False
 
     def packet_callback(self, packet: Packet):
-        print(packet.packet_type)
         do_if(
             packet, PacketType.CONNECTION, lambda: self.update_connection_status(True)
         )
@@ -1086,11 +1085,24 @@ class Game(Engine):
 
             grid_x = (pos[0] - offset_x) // cell_size
             grid_y = (pos[1] - offset_y) // cell_size
+            x = grid_x
+            y = grid_y
 
             if (
                 0 <= grid_x < Arena.WIDTH
                 and 0 <= grid_y < Arena.HEIGHT
                 and self.selected_card
+                and (
+                    (
+                        Arena.get_tile_owner((x, y)) == Owner.P1
+                        and self.client.side != "Player 1"
+                    )
+                    or (
+                        Arena.get_tile_owner((x, y)) == Owner.P2
+                        and self.client.side != "Player 2"
+                    )
+                    or Arena.get_tile_owner((x, y)) != None
+                )
             ):
                 self.client.deploy_unit(self.selected_card, (grid_x, grid_y))
                 self.selected_card = None

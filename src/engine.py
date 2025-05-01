@@ -116,6 +116,9 @@ class InternalEngine:
             target=lambda: self.run_with_delay(0, lambda: self.handle_events()),
             daemon=True,
         ).start()
+        threading.Thread(target=self._loop_, daemon=True).start()
+
+    def _loop_(self):
         while self.running:
             self.update()
             self.render()

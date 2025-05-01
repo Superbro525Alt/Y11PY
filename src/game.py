@@ -179,14 +179,14 @@ class GameNetworkClient(Client):
                 self.state = json.loads(
                     data.decode(), object_hook=lambda d: SimpleNamespace(**d)
                 )
-                print(self.state)
+                # print(self.state)
             except Exception as e:
                 logger.error(f"Server Connection Error: {e}")
                 # print("e")
-                # raise ValueError(
-                #     f"Transmitted Game State was in an invalid format: {e}"
-                # )
-                pass
+                raise ValueError(
+                    f"Transmitted Game State was in an invalid format: {e}"
+                )
+                # pass
 
             self.battle_client.tick(self.state)
 

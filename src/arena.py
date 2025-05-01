@@ -366,7 +366,6 @@ class Arena:
         tower_id = cls.get_tower_id(arena, (x, y))
 
         if tower_id is None:
-            print("ok")
             return False
 
         tower_index = cls.tower_id_to_target_str(arena, str(tower_id))

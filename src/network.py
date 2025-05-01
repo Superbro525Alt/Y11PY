@@ -15,7 +15,6 @@ import select
 from uuid import uuid4
 from enum import Enum
 
-
 @dataclass
 class ServerStatus:
     pass
@@ -215,7 +214,7 @@ class Packet:
 
     @classmethod
     def from_struct(cls, packet_type: PacketType, s: object):
-        return cls(packet_type, json.dumps(serialize_object(s)).encode())
+        return cls(packet_type, json.dumps(s).encode())
 
     def serialize_with_length(self) -> bytes:
         """Serializes the packet into bytes with length headers."""

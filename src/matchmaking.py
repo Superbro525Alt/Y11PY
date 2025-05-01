@@ -70,7 +70,6 @@ class MatchThread:
 
     def loop(self) -> None:
         while not self.stop_threads.is_set():
-            print("i")
             start_time = time.monotonic()
             self.tick()
             elapsed_time = time.monotonic() - start_time

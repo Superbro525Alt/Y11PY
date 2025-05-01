@@ -12,16 +12,16 @@
 \contentsline {section}{\numberline {6}Networking Architecture}{4}{section.6}%
 \contentsline {subsection}{\numberline {6.1}Packet Types and Framing}{4}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}Packet Serialization / Deserialization}{5}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Server}{5}{subsection.6.3}%
-\contentsline {subsection}{\numberline {6.4}Client}{6}{subsection.6.4}%
-\contentsline {section}{\numberline {7}Test Plan}{7}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Automated tests}{7}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}Manual and edge‐case tests}{9}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Coverage and metrics}{10}{subsection.7.3}%
-\contentsline {section}{\numberline {8}User Acceptance Testing}{10}{section.8}%
-\contentsline {section}{\numberline {9}Unimplemented Part 1 Requirements}{10}{section.9}%
-\contentsline {section}{\numberline {10}Improvements and Limitations}{11}{section.10}%
-\contentsline {section}{\numberline {11}Retrospective}{11}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Development Process and Workflow}{11}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Challenges and Lessons Learned}{11}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Future Directions}{11}{subsection.11.3}%
+\contentsline {subsection}{\numberline {6.3}Server}{7}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Client}{7}{subsection.6.4}%
+\contentsline {section}{\numberline {7}Test Plan}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Automated tests}{8}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Manual and edge‐case tests}{11}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Coverage and metrics}{11}{subsection.7.3}%
+\contentsline {section}{\numberline {8}User Acceptance Testing}{11}{section.8}%
+\contentsline {section}{\numberline {9}Unimplemented Part 1 Requirements}{12}{section.9}%
+\contentsline {section}{\numberline {10}Improvements and Limitations}{13}{section.10}%
+\contentsline {section}{\numberline {11}Retrospective}{13}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Development Process and Workflow}{13}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Challenges and Lessons Learned}{13}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Future Directions}{13}{subsection.11.3}%
